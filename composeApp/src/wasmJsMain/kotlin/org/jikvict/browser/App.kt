@@ -20,8 +20,10 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,6 +34,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import org.jikvict.api.apis.BasicControllerApi
 import org.jikvict.browser.icons.myiconpack.Menu
 import org.jikvict.browser.icons.myiconpack.User
 import org.jikvict.browser.theme.DarkTheme
@@ -43,7 +46,15 @@ fun App() {
     ) {
         val drawerState = rememberDrawerState(DrawerValue.Closed)
         val scope = rememberCoroutineScope()
-
+        val response = remember { mutableStateOf("") }
+        LaunchedEffect(Unit) {
+            try {
+                val r = BasicControllerApi().hello().body()
+                response.value =r.message
+            } catch (e: Exception) {
+                response.value = "Error: ${e.message}"
+            }
+        }
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -61,6 +72,7 @@ fun App() {
                         .background(MaterialTheme.colorScheme.background)
                         .safeContentPadding()
                 ) {
+                    Text(response.value)
                 }
             }
 
