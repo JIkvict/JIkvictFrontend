@@ -1,5 +1,10 @@
 package org.jikvict.browser.icons.myiconpack
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType.Companion.NonZero
 import androidx.compose.ui.graphics.SolidColor
@@ -9,8 +14,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.ImageVector.Builder
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
+import org.jikvict.browser.icons.MyIconPack
 
-val Menu: ImageVector
+public val MyIconPack.Menu: ImageVector
     get() {
         if (_menu != null) {
             return _menu!!
@@ -89,3 +95,10 @@ val Menu: ImageVector
     }
 
 private var _menu: ImageVector? = null
+
+@Composable
+private fun Preview(): Unit {
+    Box(modifier = Modifier.padding(12.dp)) {
+        Image(imageVector = MyIconPack.Menu, contentDescription = "")
+    }
+}

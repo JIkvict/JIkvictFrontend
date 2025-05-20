@@ -1,4 +1,6 @@
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jikvict.gradle.tasks.CleanUpSerializableTask
@@ -7,11 +9,26 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.androidApplication)
     id("org.openapi.generator") version "7.13.0"
     kotlin("plugin.serialization") version "2.1.21"
 }
-
+android {
+    compileSdk = 35
+    namespace = "org.jikvict.composeapp"
+    defaultConfig {
+        minSdk=21
+    }
+}
 kotlin {
+    androidTarget {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+
+    }
+
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         outputModuleName = "composeApp"
@@ -33,6 +50,11 @@ kotlin {
     }
 
     sourceSets {
+
+        androidMain.dependencies {
+            implementation(compose.preview)
+            implementation(libs.androidx.activity.compose)
+        }
         commonMain {
             kotlin.srcDir("${layout.buildDirectory.get()}/generated/openapi/src/commonMain/kotlin")
             dependencies {
@@ -49,6 +71,7 @@ kotlin {
                 implementation(libs.ktor.serialization)
                 implementation(libs.ktor.json)
                 implementation(libs.kotlin.serialization)
+                implementation("org.jetbrains.compose.components:components-ui-tooling-preview:1.8.0")
             }
         }
         commonTest {
@@ -86,5 +109,13 @@ tasks.withType<KotlinWebpack>().configureEach {
     dependsOn("openApiGenerate")
 }
 tasks.named("compileKotlinWasmJs") {
+    dependsOn("openApiGenerate")
+}
+
+//dependencies {
+//    debugImplementation(compose.uiTooling)
+//}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     dependsOn("openApiGenerate")
 }
