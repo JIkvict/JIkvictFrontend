@@ -16,9 +16,15 @@ plugins {
 android {
     compileSdk = 35
     namespace = "org.jikvict.composeapp"
+
     defaultConfig {
-        minSdk=21
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
     }
+
+    sourceSets["main"].manifest.srcFile("src/commonMain/AndroidManifest.xml")
 }
 kotlin {
     androidTarget {
@@ -44,6 +50,9 @@ kotlin {
                     }
                     open = false
                 }
+            }
+            testTask {
+                enabled = false
             }
         }
         binaries.executable()
@@ -112,10 +121,13 @@ tasks.named("compileKotlinWasmJs") {
     dependsOn("openApiGenerate")
 }
 
-//dependencies {
-//    debugImplementation(compose.uiTooling)
-//}
+dependencies {
+    debugImplementation(compose.uiTooling)
+}
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    dependsOn("openApiGenerate")
+}
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon>().configureEach {
     dependsOn("openApiGenerate")
 }
