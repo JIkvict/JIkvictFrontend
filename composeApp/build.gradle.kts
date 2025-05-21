@@ -181,7 +181,7 @@ tasks.withType<KtLintCheckTask>().configureEach {
 }
 ktlint {
     filter {
-        exclude("build/generated/openapi/**")
-        exclude("build/generated/ksp/**")
+        exclude { element -> element.file.path.contains("generated/") }
+        exclude("**/generated/**")
     }
 }
