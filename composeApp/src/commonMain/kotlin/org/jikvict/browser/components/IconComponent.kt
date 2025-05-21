@@ -1,6 +1,7 @@
 package org.jikvict.browser.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -18,18 +19,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import org.jikvict.browser.debugBorder
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun IconComponent(iconVector: ImageVector, hoverable: Boolean = false, modifier: Modifier = Modifier) {
+fun IconComponent(
+    iconVector: ImageVector,
+    hoverable: Boolean = false,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
     Box(
         modifier = Modifier
             .size(32.dp)
             .hoverable(interactionSource, hoverable)
-            .background(if (isHovered && hoverable) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent, RoundedCornerShape(8.dp))
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = onClick
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .background(
+                if (isHovered && hoverable) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                RoundedCornerShape(8.dp)
+            )
             .then(modifier),
         contentAlignment = Alignment.Center
     ) {
@@ -38,8 +57,7 @@ fun IconComponent(iconVector: ImageVector, hoverable: Boolean = false, modifier:
             contentDescription = null,
             tint = Color.Unspecified,
             modifier = Modifier
-                .size(24.dp)
-                .debugBorder(Color.Red)
+                .size(24.dp),
         )
     }
 }

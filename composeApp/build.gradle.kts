@@ -9,7 +9,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.androidApplication) // To delete
     id("org.openapi.generator") version "7.13.0"
     kotlin("plugin.serialization") version "2.1.21"
 }
@@ -25,7 +25,7 @@ android {
     }
 
     sourceSets["main"].manifest.srcFile("src/commonMain/AndroidManifest.xml")
-}
+} // To delete
 kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -33,7 +33,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
 
-    }
+    } // To delete
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
@@ -63,7 +63,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-        }
+        } // To delete
         commonMain {
             kotlin.srcDir("${layout.buildDirectory.get()}/generated/openapi/src/commonMain/kotlin")
             dependencies {
@@ -80,7 +80,7 @@ kotlin {
                 implementation(libs.ktor.serialization)
                 implementation(libs.ktor.json)
                 implementation(libs.kotlin.serialization)
-                implementation("org.jetbrains.compose.components:components-ui-tooling-preview:1.8.0")
+                implementation(libs.tooling.preview)
             }
         }
         commonTest {
