@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.androidApplication) apply false // To delete
-    alias(libs.plugins.androidLibrary) apply false  // To delete
+    alias(libs.plugins.androidLibrary) apply false // To delete
     alias(libs.plugins.composeMultiplatform) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false

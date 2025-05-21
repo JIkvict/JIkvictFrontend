@@ -31,7 +31,8 @@ fun IconComponent(
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
     Box(
-        modifier = Modifier
+        modifier =
+        Modifier
             .size(32.dp)
             .hoverable(interactionSource, hoverable)
             .then(
@@ -44,20 +45,19 @@ fun IconComponent(
                 } else {
                     Modifier
                 }
-            )
-            .background(
+            ).background(
                 if (isHovered && hoverable) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
                 RoundedCornerShape(8.dp)
-            )
-            .then(modifier),
+            ).then(modifier),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             iconVector,
             contentDescription = null,
             tint = Color.Unspecified,
-            modifier = Modifier
-                .size(24.dp),
+            modifier =
+            Modifier
+                .size(24.dp)
         )
     }
 }

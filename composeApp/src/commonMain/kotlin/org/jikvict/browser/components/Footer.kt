@@ -17,7 +17,8 @@ import org.jikvict.browser.theme.DarkTheme
 @Composable
 fun Footer() {
     Row(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
             .height(48.dp)
             .background(MaterialTheme.colorScheme.primaryContainer),
@@ -26,9 +27,8 @@ fun Footer() {
     ) {
         Text(
             text = "Footer",
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
-
-            )
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
     }
 }
 

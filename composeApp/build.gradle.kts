@@ -1,18 +1,28 @@
+import com.google.devtools.ksp.gradle.KspAATask
+import org.gradle.kotlin.dsl.ktlintRuleset
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
 import org.jikvict.gradle.tasks.CleanUpSerializableTask
+import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
+import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.androidApplication) // To delete
+    id("com.google.devtools.ksp") version "2.1.21-2.0.1"
+
     id("org.openapi.generator") version "7.13.0"
+    id("org.jlleitschuh.gradle.ktlint") version "11.6.0"
     kotlin("plugin.serialization") version "2.1.21"
 }
+
 android {
     compileSdk = 35
     namespace = "org.jikvict.composeapp"
@@ -32,7 +42,6 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
-
     } // To delete
 
     @OptIn(ExperimentalWasmDsl::class)
@@ -43,13 +52,15 @@ kotlin {
             val projectDirPath = project.projectDir.path
             commonWebpackConfig {
                 outputFileName = "composeApp.js"
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    static = (static ?: mutableListOf()).apply {
-                        add(rootDirPath)
-                        add(projectDirPath)
+                devServer =
+                    (devServer ?: KotlinWebpackConfig.DevServer()).apply {
+                        static =
+                            (static ?: mutableListOf()).apply {
+                                add(rootDirPath)
+                                add(projectDirPath)
+                            }
+                        open = false
                     }
-                    open = false
-                }
             }
             testTask {
                 enabled = false
@@ -66,6 +77,7 @@ kotlin {
         } // To delete
         commonMain {
             kotlin.srcDir("${layout.buildDirectory.get()}/generated/openapi/src/commonMain/kotlin")
+            kotlin.srcDir("${layout.buildDirectory.get()}/generated/ksp/metadata/commonMain/kotlin")
             dependencies {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
@@ -101,9 +113,15 @@ openApiGenerate {
             "dateLibrary" to "kotlinx-datetime",
             "serializationLibrary" to "kotlinx_serialization",
             "parcelizeModels" to "false",
-            "withJava" to "false",
+            "withJava" to "false"
         )
     )
+}
+
+dependencies {
+    ksp(project(":processor"))
+    ktlintRuleset(libs.ktlint)
+    debugImplementation(compose.uiTooling)
 }
 tasks.named("openApiGenerate") {
     finalizedBy("cleanUpSerializable")
@@ -121,13 +139,49 @@ tasks.named("compileKotlinWasmJs") {
     dependsOn("openApiGenerate")
 }
 
-dependencies {
-    debugImplementation(compose.uiTooling)
+tasks.withType<KotlinCompile>().configureEach {
+    dependsOn("openApiGenerate")
+    dependsOn("kspCommonMainKotlinMetadata")
+}
+tasks.withType<KotlinCompileCommon>().configureEach {
+    dependsOn("openApiGenerate")
+    dependsOn("kspCommonMainKotlinMetadata")
+}
+tasks.withType<KspAATask> {
+    dependsOn("openApiGenerate")
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    dependsOn("openApiGenerate")
+afterEvaluate {
+    tasks.withType<KspAATask>().configureEach {
+        if (name != "kspCommonMainKotlinMetadata") {
+            dependsOn("kspCommonMainKotlinMetadata")
+        }
+    }
+
+    tasks.named("kspKotlinWasmJs").configure {
+        dependsOn("kspCommonMainKotlinMetadata")
+    }
+    tasks.named("kspDebugKotlinAndroid").configure {
+        dependsOn("kspCommonMainKotlinMetadata")
+    }
+    tasks.named("kspReleaseKotlinAndroid").configure {
+        dependsOn("kspCommonMainKotlinMetadata")
+    }
 }
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon>().configureEach {
+tasks.withType<org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink>().configureEach {
+    dependsOn("kspKotlinWasmJs")
+}
+tasks.withType<KtLintFormatTask>().configureEach {
+    mustRunAfter("openApiGenerate")
+    mustRunAfter("kspCommonMainKotlinMetadata")
+}
+tasks.withType<KtLintCheckTask>().configureEach {
     dependsOn("openApiGenerate")
+    dependsOn("kspCommonMainKotlinMetadata")
+}
+ktlint {
+    filter {
+        exclude("build/generated/openapi/**")
+        exclude("build/generated/ksp/**")
+    }
 }
