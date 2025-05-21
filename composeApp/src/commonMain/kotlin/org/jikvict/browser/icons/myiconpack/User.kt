@@ -28,7 +28,7 @@ val User: ImageVector
                 defaultWidth = 16.0.dp,
                 defaultHeight = 16.0.dp,
                 viewportWidth = 16.0f,
-                viewportHeight = 16.0f
+                viewportHeight = 16.0f,
             ).apply {
                 path(
                     fill = SolidColor(Color(0xFF43454A)),
@@ -37,7 +37,7 @@ val User: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(8.0f, 7.0f)
                     curveTo(9.656f, 7.0f, 11.0f, 5.657f, 11.0f, 4.0f)
@@ -53,7 +53,7 @@ val User: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(2.103f, 13.008f)
                     curveTo(2.399f, 11.303f, 3.548f, 8.0f, 8.0f, 8.0f)
@@ -70,7 +70,7 @@ val User: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = EvenOdd
+                    pathFillType = EvenOdd,
                 ) {
                     moveTo(11.0f, 4.0f)
                     curveTo(11.0f, 5.657f, 9.656f, 7.0f, 8.0f, 7.0f)
@@ -92,7 +92,7 @@ val User: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = EvenOdd
+                    pathFillType = EvenOdd,
                 ) {
                     moveTo(8.0f, 8.0f)
                     curveTo(3.548f, 8.0f, 2.399f, 11.303f, 2.103f, 13.008f)

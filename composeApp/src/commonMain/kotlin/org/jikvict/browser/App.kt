@@ -17,7 +17,7 @@ import org.jikvict.browser.theme.DarkTheme
 fun App(navController: NavHostController) {
     GeneratedScreenRegistry
     MaterialTheme(
-        colorScheme = DarkTheme.colorScheme
+        colorScheme = DarkTheme.colorScheme,
     ) {
         CompositionLocalProvider(LocalNavController provides navController) {
             NavHost(navController, startDestination = HomeScreen) {

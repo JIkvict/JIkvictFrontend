@@ -27,7 +27,7 @@ val Menu: ImageVector
                 defaultWidth = 20.0.dp,
                 defaultHeight = 20.0.dp,
                 viewportWidth = 20.0f,
-                viewportHeight = 20.0f
+                viewportHeight = 20.0f,
             ).apply {
                 path(
                     fill = SolidColor(Color(0xFFCED0D6)),
@@ -36,7 +36,7 @@ val Menu: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(2.75f, 2.5f)
                     lineTo(17.25f, 2.5f)
@@ -56,7 +56,7 @@ val Menu: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(2.75f, 7.0f)
                     lineTo(17.25f, 7.0f)
@@ -76,7 +76,7 @@ val Menu: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(2.75f, 11.5f)
                     lineTo(17.25f, 11.5f)
@@ -96,7 +96,7 @@ val Menu: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(2.75f, 16.0f)
                     lineTo(17.25f, 16.0f)

@@ -3,6 +3,7 @@ package org.jikvict.browser.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,10 +21,10 @@ data object NotFoundScreen : NavigableScreen by registerNavForScreen<NotFoundScr
         override val compose: @Composable (() -> Unit)
             get() = {
                 DefaultScreen {
-                    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                    Column(modifier = Modifier.fillMaxWidth().weight(1f).background(MaterialTheme.colorScheme.background)) {
                         Text("Not Found Screen", color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }
-    }
+    },
 )

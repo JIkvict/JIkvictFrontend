@@ -28,15 +28,15 @@ fun Header() {
 
     Row(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(35.dp)
+            horizontalArrangement = Arrangement.spacedBy(35.dp),
         ) {
             IconComponent(Ijlogo)
             IconComponent(Code, hoverable = true, onClick = {
@@ -48,13 +48,5 @@ fun Header() {
         IconComponent(User, hoverable = true, onClick = {
             navController.navigate(HomeScreen)
         })
-    }
-}
-
-@Preview
-@Composable
-fun PreviewHeader() {
-    MaterialTheme(colorScheme = DarkTheme.colorScheme) {
-        Header()
     }
 }

@@ -9,15 +9,13 @@ import kotlinx.serialization.serializer
 
 val locations = mutableListOf<NavGraphBuilder.() -> Unit>()
 
-inline fun <reified T : NavigableScreen> registerNavForScreen(
-    screen: NavigableScreen,
-): NavigableScreen {
+inline fun <reified T : NavigableScreen> registerNavForScreen(screen: NavigableScreen): NavigableScreen {
     locations.add {
         composable<T>(
             enterTransition = { fadeIn(animationSpec = tween(100)) },
             exitTransition = { fadeOut(animationSpec = tween(100)) },
             popEnterTransition = { fadeIn(animationSpec = tween(100)) },
-            popExitTransition = { fadeOut(animationSpec = tween(100)) }
+            popExitTransition = { fadeOut(animationSpec = tween(100)) },
         ) {
             screen.compose()
         }

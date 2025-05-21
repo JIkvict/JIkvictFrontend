@@ -27,7 +27,7 @@ val Ijlogo: ImageVector
                 defaultWidth = 24.0.dp,
                 defaultHeight = 24.0.dp,
                 viewportWidth = 24.0f,
-                viewportHeight = 24.0f
+                viewportHeight = 24.0f,
             ).apply {
                 path(
                     fill = SolidColor(Color(0xFFA177F4)),
@@ -36,7 +36,7 @@ val Ijlogo: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(2.4f, 0.0f)
                     curveTo(1.074f, 0.0f, 0.0f, 1.007f, 0.0f, 2.25f)
@@ -59,7 +59,7 @@ val Ijlogo: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(24.0f, 2.25f)
                     curveTo(24.0f, 1.007f, 22.926f, -0.0f, 21.6f, -0.0f)
@@ -77,7 +77,7 @@ val Ijlogo: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(3.5f, 11.5f)
                     moveToRelative(-3.5f, 0.0f)
