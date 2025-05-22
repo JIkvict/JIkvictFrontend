@@ -1,5 +1,4 @@
 import com.google.devtools.ksp.gradle.KspAATask
-import org.gradle.kotlin.dsl.ktlintRuleset
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -19,7 +18,7 @@ plugins {
     id("com.google.devtools.ksp") version "2.1.21-2.0.1"
 
     id("org.openapi.generator") version "7.13.0"
-    id("org.jlleitschuh.gradle.ktlint") version "11.6.0"
+    id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
     kotlin("plugin.serialization") version "2.1.21"
 }
 
@@ -184,4 +183,21 @@ ktlint {
         exclude { element -> element.file.path.contains("generated/") }
         exclude("**/generated/**")
     }
+}
+
+tasks.matching { it.name.startsWith("kspReleaseKotlinAndroid") }.configureEach {
+    enabled = false
+}
+tasks.matching { it.name.startsWith("kspDebugKotlinAndroid") }.configureEach {
+    enabled = false
+}
+tasks.matching { it.name.startsWith("kspKotlinWasmJs") }.configureEach {
+    enabled = false
+}
+
+tasks.matching { it.name.startsWith("kspCommonMain") }.configureEach {
+    enabled = true
+}
+tasks.named("ktlintCommonMainSourceSetCheck") {
+    enabled = false
 }

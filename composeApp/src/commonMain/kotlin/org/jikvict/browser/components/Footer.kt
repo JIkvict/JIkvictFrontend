@@ -12,22 +12,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jikvict.browser.theme.DarkTheme
+import org.jikvict.browser.util.DefaultPreview
 
 @Composable
 fun Footer() {
     Row(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .background(MaterialTheme.colorScheme.primaryContainer),
+            Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .background(MaterialTheme.colorScheme.primaryContainer),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Footer",
-            color = MaterialTheme.colorScheme.onSecondaryContainer
+            text = "JIkvict",
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            style = MaterialTheme.typography.bodyMedium,
+            fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+            modifier = Modifier.align(Alignment.CenterVertically)
         )
     }
 }
@@ -35,7 +38,7 @@ fun Footer() {
 @Preview
 @Composable
 fun PreviewFooter() {
-    MaterialTheme(colorScheme = DarkTheme.colorScheme) {
+    DefaultPreview(true) {
         Footer()
     }
 }

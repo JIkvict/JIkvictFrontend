@@ -1,11 +1,13 @@
 package org.jikvict.browser.icons.myiconpack
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType.Companion.EvenOdd
 import androidx.compose.ui.graphics.PathFillType.Companion.NonZero
 import androidx.compose.ui.graphics.SolidColor
@@ -16,13 +18,14 @@ import androidx.compose.ui.graphics.vector.ImageVector.Builder
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jikvict.browser.theme.LightTheme
 
 val User: ImageVector
+    @Composable
     get() {
-        if (_user != null) {
-            return _user!!
-        }
-        _user =
+        val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+        val tertiaryContainerColor = MaterialTheme.colorScheme.tertiaryContainer
+        return remember(onSurfaceColor, tertiaryContainerColor) {
             Builder(
                 name = "User",
                 defaultWidth = 16.0.dp,
@@ -31,7 +34,7 @@ val User: ImageVector
                 viewportHeight = 16.0f,
             ).apply {
                 path(
-                    fill = SolidColor(Color(0xFF43454A)),
+                    fill = SolidColor(tertiaryContainerColor),
                     stroke = null,
                     strokeLineWidth = 0.0f,
                     strokeLineCap = Butt,
@@ -47,7 +50,7 @@ val User: ImageVector
                     close()
                 }
                 path(
-                    fill = SolidColor(Color(0xFF43454A)),
+                    fill = SolidColor(tertiaryContainerColor),
                     stroke = null,
                     strokeLineWidth = 0.0f,
                     strokeLineCap = Butt,
@@ -64,7 +67,7 @@ val User: ImageVector
                     close()
                 }
                 path(
-                    fill = SolidColor(Color(0xFFCED0D6)),
+                    fill = SolidColor(onSurfaceColor),
                     stroke = null,
                     strokeLineWidth = 0.0f,
                     strokeLineCap = Butt,
@@ -86,7 +89,7 @@ val User: ImageVector
                     close()
                 }
                 path(
-                    fill = SolidColor(Color(0xFFCED0D6)),
+                    fill = SolidColor(onSurfaceColor),
                     stroke = null,
                     strokeLineWidth = 0.0f,
                     strokeLineCap = Butt,
@@ -110,15 +113,18 @@ val User: ImageVector
                     close()
                 }
             }.build()
-        return _user!!
+        }
     }
 
-private var _user: ImageVector? = null
 
 @Preview
 @Composable
 private fun Preview() {
-    Box(modifier = Modifier.padding(12.dp)) {
-        Image(imageVector = User, contentDescription = "")
+    MaterialTheme(
+        colorScheme = LightTheme.colorScheme
+    ) {
+        Box(modifier = Modifier.padding(12.dp).background(MaterialTheme.colorScheme.background)) {
+            Image(imageVector = User, contentDescription = "")
+        }
     }
 }

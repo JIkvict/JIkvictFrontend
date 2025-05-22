@@ -10,9 +10,7 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.serialization.ExperimentalSerializationApi
 import org.jikvict.browser.screens.NotFoundScreen
-
-@Suppress("unused")
-fun log(message: String): Unit = js("console.log(message)")
+import org.jikvict.browser.util.log
 
 @OptIn(
     ExperimentalComposeUiApi::class,

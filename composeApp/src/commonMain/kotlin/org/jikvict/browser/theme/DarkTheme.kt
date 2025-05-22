@@ -3,7 +3,7 @@ package org.jikvict.browser.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 
-object DarkTheme {
+object DarkTheme: CustomTheme {
     val colorScheme: ColorScheme =
         ColorScheme(
             primary = Color(53, 116, 240),
@@ -43,4 +43,8 @@ object DarkTheme {
             surfaceContainerLow = Color(20, 20, 20),
             surfaceContainerLowest = Color(10, 10, 10)
         )
+
+    override fun colorScheme(): ColorScheme {
+        return colorScheme
+    }
 }

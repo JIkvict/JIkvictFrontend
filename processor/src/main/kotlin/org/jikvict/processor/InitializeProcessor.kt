@@ -1,7 +1,13 @@
 package org.jikvict.processor
 
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.processing.*
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -9,22 +15,19 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 class InitializeProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
+    private val options: Map<String, String> = emptyMap(),
 ) : SymbolProcessor {
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val files = resolver.getAllFiles()
-        val sourceSetName =
-            files.firstOrNull()?.let { file ->
-                when {
-                    file.filePath.contains("/commonMain/") -> "commonMain"
-                    file.filePath.contains("/androidDebug/") -> "androidDebug"
-                    file.filePath.contains("/wasmJsMain/") -> "wasmJsMain"
-                    else -> null
-                }
-            }
+        logger.warn("Options: $options")
+        val isCommonMain = resolver.getAllFiles().any { file ->
+            file.filePath.replace("\\", "/").contains("/commonMain/")
+        }
+        logger.warn("isCommonMain: $isCommonMain")
+        logger.warn("Example file path: ${resolver.getAllFiles().firstOrNull()?.filePath}")
 
-        if (sourceSetName != "commonMain") {
-            logger.warn("[InitializeProcessor] Skipping for source set: $sourceSetName")
+        if (!isCommonMain) {
+            logger.warn("[InitializeProcessor] Skipping because not commonMain")
             return emptyList()
         }
 
@@ -104,5 +107,6 @@ class InitializeProcessorProvider : SymbolProcessorProvider {
         InitializeProcessor(
             codeGenerator = environment.codeGenerator,
             logger = environment.logger,
+            options = environment.options,
         )
 }
