@@ -10,8 +10,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.screens.HomeScreen
-import org.jikvict.browser.screens.applyNavigation
-import org.jikvict.browser.screens.locations
+import org.jikvict.browser.screens.registerNavForScreen
+import org.jikvict.browser.screens.registeredScreens
 import org.jikvict.browser.theme.DarkTheme
 import org.jikvict.browser.theme.JIkvictTypography
 import org.jikvict.browser.theme.LightTheme
@@ -21,13 +21,15 @@ import org.jikvict.browser.util.ThemeSwitcher
 import org.jikvict.browser.util.ThemeSwitcherProvider
 import org.jikvict.browser.util.getTheme
 
+
+// TODO: Сделать @Register(name) аннотацию чтобы создать список name с обьектами помеченными этой аннотацией
+
+// TODO: Сделать @CreateNav аннотацию чтобы создать object HomeScreenRegistrar : ScreenRegistrar<HomeScreen> by createRegistrar() для каждого class помеченого этой аннотацией
 @Preview
 @Composable
 fun App(navController: NavHostController) {
-    GeneratedScreenRegistry
     val fonts = JIkvictTypography(rememberInterFontFamily(), rememberJetBrainsMonoFontFamily())
     val themeToSet = if (getTheme()) DarkTheme else LightTheme
-
     val theme = remember { mutableStateOf(themeToSet) }
     val themeSwitcher = remember { ThemeSwitcher(theme) }
     MaterialTheme(
@@ -38,12 +40,15 @@ fun App(navController: NavHostController) {
             LocalNavController provides navController,
             ThemeSwitcherProvider provides themeSwitcher
         ) {
-            NavHost(navController, startDestination = HomeScreen) {
-                applyNavigation(locations)
+            NavHost(navController, startDestination = HomeScreen(1)) {
+                registeredScreens.forEach { screen ->
+                    registerNavForScreen(screen)
+                }
             }
         }
     }
 }
+
 
 val LocalNavController =
     staticCompositionLocalOf<NavHostController> {

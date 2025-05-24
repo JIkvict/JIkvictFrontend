@@ -6,16 +6,18 @@ import androidx.compose.ui.window.ComposeViewport
 import androidx.navigation.ExperimentalBrowserHistoryApi
 import androidx.navigation.bindToNavigation
 import androidx.navigation.compose.rememberNavController
+import androidx.savedstate.read
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
 import org.jikvict.browser.screens.NotFoundScreen
-import org.jikvict.browser.util.log
+import org.jikvict.browser.screens.routers
 
 @OptIn(
     ExperimentalComposeUiApi::class,
     ExperimentalBrowserHistoryApi::class,
-    ExperimentalSerializationApi::class
+    ExperimentalSerializationApi::class, InternalSerializationApi::class
 )
 fun main() {
     val body = document.body ?: return
@@ -23,28 +25,45 @@ fun main() {
         val navController = rememberNavController()
         App(navController)
         LaunchedEffect(Unit) {
-            val initRoute = window.location.hash.substringAfter('#', "")
+            val initRoute = window.location.hash.substringAfter('#', "").substringBefore("/?")
 
-            val matchingScreen =
-                GeneratedScreenRegistry.allScreens.find { screen ->
-                    initRoute.startsWith(screen.getRoute())
-                }
-            if (matchingScreen != null) {
-                navController.navigate(matchingScreen)
+            val paramsRaw = window.location.hash.substringAfter('?', "")
+            val splitParams = paramsRaw.split("&")
+
+            val params = if (splitParams.isEmpty()) {
+                emptyMap()
             } else {
-                log("Not Found")
-                navController.navigate(NotFoundScreen)
+                paramsRaw.split("&").associate {
+                    val (key, value) = it.split("=", limit = 2)
+                    key to value.ifEmpty { null }
+                }
+            }
+            val router = routers.firstOrNull { it.matchRoute(initRoute) }
+            if (router != null) {
+                val screen = router.constructScreen(params)
+                navController.navigate(screen)
+            } else {
+                navController.navigate(NotFoundScreen())
             }
 
             window.bindToNavigation(navController) { entry ->
-                val route = entry.destination.route.orEmpty()
-                return@bindToNavigation "#" +
-                    (
-                        GeneratedScreenRegistry.allScreens.firstOrNull {
-                            route.startsWith(it.getRoute())
-                        }
-                            ?: NotFoundScreen
-                        ).getRoute()
+                println("Binding to navigation: ${entry.destination.route}")
+                var mapping = mapOf<String, Any?>()
+                entry.arguments?.read {
+                    mapping = this.toMap()
+                }
+
+                val baseRoute = entry.destination.route?.substringBefore("?")?.substringBefore("{") ?: ""
+
+                val queryParams = if (mapping.isNotEmpty()) {
+                    mapping.entries.joinToString(prefix = "?", separator = "&") { (key, value) ->
+                        "$key=${value?.toString() ?: ""}"
+                    }
+                } else {
+                    ""
+                }
+
+                return@bindToNavigation "#$baseRoute$queryParams"
             }
         }
     }

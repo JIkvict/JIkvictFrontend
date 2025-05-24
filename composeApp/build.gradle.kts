@@ -7,8 +7,6 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
 import org.jikvict.gradle.tasks.CleanUpSerializableTask
-import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
-import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -18,7 +16,6 @@ plugins {
     id("com.google.devtools.ksp") version "2.1.21-2.0.1"
 
     id("org.openapi.generator") version "7.13.0"
-    id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
     kotlin("plugin.serialization") version "2.1.21"
 }
 
@@ -92,6 +89,9 @@ kotlin {
                 implementation(libs.ktor.json)
                 implementation(libs.kotlin.serialization)
                 implementation(libs.tooling.preview)
+                implementation(project.dependencies.platform(libs.koin.bom))
+                implementation(libs.bundles.koin)
+
             }
         }
         commonTest {
@@ -119,7 +119,6 @@ openApiGenerate {
 
 dependencies {
     ksp(project(":processor"))
-    ktlintRuleset(libs.ktlint)
     debugImplementation(compose.uiTooling)
 }
 tasks.named("openApiGenerate") {
@@ -170,20 +169,6 @@ afterEvaluate {
 tasks.withType<org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink>().configureEach {
     dependsOn("kspKotlinWasmJs")
 }
-tasks.withType<KtLintFormatTask>().configureEach {
-    mustRunAfter("openApiGenerate")
-    mustRunAfter("kspCommonMainKotlinMetadata")
-}
-tasks.withType<KtLintCheckTask>().configureEach {
-    dependsOn("openApiGenerate")
-    dependsOn("kspCommonMainKotlinMetadata")
-}
-ktlint {
-    filter {
-        exclude { element -> element.file.path.contains("generated/") }
-        exclude("**/generated/**")
-    }
-}
 
 tasks.matching { it.name.startsWith("kspReleaseKotlinAndroid") }.configureEach {
     enabled = false
@@ -197,7 +182,4 @@ tasks.matching { it.name.startsWith("kspKotlinWasmJs") }.configureEach {
 
 tasks.matching { it.name.startsWith("kspCommonMain") }.configureEach {
     enabled = true
-}
-tasks.named("ktlintCommonMainSourceSetCheck") {
-    enabled = false
 }

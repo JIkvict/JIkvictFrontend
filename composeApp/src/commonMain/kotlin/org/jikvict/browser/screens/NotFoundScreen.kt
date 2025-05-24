@@ -10,42 +10,51 @@ import androidx.compose.ui.Modifier
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jikvict.browser.annotation.Initialize
+import org.jikvict.browser.annotation.Register
 import org.jikvict.browser.components.DefaultScreen
 import org.jikvict.browser.util.DefaultPreview
+import kotlin.reflect.KClass
 
 
 @Composable
-private fun NotFoundScreen() {
+private fun NotFoundScreenComposable() {
     DefaultScreen {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
-
-            ) {
+        ) {
             Text("Not Found Screen", color = MaterialTheme.colorScheme.onBackground)
         }
     }
 }
 
 
-@Initialize
+@Register
 @Serializable
 @SerialName("not-found")
-data object NotFoundScreen : NavigableScreen by registerNavForScreen<NotFoundScreen>(
-    object : NavigableScreen {
-        override val compose: @Composable (() -> Unit)
-            get() = {
-                NotFoundScreen()
-            }
-    },
-)
+class NotFoundScreen : NavigableScreen {
+    override val compose: @Composable (() -> Unit)
+        get() = {
+            NotFoundScreenComposable()
+        }
+}
+
+object NotFoundScreenRouterRegistrar : ScreenRouterRegistrar<NotFoundScreen> {
+    override val screen: KClass<NotFoundScreen>
+        get() = NotFoundScreen::class
+
+    override fun constructScreen(params: Map<String, String?>): NavigableScreen {
+        return NotFoundScreen()
+    }
+}
+
+object NotFoundScreenRegistrar : ScreenRegistrar<NotFoundScreen> by createRegistrar()
 
 @Preview
 @Composable
 fun NotFoundScreenPreview() {
     DefaultPreview {
-        NotFoundScreen()
+        NotFoundScreenComposable()
     }
 }

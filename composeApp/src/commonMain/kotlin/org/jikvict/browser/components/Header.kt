@@ -45,7 +45,7 @@ fun Header() {
         ) {
             IconComponent(Ijlogo)
             IconComponent(Code, hoverable = true, onClick = {
-                navController.navigate(NotFoundScreen)
+                navController.navigate(NotFoundScreen())
             })
 
         }
@@ -60,7 +60,7 @@ fun Header() {
             })
 
             IconComponent(User, hoverable = true, onClick = {
-                navController.navigate(HomeScreen)
+                navController.navigate(HomeScreen(2, "sheatySheet?a=4\\"))
             })
         }
     }
