@@ -28,7 +28,7 @@ fun main() {
             val initRoute = window.location.hash.substringAfter('#', "").substringBefore("/?")
 
             val paramsRaw = window.location.hash.substringAfter('?', "")
-            val splitParams = paramsRaw.split("&")
+            val splitParams = paramsRaw.split("&").filter { it.isNotBlank() }
 
             val params = if (splitParams.isEmpty()) {
                 emptyMap()

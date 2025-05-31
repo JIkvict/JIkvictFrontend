@@ -91,6 +91,7 @@ kotlin {
                 implementation(libs.tooling.preview)
                 implementation(project.dependencies.platform(libs.koin.bom))
                 implementation(libs.bundles.koin)
+                implementation(libs.kotlin.coroutines)
 
             }
         }
