@@ -58,6 +58,8 @@ fun MakeJarScreenComposable() {
     val lightRed = LocalAppColors.current.Red3
     val darkRed = LocalAppColors.current.Red6
     val red = mutableStateOf(if (theme) darkRed else lightRed)
+    val size: TextAutoSize = TextAutoSize.StepBased(20.sp, 116.sp, 8.sp)
+
     DefaultScreen {
         println("Recomposing with theme: $theme")
         Box(
@@ -68,7 +70,7 @@ fun MakeJarScreenComposable() {
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(0.75f),
+                    .fillMaxWidth(0.55f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -105,7 +107,7 @@ fun MakeJarScreenComposable() {
                             fontWeight = FontWeight.Bold
                         ),
                         color = { purple.value },
-                        autoSize = TextAutoSize.StepBased(20.sp, 128.sp, 8.sp),
+                        autoSize = size,
                         modifier = Modifier.weight(0.5f).fillMaxSize(),
                     )
                     BasicText(
@@ -117,7 +119,7 @@ fun MakeJarScreenComposable() {
                             fontWeight = FontWeight.Bold
                         ),
                         color = { purple.value },
-                        autoSize = TextAutoSize.StepBased(20.sp, 128.sp, 8.sp),
+                        autoSize = size,
                         modifier = Modifier.weight(0.5f).fillMaxSize(),
                     )
                 }
@@ -138,7 +140,7 @@ fun MakeJarScreenComposable() {
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold
                         ),
-                        autoSize = TextAutoSize.StepBased(20.sp, 128.sp, 8.sp),
+                        autoSize = size,
                         modifier = Modifier.weight(0.5f)
 
                     )
@@ -151,7 +153,7 @@ fun MakeJarScreenComposable() {
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold
                         ),
-                        autoSize = TextAutoSize.StepBased(20.sp, 128.sp, 8.sp),
+                        autoSize = size,
                         modifier = Modifier.weight(0.5f)
                     )
                 }

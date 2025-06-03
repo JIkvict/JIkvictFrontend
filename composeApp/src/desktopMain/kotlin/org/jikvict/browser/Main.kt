@@ -11,7 +11,7 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
             title = "",
-            undecorated = true,
+//            undecorated = true,
         ) {
             val navController = rememberNavController()
             App(navController)
