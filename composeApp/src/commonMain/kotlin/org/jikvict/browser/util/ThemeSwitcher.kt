@@ -22,6 +22,7 @@ class ThemeSwitcher(
     override fun switchTheme() {
         theme.value = if (theme.value == DarkTheme) LightTheme else DarkTheme
         localColors.value = if (theme.value == DarkTheme) DarkColors else LightColors
+        setTheme(theme.value == DarkTheme)
     }
 }
 val ThemeSwitcherProvider =

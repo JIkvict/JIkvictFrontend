@@ -36,7 +36,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.components.DefaultScreen
 import org.jikvict.browser.constant.LocalAppColors
-import org.jikvict.browser.theme.DarkTheme
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.ThemeSwitcherProvider
 import kotlin.reflect.KClass

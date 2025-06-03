@@ -77,14 +77,17 @@ kotlin {
             }
         }
 
-        sourceSets {
-            val desktopMain by getting {
-                dependencies {
-                    implementation(compose.desktop.currentOs)
-                }
+        @Suppress("unused")
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
             }
-            val desktopTest by getting
         }
+
+        @Suppress("unused")
+        val desktopTest by getting
+
+
 
         androidMain.dependencies {
             implementation(compose.preview)
