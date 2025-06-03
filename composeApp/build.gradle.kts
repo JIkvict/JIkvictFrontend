@@ -17,6 +17,7 @@ plugins {
 
     id("org.openapi.generator") version "7.13.0"
     kotlin("plugin.serialization") version "2.1.21"
+    id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha10"
 }
 
 android {
@@ -62,10 +63,28 @@ kotlin {
                 enabled = false
             }
         }
+        compilerOptions {
+            freeCompilerArgs.add("-Xwasm-debugger-custom-formatters")
+        }
         binaries.executable()
     }
 
     sourceSets {
+
+        jvm("desktop") {
+            compilations.all {
+                kotlinOptions.jvmTarget = "21"
+            }
+        }
+
+        sourceSets {
+            val desktopMain by getting {
+                dependencies {
+                    implementation(compose.desktop.currentOs)
+                }
+            }
+            val desktopTest by getting
+        }
 
         androidMain.dependencies {
             implementation(compose.preview)
@@ -92,7 +111,6 @@ kotlin {
                 implementation(project.dependencies.platform(libs.koin.bom))
                 implementation(libs.bundles.koin)
                 implementation(libs.kotlin.coroutines)
-
             }
         }
         commonTest {

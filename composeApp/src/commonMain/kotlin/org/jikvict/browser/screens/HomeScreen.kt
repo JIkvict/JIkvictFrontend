@@ -42,7 +42,7 @@ private fun HomeScreenComposable(
 
 @Register
 @Serializable
-@SerialName("home")
+@SerialName("home2")
 data class HomeScreen(
     val i: Int,
     val b: String = "default"

@@ -26,7 +26,8 @@ fun IconComponent(
     iconVector: ImageVector,
     hoverable: Boolean = false,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    tint: Color = Color.Unspecified,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
@@ -54,7 +55,7 @@ fun IconComponent(
         Icon(
             iconVector,
             contentDescription = null,
-            tint = Color.Unspecified,
+            tint = tint,
             modifier =
             Modifier
                 .size(24.dp)

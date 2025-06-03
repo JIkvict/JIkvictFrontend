@@ -9,18 +9,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.LocalNavController
+import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.icons.myiconpack.Code
 import org.jikvict.browser.icons.myiconpack.Ijlogo
 import org.jikvict.browser.icons.myiconpack.Moon
 import org.jikvict.browser.icons.myiconpack.Sun
 import org.jikvict.browser.icons.myiconpack.User
-import org.jikvict.browser.screens.HomeScreen
+import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.NotFoundScreen
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.ThemeSwitcherProvider
@@ -30,8 +31,13 @@ import org.jikvict.browser.util.ThemeSwitcherProvider
 fun Header() {
     val navController = LocalNavController.current
     val themeSwitcher = ThemeSwitcherProvider.current
-    val theme = themeSwitcher.isDark
-    val themeIcon = mutableStateOf(if (theme) Sun else Moon)
+
+    val darkPurple = LocalAppColors.current.Purple6
+    val lightPurple = LocalAppColors.current.Purple3
+    val theme by themeSwitcher.isDark
+    val purple = if (theme) darkPurple else lightPurple
+
+    val themeIcon = if (theme) Sun else Moon
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -43,7 +49,9 @@ fun Header() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(35.dp),
         ) {
-            IconComponent(Ijlogo)
+            IconComponent(Ijlogo, hoverable = true, tint = purple, onClick = {
+                navController.navigate(MakeJarScreen())
+            })
             IconComponent(Code, hoverable = true, onClick = {
                 navController.navigate(NotFoundScreen())
             })
@@ -55,12 +63,11 @@ fun Header() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(35.dp),
         ) {
-            IconComponent(themeIcon.value, hoverable = true, onClick = {
+            IconComponent(themeIcon, hoverable = true, onClick = {
                 themeSwitcher.switchTheme()
             })
 
             IconComponent(User, hoverable = true, onClick = {
-                navController.navigate(HomeScreen(2, "sheatySheet?a=4\\"))
             })
         }
     }

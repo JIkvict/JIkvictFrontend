@@ -9,7 +9,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jikvict.browser.screens.HomeScreen
+import org.jikvict.browser.constant.DarkColors
+import org.jikvict.browser.constant.LightColors
+import org.jikvict.browser.constant.LocalAppColors
+import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.registerNavForScreen
 import org.jikvict.browser.screens.registeredScreens
 import org.jikvict.browser.theme.DarkTheme
@@ -31,16 +34,18 @@ fun App(navController: NavHostController) {
     val fonts = JIkvictTypography(rememberInterFontFamily(), rememberJetBrainsMonoFontFamily())
     val themeToSet = if (getTheme()) DarkTheme else LightTheme
     val theme = remember { mutableStateOf(themeToSet) }
-    val themeSwitcher = remember { ThemeSwitcher(theme) }
+    val colors = remember { mutableStateOf(if (getTheme()) DarkColors else LightColors) }
+    val themeSwitcher = remember { ThemeSwitcher(theme, colors) }
     MaterialTheme(
         colorScheme = theme.value.colorScheme(),
         typography = fonts.typography
     ) {
         CompositionLocalProvider(
             LocalNavController provides navController,
-            ThemeSwitcherProvider provides themeSwitcher
+            ThemeSwitcherProvider provides themeSwitcher,
+            LocalAppColors provides colors.value
         ) {
-            NavHost(navController, startDestination = HomeScreen(1)) {
+            NavHost(navController, startDestination = MakeJarScreen()) {
                 registeredScreens.forEach { screen ->
                     registerNavForScreen(screen)
                 }
