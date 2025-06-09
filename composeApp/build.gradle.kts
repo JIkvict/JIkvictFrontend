@@ -114,6 +114,11 @@ kotlin {
                 implementation(project.dependencies.platform(libs.koin.bom))
                 implementation(libs.bundles.koin)
                 implementation(libs.kotlin.coroutines)
+                implementation(libs.adaptive)
+                implementation(libs.adaptive.layout)
+                implementation(libs.adaptive.navigation)
+                implementation(libs.material3.window.size.class1)
+                implementation(libs.bundles.compottie)
             }
         }
         commonTest {

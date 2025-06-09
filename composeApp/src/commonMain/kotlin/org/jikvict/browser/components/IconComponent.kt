@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
@@ -59,6 +60,48 @@ fun IconComponent(
             modifier =
             Modifier
                 .size(24.dp)
+        )
+    }
+}
+
+@Composable
+fun IconComponent(
+    iconPainter: Painter,
+    hoverable: Boolean = false,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    tint: Color = Color.Unspecified,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    Box(
+        modifier =
+            Modifier
+                .size(32.dp)
+                .hoverable(interactionSource, hoverable)
+                .then(
+                    if (onClick != null) {
+                        Modifier.clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            onClick = onClick
+                        )
+                    } else {
+                        Modifier
+                    }
+                ).background(
+                    if (isHovered && hoverable) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                    RoundedCornerShape(8.dp)
+                ).then(modifier),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            iconPainter,
+            contentDescription = null,
+            tint = tint,
+            modifier =
+                Modifier
+                    .size(24.dp)
         )
     }
 }
