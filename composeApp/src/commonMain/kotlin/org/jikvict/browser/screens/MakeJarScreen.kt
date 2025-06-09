@@ -99,6 +99,9 @@ fun MakeJarScreenComposable() {
         val screenHeight = constraints.maxHeight
 
         val density = LocalDensity.current
+        with(density) {
+            println("Screen width: ${screenWidth.toPx()} px, height: ${screenHeight.toPx()} px")
+        }
         val jarWarOffsetY = remember { mutableStateOf(0) }
         val jarWarHeightPx = remember { mutableStateOf(0) }
 
@@ -111,6 +114,7 @@ fun MakeJarScreenComposable() {
                 with(density) { (remainingPx / 2f).toDp() }
             }
         }
+        println("jarWarHeightPx: ${jarWarHeightPx.value}, screenHeight: $screenHeight, spacerHeightDp: $spacerHeightDp")
 
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -237,34 +241,20 @@ fun MakeJarScreenComposable() {
                     val isHovered by interactionSource.collectIsHoveredAsState()
 
                     var animationProgress by remember { mutableFloatStateOf(0f) }
-                    var isAnimating by remember { mutableStateOf(false) }
-                    var targetProgress by remember { mutableFloatStateOf(0f) }
 
                     LaunchedEffect(isHovered) {
                         if (isHovered) {
-                            targetProgress = 1f
-                            isAnimating = true
-                        } else {
-                            targetProgress = 0f
-                            isAnimating = true
-                        }
-                    }
-
-                    LaunchedEffect(isAnimating) {
-                        if (isAnimating) {
                             val steps = 30
                             val stepDuration = 16L * 3
-                            val startProgress = animationProgress
-                            val progressDiff = targetProgress - startProgress
 
                             repeat(steps) { step ->
-                                animationProgress = startProgress + (progressDiff * (step / (steps - 1f)))
+                                animationProgress = step / (steps - 1f)
                                 delay(stepDuration)
                             }
 
-                            animationProgress = targetProgress
-
-                            isAnimating = false
+                            animationProgress = 1f
+                        } else {
+                            animationProgress = 0f
                         }
                     }
 
@@ -338,7 +328,7 @@ data class FeedItem(
 @Serializable
 @SerialName("home")
 class MakeJarScreen : NavigableScreen {
-    override val compose: @Composable (() -> Unit)
+    override val largeScreen: @Composable (() -> Unit)
         get() = { MakeJarScreenComposable() }
 }
 

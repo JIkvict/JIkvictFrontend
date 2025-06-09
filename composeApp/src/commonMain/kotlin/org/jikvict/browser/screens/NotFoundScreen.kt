@@ -34,7 +34,7 @@ private fun NotFoundScreenComposable() {
 @Serializable
 @SerialName("not-found")
 class NotFoundScreen : NavigableScreen {
-    override val compose: @Composable (() -> Unit)
+    override val largeScreen: @Composable (() -> Unit)
         get() = {
             NotFoundScreenComposable()
         }

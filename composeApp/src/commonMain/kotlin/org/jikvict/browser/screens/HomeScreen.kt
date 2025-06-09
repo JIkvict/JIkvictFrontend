@@ -47,7 +47,7 @@ data class HomeScreen(
     val i: Int,
     val b: String = "default"
 ) : NavigableScreen {
-    override val compose: @Composable (() -> Unit)
+    override val largeScreen: @Composable (() -> Unit)
         get() = {
             HomeScreenComposable(i)
         }
