@@ -14,6 +14,8 @@ class MakeJarScreenViewModel : ViewModel() {
     private val _feedItems = MutableStateFlow<List<FeedItem>>(emptyList())
     val feedItems = _feedItems.asStateFlow()
 
+    private val _jarWarOffsetY = MutableStateFlow(0)
+    val jarWarOffsetY = _jarWarOffsetY.asStateFlow()
 
     private val _jarWarHeightPx = MutableStateFlow(0)
     val jarWarHeightPx = _jarWarHeightPx.asStateFlow()
@@ -43,6 +45,10 @@ class MakeJarScreenViewModel : ViewModel() {
 
     fun updateJarWarHeightPx(height: Int) {
         _jarWarHeightPx.value = height
+    }
+
+    fun updateJarWarOffsetY(offset: Int) {
+        _jarWarOffsetY.value = offset
     }
 
     fun updateGridPosition(position: Int) {
