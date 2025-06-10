@@ -9,24 +9,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import io.github.alexzhirkevich.compottie.LottieCompositionSpec
-import io.github.alexzhirkevich.compottie.rememberLottieComposition
-import io.github.alexzhirkevich.compottie.rememberLottiePainter
-import jikvictfrontend.composeapp.generated.resources.Res
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.LocalNavController
 import org.jikvict.browser.constant.LocalAppColors
-import org.jikvict.browser.icons.myiconpack.Code
 import org.jikvict.browser.icons.myiconpack.Ijlogo
 import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.NotFoundScreen
@@ -38,79 +31,15 @@ import org.jikvict.browser.util.ThemeSwitcherProvider
 fun Header(modifier: Modifier = Modifier) {
     val navController = LocalNavController.current
     val themeSwitcher = ThemeSwitcherProvider.current
+    val coroutineScope = rememberCoroutineScope()
 
     val darkPurple = LocalAppColors.current.Purple6
     val lightPurple = LocalAppColors.current.Purple3
     val theme by themeSwitcher.isDark
     val purple = if (theme) darkPurple else lightPurple
 
-    val themeAnimatedIcon by rememberLottieComposition {
-        LottieCompositionSpec.JsonString(
-            Res.readBytes("files/sun-moon.json").decodeToString()
-        )
-    }
-    val userAnimatedIcon by rememberLottieComposition {
-        LottieCompositionSpec.JsonString(
-            Res.readBytes("files/user-animation.json").decodeToString()
-        )
-    }
+    val moonTint = if (!theme) Color.Black else Color.Unspecified
 
-    var isThemeAnimating by remember { mutableStateOf(false) }
-    var themeProgress by remember { mutableFloatStateOf(if (theme) 0f else 1f) }
-
-    var isUserAnimating by remember { mutableStateOf(false) }
-    var userProgress by remember { mutableFloatStateOf(0f) }
-
-    LaunchedEffect(theme) {
-        if (!isThemeAnimating) {
-            themeProgress = if (theme) 0f else 1f
-        }
-    }
-
-    LaunchedEffect(isThemeAnimating) {
-        if (isThemeAnimating) {
-            val targetProgress = if (themeProgress < 0.5f) 1f else 0f
-            val startProgress = themeProgress
-
-            val steps = 30
-            val stepDuration = 16L
-            val stepSize = (targetProgress - startProgress) / steps
-
-            repeat(steps) { step ->
-                themeProgress = startProgress + stepSize * (step + 1)
-                delay(stepDuration)
-            }
-
-            themeProgress = targetProgress
-
-            themeSwitcher.switchTheme()
-
-            isThemeAnimating = false
-        }
-    }
-
-    LaunchedEffect(isUserAnimating) {
-        if (isUserAnimating) {
-            val steps = 30
-            val stepDuration = 16L
-
-            repeat(steps) { step ->
-                userProgress = step / (steps - 1f)
-                delay(stepDuration)
-            }
-
-            userProgress = 1f
-
-            repeat(steps) { step ->
-                userProgress = 1f - (step / (steps - 1f))
-                delay(stepDuration)
-            }
-
-            userProgress = 0f
-
-            isUserAnimating = false
-        }
-    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -126,11 +55,20 @@ fun Header(modifier: Modifier = Modifier) {
             IconComponent(Ijlogo, hoverable = true, tint = purple, onClick = {
                 navController.navigate(MakeJarScreen())
             })
-            IconComponent(Code, hoverable = true, onClick = {
-                println("I was clicked")
-                navController.navigate(NotFoundScreen())
-            })
 
+            AnimatedIconComponent(
+                animationPath = "files/code-animation.json",
+                hoverable = true,
+                onClick = {
+                    coroutineScope.launch {
+                        delay(150)
+                        navController.navigate(NotFoundScreen())
+                    }
+                },
+                animationType = AnimationType.TOGGLE,
+                tint = MaterialTheme.colorScheme.onSurface,
+                speed = 2f
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -138,25 +76,25 @@ fun Header(modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(35.dp),
         ) {
-            IconComponent(
-                rememberLottiePainter(
-                    composition = themeAnimatedIcon,
-                    progress = { themeProgress }
-                ), hoverable = true, tint = MaterialTheme.colorScheme.onSurface, onClick = {
-                    if (!isThemeAnimating) {
-                        isThemeAnimating = true
-                    }
-                })
+            AnimatedIconComponent(
+                animationPath = "files/sun-moon.json",
+                hoverable = true,
+                tint = moonTint,
+                initialProgress = if (theme) 0f else 1f,
+                onEnd = {
+                    themeSwitcher.switchTheme()
+                },
+                animationType = AnimationType.TOGGLE,
+                speed = 1f
+            )
 
-            IconComponent(
-                rememberLottiePainter(
-                    composition = userAnimatedIcon,
-                    progress = { userProgress }
-                ), hoverable = true, tint = MaterialTheme.colorScheme.onSurface, onClick = {
-                    if (!isUserAnimating) {
-                        isUserAnimating = true
-                    }
-                })
+            AnimatedIconComponent(
+                animationPath = "files/user-animation.json",
+                hoverable = true,
+                tint = MaterialTheme.colorScheme.onSurface,
+                animationType = AnimationType.ONCE_FORWARD,
+                speed = 1f
+            )
         }
     }
 }

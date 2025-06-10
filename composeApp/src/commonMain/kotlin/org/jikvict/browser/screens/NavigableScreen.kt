@@ -4,9 +4,7 @@ import androidx.compose.runtime.Composable
 
 interface NavigableScreen {
     val compose: @Composable (() -> Unit)
-        get() = {
-
-        }
+        get() = largeScreen
     val largeScreen: @Composable (() -> Unit)
     val smallScreen: @Composable (() -> Unit)
         get() = largeScreen
