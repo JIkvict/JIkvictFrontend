@@ -12,6 +12,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
+import org.jikvict.browser.di.appModule
 import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.registerNavForScreen
 import org.jikvict.browser.screens.registeredScreens
@@ -23,6 +24,8 @@ import org.jikvict.browser.theme.rememberJetBrainsMonoFontFamily
 import org.jikvict.browser.util.ThemeSwitcher
 import org.jikvict.browser.util.ThemeSwitcherProvider
 import org.jikvict.browser.util.getTheme
+import org.koin.compose.KoinContext
+import org.koin.core.context.startKoin
 
 
 // TODO: Сделать @Register(name) аннотацию чтобы создать список name с обьектами помеченными этой аннотацией
@@ -36,18 +39,25 @@ fun App(navController: NavHostController) {
     val theme = remember { mutableStateOf(themeToSet) }
     val colors = remember { mutableStateOf(if (getTheme()) DarkColors else LightColors) }
     val themeSwitcher = remember { ThemeSwitcher(theme, colors) }
-    MaterialTheme(
-        colorScheme = theme.value.colorScheme(),
-        typography = fonts.typography
-    ) {
-        CompositionLocalProvider(
-            LocalNavController provides navController,
-            ThemeSwitcherProvider provides themeSwitcher,
-            LocalAppColors provides colors.value
+    startKoin {
+        modules(
+            appModule
+        )
+    }
+    KoinContext {
+        MaterialTheme(
+            colorScheme = theme.value.colorScheme(),
+            typography = fonts.typography
         ) {
-            NavHost(navController, startDestination = MakeJarScreen()) {
-                registeredScreens.forEach { screen ->
-                    registerNavForScreen(screen)
+            CompositionLocalProvider(
+                LocalNavController provides navController,
+                ThemeSwitcherProvider provides themeSwitcher,
+                LocalAppColors provides colors.value
+            ) {
+                NavHost(navController, startDestination = MakeJarScreen()) {
+                    registeredScreens.forEach { screen ->
+                        registerNavForScreen(screen)
+                    }
                 }
             }
         }
@@ -59,4 +69,3 @@ val LocalNavController =
     staticCompositionLocalOf<NavHostController> {
         error("No NavController provided")
     }
-

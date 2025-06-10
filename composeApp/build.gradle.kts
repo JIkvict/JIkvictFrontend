@@ -81,17 +81,26 @@ kotlin {
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation(libs.kotlin.coroutines.swing)
             }
         }
 
         @Suppress("unused")
         val desktopTest by getting
 
+        @Suppress("unused")
+        val wasmJsMain by getting {
+            dependencies {
+                implementation(libs.kotlin.coroutines.js)
+            }
+        }
+
 
 
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.kotlin.coroutines.android)
         } // To delete
         commonMain {
             kotlin.srcDir("${layout.buildDirectory.get()}/generated/openapi/src/commonMain/kotlin")

@@ -23,6 +23,7 @@ import org.jikvict.browser.util.DefaultPreview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DefaultScreen(content: @Composable ColumnScope.(DefaultScreenScope) -> Unit) {
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize(),
@@ -31,6 +32,7 @@ fun DefaultScreen(content: @Composable ColumnScope.(DefaultScreenScope) -> Unit)
         val boxWithConstraintsScope = this@BoxWithConstraints
         val verticalScroll = rememberScrollState()
         val headerHeight = mutableStateOf(0)
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
