@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.annotation.Register
 import org.jikvict.browser.components.DefaultScreen
+import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.util.DefaultPreview
 import kotlin.reflect.KClass
 
@@ -47,7 +48,7 @@ data class HomeScreen(
     val i: Int,
     val b: String = "default"
 ) : NavigableScreen {
-    override val largeScreen: @Composable (() -> Unit)
+    override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = {
             HomeScreenComposable(i)
         }

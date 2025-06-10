@@ -9,6 +9,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import org.jikvict.browser.components.DefaultScreenScope
 import kotlin.reflect.KClass
 
 interface ScreenRegistrar<T : NavigableScreen> {
@@ -16,16 +17,17 @@ interface ScreenRegistrar<T : NavigableScreen> {
     fun UseNavEntry(
         scope: AnimatedContentScope,
         entry: NavBackStackEntry,
+        defaultScope: DefaultScreenScope
     ) {
         val block = provideRegisterFunction()
-        scope.block(entry)
+        scope.block(entry, defaultScope)
     }
     fun getType(): KClass<T>
 
-    fun provideRegisterFunction(): @Composable (AnimatedContentScope.(NavBackStackEntry) -> Unit) {
-        return { entry ->
+    fun provideRegisterFunction(): @Composable (AnimatedContentScope.(NavBackStackEntry, DefaultScreenScope) -> Unit) {
+        return { entry, scope ->
             val route = entry.toRoute<T>(getType())
-            route.compose()
+            route.compose(scope)
         }
     }
 }
@@ -40,7 +42,7 @@ inline fun <reified T: NavigableScreen> createRegistrar(): ScreenRegistrar<T> {
     }
 }
 
-fun NavGraphBuilder.registerNavForScreen(screenRegistrar: ScreenRegistrar<out NavigableScreen>) {
+fun NavGraphBuilder.registerNavForScreen(screenRegistrar: ScreenRegistrar<out NavigableScreen>, scope: DefaultScreenScope) {
     composable(
         route = screenRegistrar.getType(),
         enterTransition = { fadeIn(animationSpec = tween(100)) },
@@ -49,6 +51,6 @@ fun NavGraphBuilder.registerNavForScreen(screenRegistrar: ScreenRegistrar<out Na
         popExitTransition = { fadeOut(animationSpec = tween(100)) },
 
         ) {
-        screenRegistrar.UseNavEntry(this, it)
+        screenRegistrar.UseNavEntry(this, it, scope)
     }
 }

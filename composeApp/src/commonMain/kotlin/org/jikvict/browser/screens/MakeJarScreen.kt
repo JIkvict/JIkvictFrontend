@@ -58,7 +58,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jikvict.browser.components.DefaultScreen
+import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.IconComponent
 import org.jikvict.browser.components.SimpleStaggeredGrid
 import org.jikvict.browser.constant.LocalAppColors
@@ -69,7 +69,7 @@ import kotlin.reflect.KClass
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalFoundationApi::class)
 @Composable
-fun MakeJarScreenComposable() {
+fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
     val iconId = "icon"
     val annotatedText = buildAnnotatedString {
         append("MA")
@@ -92,211 +92,209 @@ fun MakeJarScreenComposable() {
         FeedItem("Title $index", "Description $index", height = 120 + (index % 3) * 40)
     }
 
-    DefaultScreen { defaultScope ->
-        val constraints = defaultScope.boxWithConstraintsScope
-        val screenWidth = constraints.maxWidth
-        val isLargeScreen = screenWidth >= 600.dp
-        val screenHeight = constraints.maxHeight
+    val constraints = defaultScope.boxWithConstraintsScope
+    val screenWidth = constraints.maxWidth
+    val isLargeScreen = screenWidth >= 600.dp
+    val screenHeight = constraints.maxHeight
 
-        val density = LocalDensity.current
-        with(density) {
-            println("Screen width: ${screenWidth.toPx()} px, height: ${screenHeight.toPx()} px")
+    val density = LocalDensity.current
+    with(density) {
+        println("Screen width: ${screenWidth.toPx()} px, height: ${screenHeight.toPx()} px")
+    }
+    val jarWarOffsetY = remember { mutableStateOf(0) }
+    val jarWarHeightPx = remember { mutableStateOf(0) }
+
+    val spacerHeightDp = remember(jarWarHeightPx.value, screenHeight) {
+        if (jarWarHeightPx.value == 0) {
+            0.dp
+        } else {
+            val totalHeightPx = with(density) { screenHeight.toPx() }
+            val remainingPx = (totalHeightPx - jarWarHeightPx.value - defaultScope.headerHeight).coerceAtLeast(0f)
+            with(density) { (remainingPx / 2f).toDp() }
         }
-        val jarWarOffsetY = remember { mutableStateOf(0) }
-        val jarWarHeightPx = remember { mutableStateOf(0) }
+    }
+    println("jarWarHeightPx: ${jarWarHeightPx.value}, screenHeight: $screenHeight, spacerHeightDp: $spacerHeightDp")
 
-        val spacerHeightDp = remember(jarWarHeightPx.value, screenHeight) {
-            if (jarWarHeightPx.value == 0) {
-                0.dp
-            } else {
-                val totalHeightPx = with(density) { screenHeight.toPx() }
-                val remainingPx = (totalHeightPx - jarWarHeightPx.value - defaultScope.headerHeight).coerceAtLeast(0f)
-                with(density) { (remainingPx / 2f).toDp() }
-            }
-        }
-        println("jarWarHeightPx: ${jarWarHeightPx.value}, screenHeight: $screenHeight, spacerHeightDp: $spacerHeightDp")
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            val gridPosition = mutableStateOf(0)
-            Spacer(modifier = Modifier.height(spacerHeightDp))
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(0.45f)
-                        .wrapContentHeight()
-                        .onGloballyPositioned {
-                            jarWarHeightPx.value = it.size.height
-                            jarWarOffsetY.value = it.positionInParent().y.toInt()
-                        },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .wrapContentHeight()
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val inlineContent = mapOf(
-                            iconId to InlineTextContent(
-                                Placeholder(
-                                    width = 1.em,
-                                    height = 1.em,
-                                    placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
-                                )
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.kotlink),
-                                    contentDescription = null,
-                                    tint = purple.value,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            BasicText(
-                                text = annotatedText,
-                                inlineContent = inlineContent,
-                                minLines = 1,
-                                maxLines = 1,
-                                style = MaterialTheme.typography.headlineLarge.copy(
-                                    textAlign = TextAlign.Left,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = { purple.value },
-                                autoSize = if (isLargeScreen) size else null,
-                                modifier = Modifier.weight(0.5f)
-                            )
-                            BasicText(
-                                text = ".JAR",
-                                minLines = 1,
-                                maxLines = 1,
-                                style = MaterialTheme.typography.headlineLarge.copy(
-                                    textAlign = TextAlign.Right,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = { purple.value },
-                                autoSize = if (isLargeScreen) size else null,
-                                modifier = Modifier.weight(0.5f)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .wrapContentHeight()
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            BasicText(
-                                text = "NOT",
-                                minLines = 1,
-                                maxLines = 1,
-                                color = { red.value },
-                                style = MaterialTheme.typography.headlineLarge.copy(
-                                    textAlign = TextAlign.Left,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                autoSize = if (isLargeScreen) size else null,
-                                modifier = Modifier.weight(0.5f)
-                            )
-                            BasicText(
-                                text = ".WAR",
-                                minLines = 1,
-                                maxLines = 1,
-                                color = { red.value },
-                                style = MaterialTheme.typography.headlineLarge.copy(
-                                    textAlign = TextAlign.Right,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                autoSize = if (isLargeScreen) size else null,
-                                modifier = Modifier.weight(0.5f)
-                            )
-                        }
-                    }
-                }
-                val scope = rememberCoroutineScope()
-                if (defaultScope.verticalScroll.value < (spacerHeightDp / 2).value) {
-                    val scrollDownAnimation by rememberLottieComposition {
-                        LottieCompositionSpec.JsonString(
-                            Res.readBytes("files/scroll-down.json").decodeToString()
-                        )
-                    }
-
-                    val interactionSource = remember { MutableInteractionSource() }
-                    val isHovered by interactionSource.collectIsHoveredAsState()
-
-                    var animationProgress by remember { mutableFloatStateOf(0f) }
-
-                    LaunchedEffect(isHovered) {
-                        if (isHovered) {
-                            val steps = 30
-                            val stepDuration = 16L * 3
-
-                            repeat(steps) { step ->
-                                animationProgress = step / (steps - 1f)
-                                delay(stepDuration)
-                            }
-
-                            animationProgress = 1f
-                        } else {
-                            animationProgress = 0f
-                        }
-                    }
-
-                    FloatingActionButton(
-                        onClick = {
-                            val scope = scope
-                            scope.launch {
-                                defaultScope.verticalScroll.animateScrollTo(gridPosition.value)
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .offset(y = spacerHeightDp / 2)
-                            .hoverable(interactionSource, true),
-                    ) {
-                        IconComponent(
-                            rememberLottiePainter(
-                                composition = scrollDownAnimation,
-                                progress = { animationProgress }
-                            ),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(spacerHeightDp))
-
-            SimpleStaggeredGrid(
-                columns = if (isLargeScreen) 2 else 1,
-                modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f).onGloballyPositioned {
-                    gridPosition.value = it.positionInParent().y.toInt()
-                },
-                verticalSpacing = 10,
-                horizontalSpacing = 10
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        val gridPosition = mutableStateOf(0)
+        Spacer(modifier = Modifier.height(spacerHeightDp))
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(0.45f)
+                    .wrapContentHeight()
+                    .onGloballyPositioned {
+                        jarWarHeightPx.value = it.size.height
+                        jarWarOffsetY.value = it.positionInParent().y.toInt()
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                feedItems.forEach {
-                    FeedCard(it)
+                Box(
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val inlineContent = mapOf(
+                        iconId to InlineTextContent(
+                            Placeholder(
+                                width = 1.em,
+                                height = 1.em,
+                                placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.kotlink),
+                                contentDescription = null,
+                                tint = purple.value,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        BasicText(
+                            text = annotatedText,
+                            inlineContent = inlineContent,
+                            minLines = 1,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                textAlign = TextAlign.Left,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = { purple.value },
+                            autoSize = if (isLargeScreen) size else null,
+                            modifier = Modifier.weight(0.5f)
+                        )
+                        BasicText(
+                            text = ".JAR",
+                            minLines = 1,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                textAlign = TextAlign.Right,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = { purple.value },
+                            autoSize = if (isLargeScreen) size else null,
+                            modifier = Modifier.weight(0.5f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Box(
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        BasicText(
+                            text = "NOT",
+                            minLines = 1,
+                            maxLines = 1,
+                            color = { red.value },
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                textAlign = TextAlign.Left,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            autoSize = if (isLargeScreen) size else null,
+                            modifier = Modifier.weight(0.5f)
+                        )
+                        BasicText(
+                            text = ".WAR",
+                            minLines = 1,
+                            maxLines = 1,
+                            color = { red.value },
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                textAlign = TextAlign.Right,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            autoSize = if (isLargeScreen) size else null,
+                            modifier = Modifier.weight(0.5f)
+                        )
+                    }
                 }
             }
+            val scope = rememberCoroutineScope()
+            if (defaultScope.verticalScroll.value < (spacerHeightDp / 2).value) {
+                val scrollDownAnimation by rememberLottieComposition {
+                    LottieCompositionSpec.JsonString(
+                        Res.readBytes("files/scroll-down.json").decodeToString()
+                    )
+                }
 
+                val interactionSource = remember { MutableInteractionSource() }
+                val isHovered by interactionSource.collectIsHoveredAsState()
+
+                var animationProgress by remember { mutableFloatStateOf(0f) }
+
+                LaunchedEffect(isHovered) {
+                    if (isHovered) {
+                        val steps = 30
+                        val stepDuration = 16L * 3
+
+                        repeat(steps) { step ->
+                            animationProgress = step / (steps - 1f)
+                            delay(stepDuration)
+                        }
+
+                        animationProgress = 1f
+                    } else {
+                        animationProgress = 0f
+                    }
+                }
+
+                FloatingActionButton(
+                    onClick = {
+                        val scope = scope
+                        scope.launch {
+                            defaultScope.verticalScroll.animateScrollTo(gridPosition.value)
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .offset(y = spacerHeightDp / 2)
+                        .hoverable(interactionSource, true),
+                ) {
+                    IconComponent(
+                        rememberLottiePainter(
+                            composition = scrollDownAnimation,
+                            progress = { animationProgress }
+                        ),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
+
+        Spacer(modifier = Modifier.height(spacerHeightDp))
+
+        SimpleStaggeredGrid(
+            columns = if (isLargeScreen) 2 else 1,
+            modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f).onGloballyPositioned {
+                gridPosition.value = it.positionInParent().y.toInt()
+            },
+            verticalSpacing = 10,
+            horizontalSpacing = 10
+        ) {
+            feedItems.forEach {
+                FeedCard(it)
+            }
+        }
+
     }
 }
 
@@ -328,8 +326,8 @@ data class FeedItem(
 @Serializable
 @SerialName("home")
 class MakeJarScreen : NavigableScreen {
-    override val largeScreen: @Composable (() -> Unit)
-        get() = { MakeJarScreenComposable() }
+    override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
+        get() = { MakeJarScreenComposable(it) }
 }
 
 object MakeJarScreenRouterRegistrar : ScreenRouterRegistrar<MakeJarScreen> {
@@ -347,7 +345,7 @@ object MakeJarScreenRegistrar : ScreenRegistrar<MakeJarScreen> by createRegistra
 @Composable
 fun MakeJarScreenPreview() {
     DefaultPreview {
-        MakeJarScreenComposable()
+        MakeJarScreenComposable(it)
     }
 }
 
@@ -355,6 +353,6 @@ fun MakeJarScreenPreview() {
 @Composable
 fun MakeJarScreenPreviewLight() {
     DefaultPreview(false) {
-        MakeJarScreenComposable()
+        MakeJarScreenComposable(it)
     }
 }

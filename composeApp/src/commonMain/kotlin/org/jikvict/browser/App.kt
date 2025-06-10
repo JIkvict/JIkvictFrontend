@@ -9,6 +9,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jikvict.browser.components.DefaultScreen
 import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
@@ -54,9 +55,11 @@ fun App(navController: NavHostController) {
                 ThemeSwitcherProvider provides themeSwitcher,
                 LocalAppColors provides colors.value
             ) {
-                NavHost(navController, startDestination = MakeJarScreen()) {
-                    registeredScreens.forEach { screen ->
-                        registerNavForScreen(screen)
+                DefaultScreen {scope ->
+                    NavHost(navController, startDestination = MakeJarScreen()) {
+                        registeredScreens.forEach { screen ->
+                            registerNavForScreen(screen, scope)
+                        }
                     }
                 }
             }

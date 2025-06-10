@@ -7,6 +7,8 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.navigation.compose.rememberNavController
 import org.jikvict.browser.LocalNavController
+import org.jikvict.browser.components.DefaultScreen
+import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
@@ -15,7 +17,7 @@ import org.jikvict.browser.theme.LightTheme
 
 
 @Composable
-fun DefaultPreview(isDark: Boolean = true, content: @Composable () -> Unit) {
+fun DefaultPreview(isDark: Boolean = true, content: @Composable (DefaultScreenScope) -> Unit) {
     val theme = if (isDark) {
         DarkTheme
     } else {
@@ -29,7 +31,9 @@ fun DefaultPreview(isDark: Boolean = true, content: @Composable () -> Unit) {
             ThemeSwitcherProvider provides themeSwitcher,
             LocalAppColors provides if (isDark) DarkColors else LightColors
         ) {
-            content()
+            DefaultScreen {
+                content(it)
+            }
         }
     }
 }
