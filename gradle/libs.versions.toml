@@ -38,7 +38,6 @@ koin-compose-viewmodel = {module = "io.insert-koin:koin-compose-viewmodel", vers
 koin-compose-viewmodel-navigation = {module = "io.insert-koin:koin-compose-viewmodel-navigation", version.ref = "koin-bom"}
 kotlin-coroutines = {module ="org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines"}
 kotlin-coroutines-swing = {module ="org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "coroutines"}
-kotlin-coroutines-js = {module ="org.jetbrains.kotlinx:kotlinx-coroutines-js", version.ref = "coroutines"}
 kotlin-coroutines-android = {module ="org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines"}
 compottie = { module = "io.github.alexzhirkevich:compottie", version.ref = "compottie" }
 compottie-dot = { module = "io.github.alexzhirkevich:compottie-dot", version.ref = "compottie" }

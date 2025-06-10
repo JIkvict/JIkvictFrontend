@@ -91,7 +91,6 @@ kotlin {
         @Suppress("unused")
         val wasmJsMain by getting {
             dependencies {
-                implementation(libs.kotlin.coroutines.js)
             }
         }
 

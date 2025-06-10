@@ -28,12 +28,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -52,7 +50,6 @@ import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import jikvictfrontend.composeapp.generated.resources.Res
 import jikvictfrontend.composeapp.generated.resources.kotlink
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -64,12 +61,16 @@ import org.jikvict.browser.components.SimpleStaggeredGrid
 import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.ThemeSwitcherProvider
+import org.jikvict.browser.viewmodel.MakeJarScreenViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
 
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
+    val viewModel = koinViewModel<MakeJarScreenViewModel>()
+
     val iconId = "icon"
     val annotatedText = buildAnnotatedString {
         append("MA")
@@ -79,18 +80,15 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
 
     val themeSwitcher = ThemeSwitcherProvider.current
     val theme by themeSwitcher.isDark
+    val appColors = LocalAppColors.current
 
-    val lightPurple = LocalAppColors.current.Purple3
-    val darkPurple = LocalAppColors.current.Purple6
-    val purple = mutableStateOf(if (theme) darkPurple else lightPurple)
-    val lightRed = LocalAppColors.current.Red3
-    val darkRed = LocalAppColors.current.Red6
-    val red = mutableStateOf(if (theme) darkRed else lightRed)
+    viewModel.updateColors(theme, appColors)
+
+    val purple by viewModel.purpleColor.collectAsState()
+    val red by viewModel.redColor.collectAsState()
     val size: TextAutoSize = TextAutoSize.StepBased(20.sp, 116.sp, 8.sp)
 
-    val feedItems = List(20) { index ->
-        FeedItem("Title $index", "Description $index", height = 120 + (index % 3) * 40)
-    }
+    val feedItems by viewModel.feedItems.collectAsState()
 
     val constraints = defaultScope.boxWithConstraintsScope
     val screenWidth = constraints.maxWidth
@@ -98,28 +96,24 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
     val screenHeight = constraints.maxHeight
 
     val density = LocalDensity.current
-    with(density) {
-        println("Screen width: ${screenWidth.toPx()} px, height: ${screenHeight.toPx()} px")
-    }
-    val jarWarOffsetY = remember { mutableStateOf(0) }
-    val jarWarHeightPx = remember { mutableStateOf(0) }
 
-    val spacerHeightDp = remember(jarWarHeightPx.value, screenHeight) {
-        if (jarWarHeightPx.value == 0) {
+    val jarWarHeightPx by viewModel.jarWarHeightPx.collectAsState()
+
+    val spacerHeightDp = remember(jarWarHeightPx, screenHeight) {
+        if (jarWarHeightPx == 0) {
             0.dp
         } else {
             val totalHeightPx = with(density) { screenHeight.toPx() }
-            val remainingPx = (totalHeightPx - jarWarHeightPx.value - defaultScope.headerHeight).coerceAtLeast(0f)
+            val remainingPx = (totalHeightPx - jarWarHeightPx - defaultScope.headerHeight).coerceAtLeast(0f)
             with(density) { (remainingPx / 2f).toDp() }
         }
     }
-    println("jarWarHeightPx: ${jarWarHeightPx.value}, screenHeight: $screenHeight, spacerHeightDp: $spacerHeightDp")
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val gridPosition = mutableStateOf(0)
+        val gridPosition by viewModel.gridPosition.collectAsState()
         Spacer(modifier = Modifier.height(spacerHeightDp))
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
@@ -127,8 +121,8 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                     .fillMaxWidth(0.45f)
                     .wrapContentHeight()
                     .onGloballyPositioned {
-                        jarWarHeightPx.value = it.size.height
-                        jarWarOffsetY.value = it.positionInParent().y.toInt()
+                        viewModel.updateJarWarHeightPx(it.size.height)
+                        viewModel.updateJarWarOffsetY(it.positionInParent().y.toInt())
                     },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -149,7 +143,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                             Icon(
                                 painter = painterResource(Res.drawable.kotlink),
                                 contentDescription = null,
-                                tint = purple.value,
+                                tint = purple,
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -169,7 +163,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                                 textAlign = TextAlign.Left,
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = { purple.value },
+                            color = { purple },
                             autoSize = if (isLargeScreen) size else null,
                             modifier = Modifier.weight(0.5f)
                         )
@@ -181,7 +175,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                                 textAlign = TextAlign.Right,
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = { purple.value },
+                            color = { purple },
                             autoSize = if (isLargeScreen) size else null,
                             modifier = Modifier.weight(0.5f)
                         )
@@ -205,7 +199,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                             text = "NOT",
                             minLines = 1,
                             maxLines = 1,
-                            color = { red.value },
+                            color = { red },
                             style = MaterialTheme.typography.headlineLarge.copy(
                                 textAlign = TextAlign.Left,
                                 fontWeight = FontWeight.Bold
@@ -217,7 +211,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                             text = ".WAR",
                             minLines = 1,
                             maxLines = 1,
-                            color = { red.value },
+                            color = { red },
                             style = MaterialTheme.typography.headlineLarge.copy(
                                 textAlign = TextAlign.Right,
                                 fontWeight = FontWeight.Bold
@@ -238,30 +232,17 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
 
                 val interactionSource = remember { MutableInteractionSource() }
                 val isHovered by interactionSource.collectIsHoveredAsState()
-
-                var animationProgress by remember { mutableFloatStateOf(0f) }
+                val animationProgress by viewModel.animationProgress.collectAsState()
 
                 LaunchedEffect(isHovered) {
-                    if (isHovered) {
-                        val steps = 30
-                        val stepDuration = 16L * 3
-
-                        repeat(steps) { step ->
-                            animationProgress = step / (steps - 1f)
-                            delay(stepDuration)
-                        }
-
-                        animationProgress = 1f
-                    } else {
-                        animationProgress = 0f
-                    }
+                    viewModel.animateHover(isHovered)
                 }
 
                 FloatingActionButton(
                     onClick = {
                         val scope = scope
                         scope.launch {
-                            defaultScope.verticalScroll.animateScrollTo(gridPosition.value)
+                            defaultScope.verticalScroll.animateScrollTo(gridPosition)
                         }
                     },
                     modifier = Modifier
@@ -285,7 +266,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
         SimpleStaggeredGrid(
             columns = if (isLargeScreen) 2 else 1,
             modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f).onGloballyPositioned {
-                gridPosition.value = it.positionInParent().y.toInt()
+                viewModel.updateGridPosition(it.positionInParent().y.toInt())
             },
             verticalSpacing = 10,
             horizontalSpacing = 10
