@@ -1,6 +1,7 @@
 package org.jikvict.browser.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -19,8 +20,6 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,10 +29,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -49,13 +50,16 @@ import io.github.alexzhirkevich.compottie.LottieCompositionSpec
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import jikvictfrontend.composeapp.generated.resources.Res
+import jikvictfrontend.composeapp.generated.resources.background
 import jikvictfrontend.composeapp.generated.resources.kotlink
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.components.DefaultScreenScope
+import org.jikvict.browser.components.GlassmorphismContainer
 import org.jikvict.browser.components.IconComponent
 import org.jikvict.browser.components.SimpleStaggeredGrid
 import org.jikvict.browser.constant.LocalAppColors
@@ -234,8 +238,21 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                 val isHovered by interactionSource.collectIsHoveredAsState()
                 val animationProgress by viewModel.animationProgress.collectAsState()
 
+                val hoverJob = remember { mutableStateOf<Job?>(null) }
+                val animationJob = remember { mutableStateOf<Job?>(null) }
+                val coroutineScope = rememberCoroutineScope()
                 LaunchedEffect(isHovered) {
-                    viewModel.animateHover(isHovered)
+                    if (isHovered) {
+                        animationJob.value?.cancel()
+                        animationJob.value = coroutineScope.launch { viewModel.animateHover(isHovered) }
+                        animationJob.value?.join()
+                        hoverJob.value?.cancel()
+                        hoverJob.value = launch {
+                            scope.launch {
+                                defaultScope.verticalScroll.animateScrollTo(gridPosition)
+                            }
+                        }
+                    }
                 }
 
                 FloatingActionButton(
@@ -263,37 +280,64 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
 
         Spacer(modifier = Modifier.height(spacerHeightDp))
 
-        SimpleStaggeredGrid(
-            columns = if (isLargeScreen) 2 else 1,
-            modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f).onGloballyPositioned {
-                viewModel.updateGridPosition(it.positionInParent().y.toInt())
-            },
-            verticalSpacing = 10,
-            horizontalSpacing = 10
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            feedItems.forEach {
-                FeedCard(it)
+            Image(
+                painter = painterResource(Res.drawable.background),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.fillMaxSize()
+            )
+            SimpleStaggeredGrid(
+                columns = if (isLargeScreen) 2 else 1,
+                modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f).onGloballyPositioned {
+                    viewModel.updateGridPosition(it.positionInParent().y.toInt())
+                },
+                verticalSpacing = 10,
+                horizontalSpacing = 10
+            ) {
+                feedItems.forEach {
+                    FeedCard(it)
+                }
             }
         }
-
     }
 }
 
 
 @Composable
 fun FeedCard(item: FeedItem) {
-    Card(
+    GlassmorphismExample(item)
+}
+
+@Composable
+fun GlassmorphismExample(item: FeedItem) {
+    GlassmorphismContainer(
         modifier = Modifier
             .fillMaxWidth()
             .height(item.height.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+        cornerRadius = 24.dp,
+        blurRadius = 10.dp,
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        backgroundAlpha = 0.1f,
+        noiseAlpha = 0.01f
     ) {
         Column(
             modifier = Modifier.padding(8.dp)
         ) {
-            Text(text = item.title, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "${item.title} (Glassmorphism)",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = item.description, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = item.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }

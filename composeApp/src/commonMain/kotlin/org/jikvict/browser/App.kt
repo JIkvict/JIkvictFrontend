@@ -3,6 +3,7 @@ package org.jikvict.browser
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -32,18 +33,22 @@ import org.koin.core.context.startKoin
 // TODO: Сделать @Register(name) аннотацию чтобы создать список name с обьектами помеченными этой аннотацией
 
 // TODO: Сделать @CreateNav аннотацию чтобы создать object HomeScreenRegistrar : ScreenRegistrar<HomeScreen> by createRegistrar() для каждого class помеченого этой аннотацией
+
+private var isKoinStarted = false
+
 @Preview
 @Composable
-fun App(navController: NavHostController) {
+fun App(navController: NavHostController, onNavHostReady: (Boolean) -> Unit = {}) {
     val fonts = JIkvictTypography(rememberInterFontFamily(), rememberJetBrainsMonoFontFamily())
     val themeToSet = if (getTheme()) DarkTheme else LightTheme
     val theme = remember { mutableStateOf(themeToSet) }
     val colors = remember { mutableStateOf(if (getTheme()) DarkColors else LightColors) }
     val themeSwitcher = remember { ThemeSwitcher(theme, colors) }
-    startKoin {
-        modules(
-            appModule
-        )
+    if (!isKoinStarted) {
+        startKoin {
+            modules(appModule)
+        }
+        isKoinStarted = true
     }
     KoinContext {
         MaterialTheme(
@@ -55,13 +60,20 @@ fun App(navController: NavHostController) {
                 ThemeSwitcherProvider provides themeSwitcher,
                 LocalAppColors provides colors.value
             ) {
-                DefaultScreen {scope ->
+                DefaultScreen { scope ->
                     NavHost(navController, startDestination = MakeJarScreen()) {
                         registeredScreens.forEach { screen ->
                             registerNavForScreen(screen, scope)
                         }
                     }
                 }
+                DisposableEffect(Unit) {
+                    onNavHostReady(false)
+                    onDispose {
+                        onNavHostReady(true)
+                    }
+                }
+
             }
         }
     }

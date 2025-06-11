@@ -36,7 +36,6 @@ interface ScreenRegistrar<T : NavigableScreen> {
 inline fun <reified T: NavigableScreen> createRegistrar(): ScreenRegistrar<T> {
     return object : ScreenRegistrar<T> {
         override fun getType(): KClass<T> {
-            println("Creating registrar for ${T::class.simpleName}")
             return T::class
         }
     }

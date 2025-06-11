@@ -1,6 +1,10 @@
 package org.jikvict.browser
 
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import androidx.navigation.ExperimentalBrowserHistoryApi
@@ -23,13 +27,19 @@ fun main() {
     val body = document.body ?: return
     ComposeViewport(body) {
         val navController = rememberNavController()
-        App(navController)
-        LaunchedEffect(Unit) {
-            val initRoute = window.location.hash.substringAfter('#', "").substringBefore("/?")
+        var isNavHostReady by remember { mutableStateOf(false) }
 
+        App(navController) { ready ->
+            isNavHostReady = ready
+        }
+
+        LaunchedEffect(isNavHostReady) {
+            if (!isNavHostReady) {
+                return@LaunchedEffect
+            }
+            val initRoute = window.location.hash.substringAfter('#', "").substringBefore("/?")
             val paramsRaw = window.location.hash.substringAfter('?', "")
             val splitParams = paramsRaw.split("&").filter { it.isNotBlank() }
-
             val params = if (splitParams.isEmpty()) {
                 emptyMap()
             } else {
@@ -45,7 +55,6 @@ fun main() {
             } else {
                 navController.navigate(NotFoundScreen())
             }
-
             window.bindToNavigation(navController) { entry ->
                 println("Binding to navigation: ${entry.destination.route}")
                 var mapping = mapOf<String, Any?>()

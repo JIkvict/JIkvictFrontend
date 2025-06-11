@@ -2,11 +2,9 @@ package org.jikvict.browser.viewmodel
 
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import org.jikvict.browser.constant.ThemeColors
 import org.jikvict.browser.screens.FeedItem
 
@@ -60,21 +58,19 @@ class MakeJarScreenViewModel : ViewModel() {
         _redColor.value = if (isDark) appColors.Red6 else appColors.Red3
     }
 
-    fun animateHover(isHovered: Boolean) {
-        viewModelScope.launch {
-            if (isHovered) {
-                val steps = 30
-                val stepDuration = 16L * 3
+    suspend fun animateHover(isHovered: Boolean) {
+        if (isHovered) {
+            val steps = 30
+            val stepDuration = 16L * 3
 
-                repeat(steps) { step ->
-                    _animationProgress.value = step / (steps - 1f)
-                    delay(stepDuration)
-                }
-
-                _animationProgress.value = 1f
-            } else {
-                _animationProgress.value = 0f
+            repeat(steps) { step ->
+                _animationProgress.value = step / (steps - 1f)
+                delay(stepDuration)
             }
+
+            _animationProgress.value = 1f
+        } else {
+            _animationProgress.value = 0f
         }
     }
 }
