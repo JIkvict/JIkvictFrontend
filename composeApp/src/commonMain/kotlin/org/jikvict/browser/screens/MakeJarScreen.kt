@@ -1,7 +1,6 @@
 package org.jikvict.browser.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -34,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -50,7 +48,6 @@ import io.github.alexzhirkevich.compottie.LottieCompositionSpec
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import jikvictfrontend.composeapp.generated.resources.Res
-import jikvictfrontend.composeapp.generated.resources.background
 import jikvictfrontend.composeapp.generated.resources.kotlink
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -280,27 +277,16 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
 
         Spacer(modifier = Modifier.height(spacerHeightDp))
 
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        SimpleStaggeredGrid(
+            columns = if (isLargeScreen) 2 else 1,
+            modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f).onGloballyPositioned {
+                viewModel.updateGridPosition(it.positionInParent().y.toInt())
+            },
+            verticalSpacing = 10,
+            horizontalSpacing = 10
         ) {
-            Image(
-                painter = painterResource(Res.drawable.background),
-                contentDescription = null,
-                contentScale = ContentScale.FillBounds,
-                modifier = Modifier.fillMaxSize()
-            )
-            SimpleStaggeredGrid(
-                columns = if (isLargeScreen) 2 else 1,
-                modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f).onGloballyPositioned {
-                    viewModel.updateGridPosition(it.positionInParent().y.toInt())
-                },
-                verticalSpacing = 10,
-                horizontalSpacing = 10
-            ) {
-                feedItems.forEach {
-                    FeedCard(it)
-                }
+            feedItems.forEach {
+                FeedCard(it)
             }
         }
     }

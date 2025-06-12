@@ -22,6 +22,7 @@ interface ScreenRegistrar<T : NavigableScreen> {
         val block = provideRegisterFunction()
         scope.block(entry, defaultScope)
     }
+
     fun getType(): KClass<T>
 
     fun provideRegisterFunction(): @Composable (AnimatedContentScope.(NavBackStackEntry, DefaultScreenScope) -> Unit) {
@@ -33,7 +34,7 @@ interface ScreenRegistrar<T : NavigableScreen> {
 }
 
 
-inline fun <reified T: NavigableScreen> createRegistrar(): ScreenRegistrar<T> {
+inline fun <reified T : NavigableScreen> createRegistrar(): ScreenRegistrar<T> {
     return object : ScreenRegistrar<T> {
         override fun getType(): KClass<T> {
             return T::class
@@ -41,13 +42,16 @@ inline fun <reified T: NavigableScreen> createRegistrar(): ScreenRegistrar<T> {
     }
 }
 
-fun NavGraphBuilder.registerNavForScreen(screenRegistrar: ScreenRegistrar<out NavigableScreen>, scope: DefaultScreenScope) {
+fun NavGraphBuilder.registerNavForScreen(
+    screenRegistrar: ScreenRegistrar<out NavigableScreen>,
+    scope: DefaultScreenScope
+) {
     composable(
         route = screenRegistrar.getType(),
-        enterTransition = { fadeIn(animationSpec = tween(100)) },
-        exitTransition = { fadeOut(animationSpec = tween(100)) },
-        popEnterTransition = { fadeIn(animationSpec = tween(100)) },
-        popExitTransition = { fadeOut(animationSpec = tween(100)) },
+        enterTransition = { fadeIn(animationSpec = tween(500)) },
+        exitTransition = { fadeOut(animationSpec = tween(500)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(500)) },
+        popExitTransition = { fadeOut(animationSpec = tween(500)) },
 
         ) {
         screenRegistrar.UseNavEntry(this, it, scope)

@@ -1,4 +1,5 @@
 package org.jikvict.browser.di
 
-class PlatformModule {
-}
+import org.koin.core.module.Module
+
+expect val platformModule: Module

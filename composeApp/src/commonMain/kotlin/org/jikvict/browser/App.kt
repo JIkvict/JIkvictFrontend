@@ -3,7 +3,6 @@ package org.jikvict.browser
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -15,7 +14,9 @@ import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.di.appModule
+import org.jikvict.browser.di.platformModule
 import org.jikvict.browser.screens.MakeJarScreen
+import org.jikvict.browser.screens.NavigableScreen
 import org.jikvict.browser.screens.registerNavForScreen
 import org.jikvict.browser.screens.registeredScreens
 import org.jikvict.browser.theme.DarkTheme
@@ -23,6 +24,7 @@ import org.jikvict.browser.theme.JIkvictTypography
 import org.jikvict.browser.theme.LightTheme
 import org.jikvict.browser.theme.rememberInterFontFamily
 import org.jikvict.browser.theme.rememberJetBrainsMonoFontFamily
+import org.jikvict.browser.util.SavableStateFlow
 import org.jikvict.browser.util.ThemeSwitcher
 import org.jikvict.browser.util.ThemeSwitcherProvider
 import org.jikvict.browser.util.getTheme
@@ -46,7 +48,7 @@ fun App(navController: NavHostController, onNavHostReady: (Boolean) -> Unit = {}
     val themeSwitcher = remember { ThemeSwitcher(theme, colors) }
     if (!isKoinStarted) {
         startKoin {
-            modules(appModule)
+            modules(platformModule, appModule)
         }
         isKoinStarted = true
     }
@@ -58,7 +60,7 @@ fun App(navController: NavHostController, onNavHostReady: (Boolean) -> Unit = {}
             CompositionLocalProvider(
                 LocalNavController provides navController,
                 ThemeSwitcherProvider provides themeSwitcher,
-                LocalAppColors provides colors.value
+                LocalAppColors provides colors.value,
             ) {
                 DefaultScreen { scope ->
                     NavHost(navController, startDestination = MakeJarScreen()) {
@@ -66,12 +68,7 @@ fun App(navController: NavHostController, onNavHostReady: (Boolean) -> Unit = {}
                             registerNavForScreen(screen, scope)
                         }
                     }
-                }
-                DisposableEffect(Unit) {
-                    onNavHostReady(false)
-                    onDispose {
-                        onNavHostReady(true)
-                    }
+                    onNavHostReady(true)
                 }
 
             }
