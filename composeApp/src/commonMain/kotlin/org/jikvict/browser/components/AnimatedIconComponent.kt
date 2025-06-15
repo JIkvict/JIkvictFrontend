@@ -151,6 +151,7 @@ fun AnimatedIconComponent(
         }
     )
 }
+
 /**
  * Enum defining different types of animations.
  */

@@ -15,13 +15,14 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.util.DefaultPreview
 
 @Composable
-fun Footer() {
+fun Footer(modifier: Modifier = Modifier) {
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .height(48.dp)
-                .background(MaterialTheme.colorScheme.primaryContainer),
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .then(modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {

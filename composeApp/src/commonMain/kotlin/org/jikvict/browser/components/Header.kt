@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.icons.myiconpack.Ijlogo
 import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.NotFoundScreen
+import org.jikvict.browser.screens.NotFoundScreenRouterRegistrar
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.ThemeSwitcherProvider
 
@@ -43,6 +45,7 @@ fun Header(modifier: Modifier = Modifier) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(48.dp)
             .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .then(modifier),
@@ -60,9 +63,14 @@ fun Header(modifier: Modifier = Modifier) {
                 animationPath = "files/code-animation.json",
                 hoverable = true,
                 onClick = {
-                    coroutineScope.launch {
-                        delay(150)
-                        navController.navigate(NotFoundScreen())
+                    if (!NotFoundScreenRouterRegistrar.matchRoute(
+                            navController.currentBackStackEntry?.destination?.route ?: ""
+                        )
+                    ) {
+                        coroutineScope.launch {
+                            delay(150)
+                            navController.navigate(NotFoundScreen())
+                        }
                     }
                 },
                 animationType = AnimationType.TOGGLE,

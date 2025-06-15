@@ -224,6 +224,8 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                 }
             }
             val scope = rememberCoroutineScope()
+            val hoverJob = remember { mutableStateOf<Job?>(null) }
+            val animationJob = remember { mutableStateOf<Job?>(null) }
             if (defaultScope.verticalScroll.value < (spacerHeightDp / 2).value) {
                 val scrollDownAnimation by rememberLottieComposition {
                     LottieCompositionSpec.JsonString(
@@ -235,8 +237,6 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                 val isHovered by interactionSource.collectIsHoveredAsState()
                 val animationProgress by viewModel.animationProgress.collectAsState()
 
-                val hoverJob = remember { mutableStateOf<Job?>(null) }
-                val animationJob = remember { mutableStateOf<Job?>(null) }
                 val coroutineScope = rememberCoroutineScope()
                 LaunchedEffect(isHovered) {
                     if (isHovered) {
@@ -272,6 +272,10 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
+            } else {
+                hoverJob.value?.cancel()
+                animationJob.value?.cancel()
+                viewModel.resetAnimationProgress()
             }
         }
 

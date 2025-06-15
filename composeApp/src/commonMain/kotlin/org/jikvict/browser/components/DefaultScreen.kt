@@ -8,15 +8,21 @@ import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.util.DefaultPreview
 
@@ -25,13 +31,21 @@ import org.jikvict.browser.util.DefaultPreview
 fun DefaultScreen(content: @Composable ColumnScope.(DefaultScreenScope) -> Unit) {
 
     BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         val boxWithConstraintsScope = this@BoxWithConstraints
         val verticalScroll = rememberScrollState()
-        val headerHeight = mutableStateOf(0)
+        val headerHeight = remember { mutableStateOf(0) }
+        val footerHeight = remember { mutableStateOf(0) }
+        val density = LocalDensity.current
+
+        val screenHeight =
+            derivedStateOf {
+                with(density) {
+                    (maxHeight.toPx() - headerHeight.value - footerHeight.value - 32).toDp()
+                }
+            }
 
         Column(
             modifier = Modifier
@@ -45,17 +59,39 @@ fun DefaultScreen(content: @Composable ColumnScope.(DefaultScreenScope) -> Unit)
             Header(modifier = Modifier.onGloballyPositioned {
                 headerHeight.value = it.size.height
             })
-            content(DefaultScreenScope(boxWithConstraintsScope, verticalScroll, headerHeight.value))
-            Footer()
+
+            content(
+                DefaultScreenScope(
+                    boxWithConstraintsScope,
+                    this,
+                    verticalScroll,
+                    headerHeight.value,
+                    footerHeight.value,
+                    screenHeight = screenHeight.value
+                )
+            )
+
+            Footer(modifier = Modifier.onGloballyPositioned {
+                footerHeight.value = it.size.height
+            })
         }
     }
 }
 
+
 data class DefaultScreenScope(
     val boxWithConstraintsScope: BoxWithConstraintsScope,
+    val columnScope: ColumnScope,
     val verticalScroll: ScrollState,
-    val headerHeight: Int = 0,
-)
+    val headerHeight: Int,
+    val footerHeight: Int,
+    val screenWith: Dp = boxWithConstraintsScope.maxWidth,
+    val screenHeight: Dp,
+) {
+    fun Modifier.fitContentToScreen(): Modifier {
+        return this.fillMaxWidth().height(screenHeight)
+    }
+}
 
 @Preview
 @Composable

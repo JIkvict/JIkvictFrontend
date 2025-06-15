@@ -64,6 +64,10 @@ class MakeJarScreenViewModel(
         _redColor.value = if (isDark) appColors.Red6 else appColors.Red3
     }
 
+    fun resetAnimationProgress() {
+        _animationProgress.value = 0f
+    }
+
     suspend fun animateHover(isHovered: Boolean) {
         if (isHovered) {
             val steps = 30
