@@ -1,10 +1,11 @@
 package org.jikvict.browser.theme
 
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 object LightTheme : CustomTheme {
-    val colorScheme = ColorScheme(
+    val colorScheme = lightColorScheme(
         // Primary colors
         primary = Color(0xFF3574F0),         // Blue 4 (Primary)
         onPrimary = Color.White,

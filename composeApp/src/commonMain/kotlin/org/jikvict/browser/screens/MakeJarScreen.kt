@@ -1,8 +1,14 @@
 package org.jikvict.browser.screens
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -39,7 +45,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -51,6 +62,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import io.github.alexzhirkevich.compottie.LottieCompositionSpec
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
@@ -65,6 +77,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.IconComponent
 import org.jikvict.browser.components.SimpleStaggeredGrid
+import org.jikvict.browser.constant.DarkColors
+import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.ThemeSwitcherProvider
@@ -123,172 +137,178 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val gridPosition by viewModel.gridPosition.collectAsState()
-        Spacer(modifier = Modifier.height(spacerHeightDp))
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(0.45f)
-                    .wrapContentHeight()
-                    .onGloballyPositioned {
-                        viewModel.updateJarWarHeightPx(it.size.height)
-                        viewModel.updateJarWarOffsetY(it.positionInParent().y.toInt())
-                    },
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val inlineContent = mapOf(
-                        iconId to InlineTextContent(
-                            Placeholder(
-                                width = 1.em,
-                                height = 1.em,
-                                placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
-                            )
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            val gridPosition by viewModel.gridPosition.collectAsState()
+            AnimatedBackgroundTopLeft(
+                modifier = Modifier.height(spacerHeightDp * 2 + jarWarHeightPx.dp).fillMaxWidth().zIndex(-1f)
+            )
+            Column {
+                Spacer(modifier = Modifier.height(spacerHeightDp))
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth(0.45f)
+                            .wrapContentHeight()
+                            .onGloballyPositioned {
+                                viewModel.updateJarWarHeightPx(it.size.height)
+                                viewModel.updateJarWarOffsetY(it.positionInParent().y.toInt())
+                            },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .wrapContentHeight()
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                painter = painterResource(Res.drawable.kotlink),
-                                contentDescription = null,
-                                tint = purple,
-                                modifier = Modifier.fillMaxSize()
+                            val inlineContent = mapOf(
+                                iconId to InlineTextContent(
+                                    Placeholder(
+                                        width = 1.em,
+                                        height = 1.em,
+                                        placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
+                                    )
+                                ) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.kotlink),
+                                        contentDescription = null,
+                                        tint = purple,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
                             )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                            ) {
+                                BasicText(
+                                    text = annotatedText,
+                                    inlineContent = inlineContent,
+                                    minLines = 1,
+                                    maxLines = 1,
+                                    style = MaterialTheme.typography.headlineLarge.copy(
+                                        textAlign = TextAlign.Left,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = { purple },
+                                    autoSize = if (isLargeScreen) size else null,
+                                    modifier = Modifier.weight(0.5f)
+                                )
+                                BasicText(
+                                    text = ".JAR",
+                                    minLines = 1,
+                                    maxLines = 1,
+                                    style = MaterialTheme.typography.headlineLarge.copy(
+                                        textAlign = TextAlign.Right,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = { purple },
+                                    autoSize = if (isLargeScreen) size else null,
+                                    modifier = Modifier.weight(0.5f)
+                                )
+                            }
                         }
-                    )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        BasicText(
-                            text = annotatedText,
-                            inlineContent = inlineContent,
-                            minLines = 1,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                textAlign = TextAlign.Left,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = { purple },
-                            autoSize = if (isLargeScreen) size else null,
-                            modifier = Modifier.weight(0.5f)
-                        )
-                        BasicText(
-                            text = ".JAR",
-                            minLines = 1,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                textAlign = TextAlign.Right,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = { purple },
-                            autoSize = if (isLargeScreen) size else null,
-                            modifier = Modifier.weight(0.5f)
-                        )
-                    }
-                }
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Box(
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        BasicText(
-                            text = "NOT",
-                            minLines = 1,
-                            maxLines = 1,
-                            color = { red },
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                textAlign = TextAlign.Left,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            autoSize = if (isLargeScreen) size else null,
-                            modifier = Modifier.weight(0.5f)
-                        )
-                        BasicText(
-                            text = ".WAR",
-                            minLines = 1,
-                            maxLines = 1,
-                            color = { red },
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                textAlign = TextAlign.Right,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            autoSize = if (isLargeScreen) size else null,
-                            modifier = Modifier.weight(0.5f)
-                        )
-                    }
-                }
-            }
-            val scope = rememberCoroutineScope()
-            val hoverJob = remember { mutableStateOf<Job?>(null) }
-            val animationJob = remember { mutableStateOf<Job?>(null) }
-            if (defaultScope.verticalScroll.value < (spacerHeightDp / 2).value) {
-                val scrollDownAnimation by rememberLottieComposition {
-                    LottieCompositionSpec.JsonString(
-                        Res.readBytes("files/scroll-down.json").decodeToString()
-                    )
-                }
-
-                val interactionSource = remember { MutableInteractionSource() }
-                val isHovered by interactionSource.collectIsHoveredAsState()
-                val animationProgress by viewModel.animationProgress.collectAsState()
-
-                val coroutineScope = rememberCoroutineScope()
-                LaunchedEffect(isHovered) {
-                    if (isHovered) {
-                        animationJob.value?.cancel()
-                        animationJob.value = coroutineScope.launch { viewModel.animateHover(isHovered) }
-                        animationJob.value?.join()
-                        hoverJob.value?.cancel()
-                        hoverJob.value = launch {
-                            scope.launch {
-                                defaultScope.verticalScroll.animateScrollTo(gridPosition)
+                        Box(
+                            modifier = Modifier
+                                .wrapContentHeight()
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                            ) {
+                                BasicText(
+                                    text = "NOT",
+                                    minLines = 1,
+                                    maxLines = 1,
+                                    color = { red },
+                                    style = MaterialTheme.typography.headlineLarge.copy(
+                                        textAlign = TextAlign.Left,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    autoSize = if (isLargeScreen) size else null,
+                                    modifier = Modifier.weight(0.5f)
+                                )
+                                BasicText(
+                                    text = ".WAR",
+                                    minLines = 1,
+                                    maxLines = 1,
+                                    color = { red },
+                                    style = MaterialTheme.typography.headlineLarge.copy(
+                                        textAlign = TextAlign.Right,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    autoSize = if (isLargeScreen) size else null,
+                                    modifier = Modifier.weight(0.5f)
+                                )
                             }
                         }
                     }
-                }
-
-                FloatingActionButton(
-                    onClick = {
-                        val scope = scope
-                        scope.launch {
-                            defaultScope.verticalScroll.animateScrollTo(gridPosition)
+                    val scope = rememberCoroutineScope()
+                    val hoverJob = remember { mutableStateOf<Job?>(null) }
+                    val animationJob = remember { mutableStateOf<Job?>(null) }
+                    if (defaultScope.verticalScroll.value < (spacerHeightDp / 2).value) {
+                        val scrollDownAnimation by rememberLottieComposition {
+                            LottieCompositionSpec.JsonString(
+                                Res.readBytes("files/scroll-down.json").decodeToString()
+                            )
                         }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .offset(y = spacerHeightDp / 2)
-                        .hoverable(interactionSource, true),
-                ) {
-                    IconComponent(
-                        rememberLottiePainter(
-                            composition = scrollDownAnimation,
-                            progress = { animationProgress }
-                        ),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val isHovered by interactionSource.collectIsHoveredAsState()
+                        val animationProgress by viewModel.animationProgress.collectAsState()
+
+                        val coroutineScope = rememberCoroutineScope()
+                        LaunchedEffect(isHovered) {
+                            if (isHovered) {
+                                animationJob.value?.cancel()
+                                animationJob.value = coroutineScope.launch { viewModel.animateHover(isHovered) }
+                                animationJob.value?.join()
+                                hoverJob.value?.cancel()
+                                hoverJob.value = launch {
+                                    scope.launch {
+                                        defaultScope.verticalScroll.animateScrollTo(gridPosition)
+                                    }
+                                }
+                            }
+                        }
+
+                        FloatingActionButton(
+                            onClick = {
+                                val scope = scope
+                                scope.launch {
+                                    defaultScope.verticalScroll.animateScrollTo(gridPosition)
+                                }
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .offset(y = spacerHeightDp / 2)
+                                .hoverable(interactionSource, true),
+                        ) {
+                            IconComponent(
+                                rememberLottiePainter(
+                                    composition = scrollDownAnimation,
+                                    progress = { animationProgress }
+                                ),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    } else {
+                        hoverJob.value?.cancel()
+                        animationJob.value?.cancel()
+                        viewModel.resetAnimationProgress()
+                    }
                 }
-            } else {
-                hoverJob.value?.cancel()
-                animationJob.value?.cancel()
-                viewModel.resetAnimationProgress()
             }
         }
 
-        Spacer(modifier = Modifier.height(spacerHeightDp))
 
         SimpleStaggeredGrid(
             columns = if (isLargeScreen) 2 else 1,
@@ -358,6 +378,64 @@ data class FeedItem(
     val description: String,
     val height: Int = 150
 )
+
+@Composable
+fun AnimatedBackgroundTopLeft(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "gradient")
+    val themeColors = LocalAppColors.current
+    val offsetX by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 500f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(15000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "x"
+    )
+
+    val offsetY by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 500f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(17000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "y"
+    )
+
+    val colors = if (themeColors is DarkColors) {
+        listOf(
+            themeColors.Blue9.copy(alpha = 0.35f),
+            themeColors.Purple7.copy(alpha = 0.25f),
+            Color.Transparent
+        )
+    } else {
+        themeColors as LightColors
+        listOf(
+            DarkColors.Blue9.copy(alpha = 0.70f),
+            DarkColors.Purple7.copy(alpha = 0.55f),
+            Color.Transparent
+        )
+    }
+    Canvas(modifier = modifier.fillMaxSize().blur(150.dp)) {
+        val maxOffsetX = size.width * 0.3f
+        val maxOffsetY = size.height * 0.2f
+
+        val currentOffsetX = (offsetX / 500f) * maxOffsetX
+        val currentOffsetY = (offsetY / 500f) * maxOffsetY
+
+
+        drawRect(
+            brush = Brush.radialGradient(
+                colors = colors,
+                center = Offset(currentOffsetX, currentOffsetY),
+                radius = size.minDimension * 0.75f,
+                tileMode = TileMode.Decal
+            ),
+            size = size,
+        )
+    }
+}
 
 @Serializable
 @SerialName("home")
