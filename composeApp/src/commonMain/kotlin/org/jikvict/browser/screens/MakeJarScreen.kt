@@ -1,5 +1,8 @@
 package org.jikvict.browser.screens
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,6 +22,9 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -56,7 +63,6 @@ import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.components.DefaultScreenScope
-import org.jikvict.browser.components.GlassmorphismContainer
 import org.jikvict.browser.components.IconComponent
 import org.jikvict.browser.components.SimpleStaggeredGrid
 import org.jikvict.browser.constant.LocalAppColors
@@ -67,7 +73,10 @@ import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
 
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3AdaptiveApi::class, ExperimentalFoundationApi::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
     val viewModel = koinViewModel<MakeJarScreenViewModel>()
@@ -286,8 +295,8 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
             modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f).onGloballyPositioned {
                 viewModel.updateGridPosition(it.positionInParent().y.toInt())
             },
-            verticalSpacing = 10,
-            horizontalSpacing = 10
+            verticalSpacing = 24,
+            horizontalSpacing = 24
         ) {
             feedItems.forEach {
                 FeedCard(it)
@@ -299,20 +308,31 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
 
 @Composable
 fun FeedCard(item: FeedItem) {
-    GlassmorphismExample(item)
-}
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
 
-@Composable
-fun GlassmorphismExample(item: FeedItem) {
-    GlassmorphismContainer(
+    val animatedElevation by animateDpAsState(
+        targetValue = if (isHovered) 12.dp else 6.dp,
+        animationSpec = tween(durationMillis = 200)
+    )
+
+    val animatedScale by animateFloatAsState(
+        targetValue = if (isHovered) 1.02f else 1f,
+        animationSpec = tween(durationMillis = 200)
+    )
+
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .height(item.height.dp),
-        cornerRadius = 24.dp,
-        blurRadius = 10.dp,
-        backgroundColor = MaterialTheme.colorScheme.surface,
-        backgroundAlpha = 0.1f,
-        noiseAlpha = 0.01f
+            .height(item.height.dp)
+            .scale(animatedScale)
+            .hoverable(interactionSource),
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = animatedElevation
+        ),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        )
     ) {
         Column(
             modifier = Modifier.padding(8.dp)
@@ -320,17 +340,18 @@ fun GlassmorphismExample(item: FeedItem) {
             Text(
                 text = "${item.title} (Glassmorphism)",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = item.description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
+
 
 data class FeedItem(
     val title: String,

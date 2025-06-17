@@ -107,8 +107,11 @@ kotlin {
             dependencies {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
-                implementation(compose.material3)
+                implementation(libs.material3)
+                implementation(compose.materialIconsExtended)
                 implementation(compose.ui)
+                implementation(compose.animation)
+                implementation(compose.animationGraphics)
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
                 implementation(libs.androidx.lifecycle.viewmodel)
@@ -125,8 +128,10 @@ kotlin {
                 implementation(libs.adaptive)
                 implementation(libs.adaptive.layout)
                 implementation(libs.adaptive.navigation)
+                implementation(libs.material3.adaptive.navigation.suite)
                 implementation(libs.material3.window.size.class1)
                 implementation(libs.bundles.compottie)
+                implementation(libs.ui.util)
             }
         }
         commonTest {
