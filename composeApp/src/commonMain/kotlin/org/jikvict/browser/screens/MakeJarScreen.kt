@@ -403,6 +403,16 @@ fun AnimatedBackgroundTopLeft(modifier: Modifier = Modifier) {
         label = "y"
     )
 
+    val radiusScale by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(12000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "radius"
+    )
+
     val colors = if (themeColors is DarkColors) {
         listOf(
             themeColors.Blue9.copy(alpha = 0.35f),
@@ -412,24 +422,36 @@ fun AnimatedBackgroundTopLeft(modifier: Modifier = Modifier) {
     } else {
         themeColors as LightColors
         listOf(
-            DarkColors.Blue9.copy(alpha = 0.70f),
-            DarkColors.Purple7.copy(alpha = 0.55f),
+            DarkColors.Blue9.copy(alpha = 0.75f),
+            DarkColors.Purple7.copy(alpha = 0.65f),
             Color.Transparent
         )
     }
     Canvas(modifier = modifier.fillMaxSize().blur(150.dp)) {
-        val maxOffsetX = size.width * 0.3f
-        val maxOffsetY = size.height * 0.2f
+        val centerX = size.width / 2f
 
-        val currentOffsetX = (offsetX / 500f) * maxOffsetX
-        val currentOffsetY = (offsetY / 500f) * maxOffsetY
+        val centerY = 0f
 
+        val maxOffsetX = size.width * 0.1f
+        val maxOffsetY = 0f
+
+        val currentOffsetX = centerX + (offsetX / 500f - 0.5f) * maxOffsetX * 2f
+        val currentOffsetY = centerY + (offsetY / 500f - 0.5f) * maxOffsetY * 2f
+
+
+        val baseRadius = when {
+            size.width < 600f -> size.width * 0.9f
+            size.width < 900f -> size.width * 0.75f
+            else -> size.width * 0.6f
+        }
+
+        val animatedRadius = baseRadius * radiusScale
 
         drawRect(
             brush = Brush.radialGradient(
                 colors = colors,
                 center = Offset(currentOffsetX, currentOffsetY),
-                radius = size.minDimension * 0.75f,
+                radius = animatedRadius,
                 tileMode = TileMode.Decal
             ),
             size = size,
