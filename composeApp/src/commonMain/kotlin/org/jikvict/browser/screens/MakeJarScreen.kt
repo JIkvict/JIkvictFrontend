@@ -99,7 +99,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
     val iconId = "icon"
     val annotatedText = buildAnnotatedString {
         append("MA")
-        appendInlineContent(iconId, "K")
+        appendInlineContent(iconId, "K[")
         append("E")
     }
 
@@ -134,10 +134,10 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
         }
     }
 
-    val columnScale = adaptiveValue(0.9f, 0.55f, 0.45f)
+    val columnScale = adaptiveValue(0.9f, 0.55f, 0.5f)
     val minText = adaptiveValue(20.sp, 30.sp, 60.sp)
     val maxText = adaptiveValue(60.sp, 60.sp, 116.sp)
-
+    val radius = adaptiveValue(0.9f to 1.2f, 0.8f to 1.1f, 0.7f to 1f)
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -145,7 +145,9 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             val gridPosition by viewModel.gridPosition.collectAsState()
             AnimatedBackgroundTopLeft(
-                modifier = Modifier.height(spacerHeightDp * 2 + jarWarHeightPx.dp).fillMaxWidth().zIndex(-1f)
+                modifier = Modifier.height(spacerHeightDp * 2 + jarWarHeightPx.dp).fillMaxWidth().zIndex(-1f),
+                radius.first,
+                radius.second
             )
             Column {
                 Spacer(modifier = Modifier.height(spacerHeightDp))
@@ -169,8 +171,8 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                             val inlineContent = mapOf(
                                 iconId to InlineTextContent(
                                     Placeholder(
-                                        width = 0.80.em,
-                                        height = 1.5.em,
+                                        width = 1.em,
+                                        height = 1.em,
                                         placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
                                     )
                                 ) {
@@ -403,7 +405,11 @@ data class FeedItem(
 )
 
 @Composable
-fun AnimatedBackgroundTopLeft(modifier: Modifier = Modifier) {
+fun AnimatedBackgroundTopLeft(
+    modifier: Modifier = Modifier,
+    radiusMinSize: Float = 0.5f,
+    radiusMaxSize: Float = 1.2f
+) {
     val infiniteTransition = rememberInfiniteTransition(label = "gradient")
     val themeColors = LocalAppColors.current
     val offsetX by infiniteTransition.animateFloat(
@@ -427,14 +433,15 @@ fun AnimatedBackgroundTopLeft(modifier: Modifier = Modifier) {
     )
 
     val radiusScale by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = 1.2f,
+        initialValue = radiusMinSize,
+        targetValue = radiusMaxSize,
         animationSpec = infiniteRepeatable(
             animation = tween(12000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "radius"
     )
+
 
     val colors = if (themeColors is DarkColors) {
         listOf(
@@ -452,35 +459,31 @@ fun AnimatedBackgroundTopLeft(modifier: Modifier = Modifier) {
     }
     Canvas(modifier = modifier.fillMaxSize().blur(150.dp)) {
         val centerX = size.width / 2f
-
-        val centerY = 0f
+        val centerY = -(size.height * 0.1f)
 
         val maxOffsetX = size.width * 0.1f
-        val maxOffsetY = 0f
+        val maxOffsetY = size.height * 0.1f
 
         val currentOffsetX = centerX + (offsetX / 500f - 0.5f) * maxOffsetX * 2f
         val currentOffsetY = centerY + (offsetY / 500f - 0.5f) * maxOffsetY * 2f
 
-
-        val baseRadius = when {
-            size.width < 600f -> size.width * 0.9f
-            size.width < 900f -> size.width * 0.75f
-            else -> size.width * 0.6f
-        }
+        val baseRadius = size.width * 0.9f
 
         val animatedRadius = baseRadius * radiusScale
+        val moveUp =  (size.height - animatedRadius).coerceAtMost(size.height / 2)
 
         drawRect(
             brush = Brush.radialGradient(
                 colors = colors,
-                center = Offset(currentOffsetX, currentOffsetY),
+                center = Offset(currentOffsetX, currentOffsetY + moveUp),
                 radius = animatedRadius,
-                tileMode = TileMode.Decal
+                tileMode = TileMode.Clamp
             ),
             size = size,
         )
     }
 }
+
 
 @Serializable
 @SerialName("home")
