@@ -29,7 +29,6 @@ import org.jikvict.browser.util.DefaultPreview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DefaultScreen(content: @Composable ColumnScope.(DefaultScreenScope) -> Unit) {
-
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -85,7 +84,7 @@ data class DefaultScreenScope(
     val verticalScroll: ScrollState,
     val headerHeight: Int,
     val footerHeight: Int,
-    val screenWith: Dp = boxWithConstraintsScope.maxWidth,
+    val screenWidth: Dp = boxWithConstraintsScope.maxWidth,
     val screenHeight: Dp,
 ) {
     fun Modifier.fitContentToScreen(): Modifier {

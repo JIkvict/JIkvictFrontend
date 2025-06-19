@@ -18,15 +18,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -74,6 +73,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jikvict.browser.components.AutoSizeText
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.IconComponent
 import org.jikvict.browser.components.SimpleStaggeredGrid
@@ -82,6 +82,7 @@ import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.ThemeSwitcherProvider
+import org.jikvict.browser.util.adaptiveValue
 import org.jikvict.browser.viewmodel.MakeJarScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
@@ -92,15 +93,16 @@ import kotlin.reflect.KClass
     ExperimentalMaterial3ExpressiveApi::class
 )
 @Composable
-fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
+fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScope) {
     val viewModel = koinViewModel<MakeJarScreenViewModel>()
 
     val iconId = "icon"
     val annotatedText = buildAnnotatedString {
         append("MA")
-        appendInlineContent(iconId, "[icon]")
+        appendInlineContent(iconId, "K")
         append("E")
     }
+
 
     val themeSwitcher = ThemeSwitcherProvider.current
     val theme by themeSwitcher.isDark
@@ -110,7 +112,6 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
 
     val purple by viewModel.purpleColor.collectAsState()
     val red by viewModel.redColor.collectAsState()
-    val size: TextAutoSize = TextAutoSize.StepBased(20.sp, 116.sp, 8.sp)
 
     val feedItems by viewModel.feedItems.collectAsState()
 
@@ -133,6 +134,10 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
         }
     }
 
+    val columnScale = adaptiveValue(0.9f, 0.55f, 0.45f)
+    val minText = adaptiveValue(20.sp, 30.sp, 60.sp)
+    val maxText = adaptiveValue(60.sp, 60.sp, 116.sp)
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -147,7 +152,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth(0.45f)
+                            .fillMaxWidth(columnScale)
                             .wrapContentHeight()
                             .onGloballyPositioned {
                                 viewModel.updateJarWarHeightPx(it.size.height)
@@ -164,8 +169,8 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                             val inlineContent = mapOf(
                                 iconId to InlineTextContent(
                                     Placeholder(
-                                        width = 1.em,
-                                        height = 1.em,
+                                        width = 0.80.em,
+                                        height = 1.5.em,
                                         placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
                                     )
                                 ) {
@@ -181,33 +186,49 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
+                                horizontalArrangement = Arrangement.SpaceBetween,
                             ) {
-                                BasicText(
-                                    text = annotatedText,
-                                    inlineContent = inlineContent,
-                                    minLines = 1,
-                                    maxLines = 1,
-                                    style = MaterialTheme.typography.headlineLarge.copy(
-                                        textAlign = TextAlign.Left,
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = { purple },
-                                    autoSize = if (isLargeScreen) size else null,
-                                    modifier = Modifier.weight(0.5f)
-                                )
-                                BasicText(
-                                    text = ".JAR",
-                                    minLines = 1,
-                                    maxLines = 1,
-                                    style = MaterialTheme.typography.headlineLarge.copy(
-                                        textAlign = TextAlign.Right,
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = { purple },
-                                    autoSize = if (isLargeScreen) size else null,
-                                    modifier = Modifier.weight(0.5f)
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight(),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    AutoSizeText(
+                                        text = annotatedText,
+                                        inlineContent = inlineContent,
+                                        style = MaterialTheme.typography.headlineLarge.copy(
+                                            textAlign = TextAlign.Left,
+                                            fontWeight = FontWeight.Bold,
+                                        ),
+                                        color = purple,
+                                        modifier = Modifier,
+                                        softWrap = false,
+                                        maxTextSize = maxText,
+                                        minTextSize = minText,
+                                    )
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight(),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    AutoSizeText(
+                                        text = ".JAR",
+                                        style = MaterialTheme.typography.headlineLarge.copy(
+                                            textAlign = TextAlign.Right,
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = purple,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        minTextSize = minText,
+                                        maxTextSize = maxText,
+                                        softWrap = false,
+                                        alignment = Alignment.CenterEnd,
+                                    )
+                                }
                             }
                         }
 
@@ -222,31 +243,33 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
+                                horizontalArrangement = Arrangement.SpaceBetween,
                             ) {
-                                BasicText(
+                                AutoSizeText(
                                     text = "NOT",
-                                    minLines = 1,
-                                    maxLines = 1,
-                                    color = { red },
+                                    color = red,
                                     style = MaterialTheme.typography.headlineLarge.copy(
                                         textAlign = TextAlign.Left,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
                                     ),
-                                    autoSize = if (isLargeScreen) size else null,
-                                    modifier = Modifier.weight(0.5f)
+                                    modifier = Modifier,
+                                    minTextSize = minText,
+                                    maxTextSize = maxText,
+                                    softWrap = false,
+                                    alignment = Alignment.CenterStart,
                                 )
-                                BasicText(
+                                AutoSizeText(
                                     text = ".WAR",
-                                    minLines = 1,
-                                    maxLines = 1,
-                                    color = { red },
+                                    color = red,
                                     style = MaterialTheme.typography.headlineLarge.copy(
                                         textAlign = TextAlign.Right,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
                                     ),
-                                    autoSize = if (isLargeScreen) size else null,
-                                    modifier = Modifier.weight(0.5f)
+                                    modifier = Modifier,
+                                    minTextSize = minText,
+                                    maxTextSize = maxText,
+                                    softWrap = false,
+                                    alignment = Alignment.CenterEnd,
                                 )
                             }
                         }
