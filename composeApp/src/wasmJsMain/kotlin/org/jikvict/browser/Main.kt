@@ -25,6 +25,9 @@ import org.jikvict.browser.screens.routers
 )
 fun main() {
     val body = document.body ?: return
+    body.style.minWidth = "200px"
+    body.style.minHeight = "200px"
+
     ComposeViewport(body) {
         val navController = rememberNavController()
         var isNavHostReady by remember { mutableStateOf(false) }
