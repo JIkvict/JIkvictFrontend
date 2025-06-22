@@ -4,8 +4,6 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
@@ -50,10 +48,10 @@ fun NavGraphBuilder.registerNavForScreen(
 ) {
     composable(
         route = screenRegistrar.getType(),
-        enterTransition = { scaleIn(initialScale = 0.8f) + fadeIn() },
-        exitTransition = { scaleOut(targetScale = 1.2f) + fadeOut() },
-        popEnterTransition = { fadeIn(animationSpec = tween(500)) },
-        popExitTransition = { fadeOut(animationSpec = tween(500)) },
+        enterTransition = { fadeIn(animationSpec = tween(0)) },
+        exitTransition = { fadeOut(animationSpec = tween(0)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(0)) },
+        popExitTransition = { fadeOut(animationSpec = tween(0)) },
     ) {
         screenRegistrar.UseNavEntry(this, it, scope)
     }

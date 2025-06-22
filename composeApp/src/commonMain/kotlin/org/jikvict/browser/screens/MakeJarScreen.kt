@@ -80,12 +80,43 @@ import org.jikvict.browser.components.SimpleStaggeredGrid
 import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
+import org.jikvict.browser.util.responsive.Breakpoint
 import org.jikvict.browser.util.DefaultPreview
+import org.jikvict.browser.util.responsive.ResponsiveModifierBuilder
+import org.jikvict.browser.util.responsive.ResponsiveValueBuilder
 import org.jikvict.browser.util.ThemeSwitcherProvider
-import org.jikvict.browser.util.adaptiveValue
+import org.jikvict.browser.util.responsive.adaptiveValue
+import org.jikvict.browser.util.responsive.responsive
 import org.jikvict.browser.viewmodel.MakeJarScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
+
+
+val mainColumnModifier = ResponsiveModifierBuilder {
+    base {
+        Modifier.wrapContentHeight()
+    }
+    Breakpoint.SM {
+        Modifier.fillMaxWidth(0.9f)
+    }
+    Breakpoint.MD {
+        Modifier.fillMaxWidth(0.55f)
+    }
+    Breakpoint.LG {
+        Modifier.fillMaxWidth(0.5f)
+    }
+}
+
+val minTextSize = ResponsiveValueBuilder {
+    Breakpoint.SM { 20.sp }
+    Breakpoint.MD { 30.sp }
+    Breakpoint.LG { 60.sp }
+}
+val maxTextSize = ResponsiveValueBuilder {
+    Breakpoint.SM { 60.sp }
+    Breakpoint.MD { 60.sp }
+    Breakpoint.LG { 116.sp }
+}
 
 
 @OptIn(
@@ -134,9 +165,8 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
         }
     }
 
-    val columnScale = adaptiveValue(0.9f, 0.55f, 0.5f)
-    val minText = adaptiveValue(20.sp, 30.sp, 60.sp)
-    val maxText = adaptiveValue(60.sp, 60.sp, 116.sp)
+    val minText = minTextSize.toValue()
+    val maxText = maxTextSize.toValue()
     val radius = adaptiveValue(0.9f to 1.2f, 0.8f to 1.1f, 0.7f to 1f)
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -144,7 +174,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             val gridPosition by viewModel.gridPosition.collectAsState()
-            AnimatedBackgroundTopLeft(
+            AnimatedBackground(
                 modifier = Modifier.height(spacerHeightDp * 2 + jarWarHeightPx.dp).fillMaxWidth().zIndex(-1f),
                 radius.first,
                 radius.second
@@ -154,8 +184,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth(columnScale)
-                            .wrapContentHeight()
+                            .responsive(mainColumnModifier)
                             .onGloballyPositioned {
                                 viewModel.updateJarWarHeightPx(it.size.height)
                                 viewModel.updateJarWarOffsetY(it.positionInParent().y.toInt())
@@ -405,7 +434,7 @@ data class FeedItem(
 )
 
 @Composable
-fun AnimatedBackgroundTopLeft(
+fun AnimatedBackground(
     modifier: Modifier = Modifier,
     radiusMinSize: Float = 0.5f,
     radiusMaxSize: Float = 1.2f
@@ -470,7 +499,7 @@ fun AnimatedBackgroundTopLeft(
         val baseRadius = size.width * 0.9f
 
         val animatedRadius = baseRadius * radiusScale
-        val moveUp =  (size.height - animatedRadius).coerceAtMost(size.height / 2)
+        val moveUp = (size.height - animatedRadius).coerceAtMost(size.height / 2)
 
         drawRect(
             brush = Brush.radialGradient(

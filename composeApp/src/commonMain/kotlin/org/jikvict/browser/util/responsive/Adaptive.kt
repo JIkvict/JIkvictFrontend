@@ -1,4 +1,4 @@
-package org.jikvict.browser.util
+package org.jikvict.browser.util.responsive
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalDensity
