@@ -3,24 +3,15 @@ package org.jikvict.browser.viewmodel
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import org.jikvict.browser.constant.ThemeColors
-import org.jikvict.browser.screens.FeedItem
 
 class MakeJarScreenViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    private val _feedItems = MutableStateFlow<List<FeedItem>>(emptyList())
 
-    val feedItems = _feedItems
-        .onStart { initializeFeedItems() }
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     private val _jarWarOffsetY = MutableStateFlow(0)
     val jarWarOffsetY = _jarWarOffsetY.asStateFlow()
@@ -41,12 +32,6 @@ class MakeJarScreenViewModel(
     private val _redColor = MutableStateFlow<Color>(Color.Unspecified)
     val redColor = _redColor.asStateFlow()
 
-    private fun initializeFeedItems() {
-        val items = List(20) { index ->
-            FeedItem("Title $index", "Description $index", height = 120 + (index % 3) * 40)
-        }
-        _feedItems.value = items
-    }
 
     fun updateJarWarHeightPx(height: Int) {
         _jarWarHeightPx.value = height

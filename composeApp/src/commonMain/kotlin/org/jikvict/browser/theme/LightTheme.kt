@@ -3,62 +3,63 @@ package org.jikvict.browser.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
+import org.jikvict.browser.constant.LightColors
 
 object LightTheme : CustomTheme {
     val colorScheme = lightColorScheme(
         // Primary colors
-        primary = Color(0xFF3574F0),         // Blue 4 (Primary)
-        onPrimary = Color.White,
-        primaryContainer = Color(0xFFD4E2FF), // Blue 11
-        onPrimaryContainer = Color(0xFF2E55A3), // Blue 1
-        inversePrimary = Color(0xFF88ADF7),   // Blue 8
+        primary = LightColors.Blue4,         // Blue 4 (Primary)
+        onPrimary = LightColors.Gray14,      // White
+        primaryContainer = LightColors.Blue11, // Blue 11
+        onPrimaryContainer = LightColors.Blue1, // Blue 1
+        inversePrimary = LightColors.Blue8,   // Blue 8
 
         // Secondary colors
-        secondary = Color(0xFF208A3C),       // Green 4 (Primary)
-        onSecondary = Color.White,
-        secondaryContainer = Color(0xFFE6F7E9), // Green 10
-        onSecondaryContainer = Color(0xFF1E6B33), // Green 1
+        secondary = LightColors.Blue4,        // Blue 4 (Primary)
+        onSecondary = LightColors.Gray14,     // White
+        secondaryContainer = LightColors.Blue10, // Blue 10
+        onSecondaryContainer = LightColors.Blue1, // Blue 1
 
         // Tertiary colors
-        tertiary = Color(0xFF834DF0),        // Purple 4 (Primary)
-        onTertiary = Color.White,
-        tertiaryContainer = Color(0xFFEFE5FF), // Purple 8
-        onTertiaryContainer = Color(0xFF55339C), // Purple 1
+        tertiary = LightColors.Purple4,        // Purple 4 (Primary)
+        onTertiary = LightColors.Gray14,       // White
+        tertiaryContainer = LightColors.Purple8, // Purple 8
+        onTertiaryContainer = LightColors.Purple1, // Purple 1
 
         // Background colors
-        background = Color(0xFFFFFFFF),      // Gray 14
-        onBackground = Color(0xFF000000),    // Gray 1 (Primary)
+        background = LightColors.Gray14,      // Gray 14
+        onBackground = LightColors.Gray1,     // Gray 1 (Primary)
 
         // Surface colors
-        surface = Color(0xFFFFFFFF),         // Gray 14
-        onSurface = Color(0xFF000000),       // Gray 1 (Primary)
+        surface = LightColors.Gray14,         // Gray 14
+        onSurface = LightColors.Gray1,        // Gray 1 (Primary)
 
-        surfaceVariant = Color(0xFFF7F8FA),  // Gray 13
-        onSurfaceVariant = Color(0xFF6C707E), // Gray 6
-        surfaceTint = Color(0xFF3574F0),     // Blue 4 (Primary)
+        surfaceVariant = LightColors.Gray13,  // Gray 13
+        onSurfaceVariant = LightColors.Gray6, // Gray 6
+        surfaceTint = LightColors.Blue4,      // Blue 4 (Primary)
 
-        inverseSurface = Color(0xFF27282E),  // Gray 2
-        inverseOnSurface = Color(0xFFD3D5DB), // Gray 10
+        inverseSurface = LightColors.Gray2,   // Gray 2
+        inverseOnSurface = LightColors.Gray10, // Gray 10
 
         // Error colors
-        error = Color(0xFFDB3B4B),           // Red 4 (Primary)
-        onError = Color.White,
-        errorContainer = Color(0xFFFFF2F3),  // Red 10
-        onErrorContainer = Color(0xFFAD2B38), // Red 1
+        error = LightColors.Red4,             // Red 4 (Primary)
+        onError = LightColors.Gray14,         // White
+        errorContainer = LightColors.Red10,   // Red 10
+        onErrorContainer = LightColors.Red1,  // Red 1
 
         // Other system colors
-        outline = Color(0xFFA8ADBD),         // Gray 8
-        outlineVariant = Color(0xFFDFE1E5),  // Gray 11
-        scrim = Color(0x66000000),           // Semi-transparent black
+        outline = LightColors.Gray8,          // Gray 8
+        outlineVariant = LightColors.Gray11,  // Gray 11
+        scrim = Color(0, 0, 0, 0x66),         // Semi-transparent black
 
         // Additional surface colors for Material 3
-        surfaceBright = Color(0xFFF7F8FA),   // Gray 13
-        surfaceDim = Color(0xFFEBECF0),      // Gray 12
-        surfaceContainer = Color(0xFFF7F8FA), // Gray 13
-        surfaceContainerHigh = Color(0xFFEBECF0), // Gray 12
-        surfaceContainerHighest = Color(0xFFDFE1E5), // Gray 11
-        surfaceContainerLow = Color(0xFFFFFFFF), // Gray 14
-        surfaceContainerLowest = Color(0xFFFFFFFF), // Gray 14
+        surfaceBright = LightColors.Gray13,   // Gray 13
+        surfaceDim = LightColors.Gray12,      // Gray 12
+        surfaceContainer = LightColors.Gray13, // Gray 13
+        surfaceContainerHigh = LightColors.Gray12, // Gray 12
+        surfaceContainerHighest = LightColors.Gray11, // Gray 11
+        surfaceContainerLow = LightColors.Gray14, // Gray 14
+        surfaceContainerLowest = LightColors.Gray14, // Gray 14
     )
 
     override fun colorScheme(): ColorScheme {

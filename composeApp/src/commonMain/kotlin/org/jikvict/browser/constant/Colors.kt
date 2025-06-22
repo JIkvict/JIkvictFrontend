@@ -193,7 +193,7 @@ object DarkColors : ThemeColors {
     override val Orange8 = Color(0xFFF0AC81)
     override val Orange9 = Color(0xFFF5BD98)
     override val Orange10 = Color(0xFFFACEAF)
-    override val Orange11 = Color(0xFFFFFDFC7)
+    override val Orange11 = Color(0xFFFFDFC7)
 
     // Purple
     override val Purple1 = Color(0xFF2F2936)
@@ -276,8 +276,7 @@ object LightColors : ThemeColors {
     override val Yellow8 = Color(0xFFFFF1D1)
     override val Yellow9 = Color(0xFFFFF6DE)  // Target root in project tree
     override val Yellow10 = Color(0xFFFFFAEB)  // General icons: Fill
-    override val Yellow11: Color
-        get() = TODO("Not yet implemented")
+    override val Yellow11 = Color(0xFFFFFAEB)  // General icons: Fill
 
     // Red
     override val Red1 = Color(0xFFAD2B38)
@@ -302,10 +301,8 @@ object LightColors : ThemeColors {
     override val Orange7 = Color(0xFFF9D2B6)
     override val Orange8 = Color(0xFFFCE6D6)
     override val Orange9 = Color(0xFFFFF4EB)  // General icons: Fill
-    override val Orange10: Color
-        get() = TODO("Not yet implemented")
-    override val Orange11: Color
-        get() = TODO("Not yet implemented")
+    override val Orange10 = Color(0xFFFFF4EB)  // General icons: Fill
+    override val Orange11 = Color(0xFFFFF4EB)  // General icons: Fill
 
     // Purple
     override val Purple1 = Color(0xFF55339C)
@@ -317,10 +314,8 @@ object LightColors : ThemeColors {
     override val Purple7 = Color(0xFFDCCBFB)
     override val Purple8 = Color(0xFFEFE5FF)
     override val Purple9 = Color(0xFFFAF5FF)  // General icons: Fill
-    override val Purple10: Color
-        get() = TODO("Not yet implemented")
-    override val Purple11: Color
-        get() = TODO("Not yet implemented")
+    override val Purple10 = Color(0xFFFAF5FF)  // General icons: Fill
+    override val Purple11 = Color(0xFFFAF5FF)  // General icons: Fill
 
     // Teal
     override val Teal1 = Color(0xFF096A6E)
@@ -332,10 +327,8 @@ object LightColors : ThemeColors {
     override val Teal7 = Color(0xFFB6E4E5)
     override val Teal8 = Color(0xFFDAF4F5)
     override val Teal9 = Color(0xFFF2FCFC)  // General icons: Fill
-    override val Teal10: Color
-        get() = TODO("Not yet implemented")
-    override val Teal11: Color
-        get() = TODO("Not yet implemented")
+    override val Teal10 = Color(0xFFF2FCFC)  // General icons: Fill
+    override val Teal11 = Color(0xFFF2FCFC)  // General icons: Fill
 }
 
 val LocalAppColors = staticCompositionLocalOf<ThemeColors> {

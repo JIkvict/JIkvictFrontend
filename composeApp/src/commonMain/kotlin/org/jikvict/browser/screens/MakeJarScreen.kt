@@ -1,16 +1,6 @@
 package org.jikvict.browser.screens
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -24,21 +14,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Create
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Task
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Task
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,13 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter.Companion.tint
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -79,12 +58,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jikvict.browser.components.AdaptiveCard
+import org.jikvict.browser.components.AnimatedBackground
 import org.jikvict.browser.components.AutoSizeText
+import org.jikvict.browser.components.CustomCard
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.IconComponent
-import org.jikvict.browser.constant.DarkColors
-import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.ThemeSwitcherProvider
@@ -334,9 +312,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                         FloatingActionButton(
                             onClick = {
                                 val scope = scope
-                                println("Scroll down clicked, current position: ${defaultScope.verticalScroll.value}, target position: $solveTestCreatePosition")
                                 scope.launch {
-                                    println("Animating scroll to position: $solveTestCreatePosition")
                                     defaultScope.verticalScroll.animateScrollTo(solveTestCreatePosition)
                                 }
                             },
@@ -354,7 +330,6 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                             )
                         }
                     } else {
-                        println("Resetting animation progress")
                         hoverJob.value?.cancel()
                         animationJob.value?.cancel()
                         viewModel.resetAnimationProgress()
@@ -387,209 +362,11 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
             Spacer(modifier = Modifier.height(16.dp))
 
 
-            val iconSize = adaptiveValue(128.dp, 256.dp)
-            FeedCard(
-                primaryContent = {
-                    Box(modifier = Modifier.size(iconSize).padding(16.dp), contentAlignment = Alignment.Center) {
-                        Image(
-                            imageVector = Icons.Outlined.Download,
-                            contentDescription = "Create Icon",
-                            colorFilter = tint(MaterialTheme.colorScheme.onSurface),
-                            modifier = Modifier.fillMaxSize(0.5f)
-                        )
-                    }
-                },
-                secondaryContent = {
-                    Text(
-                        "Download the plugin in Intellij IDEA Marketplace",
-                        modifier = Modifier.padding(8.dp),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
-                },
-            )
-
-            FeedCard(
-                primaryContent = {
-                    Box(modifier = Modifier.size(iconSize).padding(16.dp), contentAlignment = Alignment.Center) {
-                        Image(
-                            imageVector = Icons.Outlined.Task,
-                            contentDescription = "Create Icon",
-                            colorFilter = tint(MaterialTheme.colorScheme.onSurface),
-                            modifier = Modifier.fillMaxSize(0.5f)
-                        )
-                    }
-                },
-                secondaryContent = {
-                    Text(
-                        "Solve tasks and test your knowledge",
-                        modifier = Modifier.padding(8.dp),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
-                },
-            )
-
-            FeedCard(
-                primaryContent = {
-                    Box(modifier = Modifier.size(iconSize).padding(16.dp), contentAlignment = Alignment.Center) {
-                        Image(
-                            imageVector = Icons.Outlined.Create,
-                            contentDescription = "Create Icon",
-                            colorFilter = tint(MaterialTheme.colorScheme.onSurface),
-                            modifier = Modifier.fillMaxSize(0.5f)
-                        )
-                    }
-                },
-                secondaryContent = {
-                    Text(
-                        "Create elegant solutions",
-                        modifier = Modifier.padding(8.dp),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-
-                    )
-                },
-            )
-
+            CustomCard(Icons.Default.Download, "Download the plugin in IntelliJ IDEA Marketplace")
+            CustomCard(Icons.Default.Task, "Solve tasks and test your knowledge")
+            CustomCard(Icons.Default.Create, "Create elegant solutions")
         }
         Spacer(modifier = Modifier.height(16.dp))
-    }
-}
-
-
-@Composable
-fun FeedCard(
-    modifier: Modifier = Modifier,
-    primaryContent: @Composable () -> Unit,
-    secondaryContent: @Composable () -> Unit,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isHovered by interactionSource.collectIsHoveredAsState()
-
-    val animatedElevation by animateDpAsState(
-        targetValue = if (isHovered) 12.dp else 6.dp,
-        animationSpec = tween(durationMillis = 200)
-    )
-
-    val animatedScale by animateFloatAsState(
-        targetValue = if (isHovered) 1.02f else 1f,
-        animationSpec = tween(durationMillis = 200)
-    )
-
-    AdaptiveCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(animatedScale)
-            .hoverable(interactionSource).then(modifier),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = animatedElevation
-        ),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        primaryContent = primaryContent,
-        secondaryContent = secondaryContent,
-    )
-}
-
-
-data class FeedItem(
-    val title: String,
-    val description: String,
-    val height: Int = 150
-)
-
-@Composable
-fun AnimatedBackground(
-    modifier: Modifier = Modifier,
-    radiusMinSize: Float = 0.5f,
-    radiusMaxSize: Float = 1.2f
-) {
-    val infiniteTransition = rememberInfiniteTransition(label = "gradient")
-    val themeColors = LocalAppColors.current
-    val offsetX by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 500f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(15000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "x"
-    )
-
-    val offsetY by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 500f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(17000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "y"
-    )
-
-    val radiusScale by infiniteTransition.animateFloat(
-        initialValue = radiusMinSize,
-        targetValue = radiusMaxSize,
-        animationSpec = infiniteRepeatable(
-            animation = tween(12000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "radius"
-    )
-
-
-    val colors = if (themeColors is DarkColors) {
-        listOf(
-            themeColors.Blue9.copy(alpha = 0.35f),
-            themeColors.Purple7.copy(alpha = 0.25f),
-            Color.Transparent
-        )
-    } else {
-        themeColors as LightColors
-        listOf(
-            DarkColors.Blue9.copy(alpha = 0.75f),
-            DarkColors.Purple7.copy(alpha = 0.65f),
-            Color.Transparent
-        )
-    }
-    Canvas(modifier = modifier.fillMaxSize().blur(150.dp)) {
-        val centerX = size.width / 2f
-        val centerY = -(size.height * 0.1f)
-
-        val maxOffsetX = size.width * 0.1f
-        val maxOffsetY = size.height * 0.1f
-
-        val currentOffsetX = centerX + (offsetX / 500f - 0.5f) * maxOffsetX * 2f
-        val currentOffsetY = centerY + (offsetY / 500f - 0.5f) * maxOffsetY * 2f
-
-        val baseRadius = size.width * 0.9f
-
-        val animatedRadius = baseRadius * radiusScale
-        val moveUp = (size.height - animatedRadius).coerceAtMost(size.height / 2)
-
-        drawRect(
-            brush = Brush.radialGradient(
-                colors = colors,
-                center = Offset(currentOffsetX, currentOffsetY + moveUp),
-                radius = animatedRadius,
-                tileMode = TileMode.Clamp
-            ),
-            size = size,
-        )
     }
 }
 
