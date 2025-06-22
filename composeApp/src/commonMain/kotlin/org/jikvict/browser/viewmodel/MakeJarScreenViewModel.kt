@@ -28,8 +28,9 @@ class MakeJarScreenViewModel(
     private val _jarWarHeightPx = MutableStateFlow(0)
     val jarWarHeightPx = _jarWarHeightPx.asStateFlow()
 
-    private val _gridPosition = MutableStateFlow(0)
-    val gridPosition = _gridPosition.asStateFlow()
+
+    private val _solveTestCreatePosition = MutableStateFlow(0)
+    val solveTestCreatePosition = _solveTestCreatePosition.asStateFlow()
 
     private val _animationProgress = MutableStateFlow(0f)
     val animationProgress = _animationProgress.asStateFlow()
@@ -55,8 +56,8 @@ class MakeJarScreenViewModel(
         _jarWarOffsetY.value = offset
     }
 
-    fun updateGridPosition(position: Int) {
-        _gridPosition.value = position
+    fun updateSolveTestCreatePosition(position: Int) {
+        _solveTestCreatePosition.value = position
     }
 
     fun updateColors(isDark: Boolean, appColors: ThemeColors) {

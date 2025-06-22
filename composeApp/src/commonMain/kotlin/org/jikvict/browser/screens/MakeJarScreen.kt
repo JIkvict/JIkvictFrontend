@@ -80,11 +80,11 @@ import org.jikvict.browser.components.SimpleStaggeredGrid
 import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
-import org.jikvict.browser.util.responsive.Breakpoint
 import org.jikvict.browser.util.DefaultPreview
+import org.jikvict.browser.util.ThemeSwitcherProvider
+import org.jikvict.browser.util.responsive.Breakpoint
 import org.jikvict.browser.util.responsive.ResponsiveModifierBuilder
 import org.jikvict.browser.util.responsive.ResponsiveValueBuilder
-import org.jikvict.browser.util.ThemeSwitcherProvider
 import org.jikvict.browser.util.responsive.adaptiveValue
 import org.jikvict.browser.util.responsive.responsive
 import org.jikvict.browser.viewmodel.MakeJarScreenViewModel
@@ -167,13 +167,13 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
 
     val minText = minTextSize.toValue()
     val maxText = maxTextSize.toValue()
-    val radius = adaptiveValue(0.9f to 1.2f, 0.8f to 1.1f, 0.7f to 1f)
+    val radius = adaptiveValue(1f to 1.5f, 0.8f to 1.1f, 0.7f to 1f)
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-            val gridPosition by viewModel.gridPosition.collectAsState()
+            val solveTestCreatePosition by viewModel.solveTestCreatePosition.collectAsState()
             AnimatedBackground(
                 modifier = Modifier.height(spacerHeightDp * 2 + jarWarHeightPx.dp).fillMaxWidth().zIndex(-1f),
                 radius.first,
@@ -233,7 +233,6 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                                             fontWeight = FontWeight.Bold,
                                         ),
                                         color = purple,
-                                        modifier = Modifier,
                                         softWrap = false,
                                         maxTextSize = maxText,
                                         minTextSize = minText,
@@ -253,11 +252,9 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                                             fontWeight = FontWeight.Bold
                                         ),
                                         color = purple,
-                                        modifier = Modifier.fillMaxWidth(),
+                                        softWrap = false,
                                         minTextSize = minText,
                                         maxTextSize = maxText,
-                                        softWrap = false,
-                                        alignment = Alignment.CenterEnd,
                                     )
                                 }
                             }
@@ -283,11 +280,9 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                                         textAlign = TextAlign.Left,
                                         fontWeight = FontWeight.Bold,
                                     ),
-                                    modifier = Modifier,
                                     minTextSize = minText,
                                     maxTextSize = maxText,
                                     softWrap = false,
-                                    alignment = Alignment.CenterStart,
                                 )
                                 AutoSizeText(
                                     text = ".WAR",
@@ -296,11 +291,9 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                                         textAlign = TextAlign.Right,
                                         fontWeight = FontWeight.Bold,
                                     ),
-                                    modifier = Modifier,
                                     minTextSize = minText,
                                     maxTextSize = maxText,
                                     softWrap = false,
-                                    alignment = Alignment.CenterEnd,
                                 )
                             }
                         }
@@ -328,7 +321,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                                 hoverJob.value?.cancel()
                                 hoverJob.value = launch {
                                     scope.launch {
-                                        defaultScope.verticalScroll.animateScrollTo(gridPosition)
+                                        defaultScope.verticalScroll.animateScrollTo(solveTestCreatePosition)
                                     }
                                 }
                             }
@@ -338,7 +331,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                             onClick = {
                                 val scope = scope
                                 scope.launch {
-                                    defaultScope.verticalScroll.animateScrollTo(gridPosition)
+                                    defaultScope.verticalScroll.animateScrollTo(solveTestCreatePosition)
                                 }
                             },
                             modifier = Modifier
@@ -364,11 +357,24 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
         }
 
 
+
+        AutoSizeText(
+            text = "Solve. Test. Create",
+            style = MaterialTheme.typography.titleLarge.copy(
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.ExtraBold
+            ),
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            softWrap = false,
+            minTextSize = minText,
+            maxTextSize = maxText,
+            modifier = Modifier.onGloballyPositioned {
+                viewModel.updateSolveTestCreatePosition(it.positionInParent().y.toInt())
+            }
+        )
         SimpleStaggeredGrid(
             columns = if (isLargeScreen) 2 else 1,
-            modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f).onGloballyPositioned {
-                viewModel.updateGridPosition(it.positionInParent().y.toInt())
-            },
+            modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f),
             verticalSpacing = 24,
             horizontalSpacing = 24
         ) {

@@ -1,19 +1,33 @@
+@file:Suppress("unused")
+
 package org.jikvict.browser.util.responsive
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun <T> adaptiveValue(small: T, medium: T, large: T): T {
-    val windowInfo = LocalWindowInfo.current
-    val density = LocalDensity.current
-    val width = with(density) { windowInfo.containerSize.width.toDp() }
-
-    return when {
-        width < 600.dp -> small
-        width < 1200.dp -> medium
-        else -> large
+    val responsiveValue = ResponsiveValueBuilder {
+        Breakpoint.SM { small }
+        Breakpoint.MD { medium }
+        Breakpoint.LG { large }
     }
+    return responsiveValue.toValue()
+}
+
+@Composable
+fun <T> adaptiveValue(small: T, large: T): T {
+    val responsiveValue = ResponsiveValueBuilder {
+        Breakpoint.SM { small }
+        Breakpoint.MD { large }
+        Breakpoint.LG { large }
+    }
+    return responsiveValue.toValue()
+}
+
+@Composable
+fun <T> adaptiveValue(value: T): T {
+    val responsiveValue = ResponsiveValueBuilder {
+        base { value }
+    }
+    return responsiveValue.toValue()
 }
