@@ -10,6 +10,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -24,11 +25,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Create
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Task
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -49,6 +54,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter.Companion.tint
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
@@ -73,10 +79,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jikvict.browser.components.AdaptiveCard
 import org.jikvict.browser.components.AutoSizeText
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.IconComponent
-import org.jikvict.browser.components.SimpleStaggeredGrid
 import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
@@ -144,11 +150,9 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
     val purple by viewModel.purpleColor.collectAsState()
     val red by viewModel.redColor.collectAsState()
 
-    val feedItems by viewModel.feedItems.collectAsState()
 
     val constraints = defaultScope.boxWithConstraintsScope
     val screenWidth = constraints.maxWidth
-    val isLargeScreen = screenWidth >= 600.dp
     val screenHeight = constraints.maxHeight
 
     val density = LocalDensity.current
@@ -330,7 +334,9 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                         FloatingActionButton(
                             onClick = {
                                 val scope = scope
+                                println("Scroll down clicked, current position: ${defaultScope.verticalScroll.value}, target position: $solveTestCreatePosition")
                                 scope.launch {
+                                    println("Animating scroll to position: $solveTestCreatePosition")
                                     defaultScope.verticalScroll.animateScrollTo(solveTestCreatePosition)
                                 }
                             },
@@ -348,6 +354,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
                             )
                         }
                     } else {
+                        println("Resetting animation progress")
                         hoverJob.value?.cancel()
                         animationJob.value?.cancel()
                         viewModel.resetAnimationProgress()
@@ -358,36 +365,117 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) = with(defaultScop
 
 
 
-        AutoSizeText(
-            text = "Solve. Test. Create",
-            style = MaterialTheme.typography.titleLarge.copy(
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.ExtraBold
-            ),
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-            softWrap = false,
-            minTextSize = minText,
-            maxTextSize = maxText,
-            modifier = Modifier.onGloballyPositioned {
+
+        Column(
+            modifier = Modifier.responsive(mainColumnModifier).onGloballyPositioned {
                 viewModel.updateSolveTestCreatePosition(it.positionInParent().y.toInt())
-            }
-        )
-        SimpleStaggeredGrid(
-            columns = if (isLargeScreen) 2 else 1,
-            modifier = Modifier.padding(16.dp).fillMaxWidth(0.65f),
-            verticalSpacing = 24,
-            horizontalSpacing = 24
+            },
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            feedItems.forEach {
-                FeedCard(it)
-            }
+
+            AutoSizeText(
+                text = "Solve. Test. Create",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.ExtraBold
+                ),
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                softWrap = false,
+                minTextSize = minText,
+                maxTextSize = maxText,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+
+            val iconSize = adaptiveValue(128.dp, 256.dp)
+            FeedCard(
+                primaryContent = {
+                    Box(modifier = Modifier.size(iconSize).padding(16.dp), contentAlignment = Alignment.Center) {
+                        Image(
+                            imageVector = Icons.Outlined.Download,
+                            contentDescription = "Create Icon",
+                            colorFilter = tint(MaterialTheme.colorScheme.onSurface),
+                            modifier = Modifier.fillMaxSize(0.5f)
+                        )
+                    }
+                },
+                secondaryContent = {
+                    Text(
+                        "Download the plugin in Intellij IDEA Marketplace",
+                        modifier = Modifier.padding(8.dp),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                },
+            )
+
+            FeedCard(
+                primaryContent = {
+                    Box(modifier = Modifier.size(iconSize).padding(16.dp), contentAlignment = Alignment.Center) {
+                        Image(
+                            imageVector = Icons.Outlined.Task,
+                            contentDescription = "Create Icon",
+                            colorFilter = tint(MaterialTheme.colorScheme.onSurface),
+                            modifier = Modifier.fillMaxSize(0.5f)
+                        )
+                    }
+                },
+                secondaryContent = {
+                    Text(
+                        "Solve tasks and test your knowledge",
+                        modifier = Modifier.padding(8.dp),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                },
+            )
+
+            FeedCard(
+                primaryContent = {
+                    Box(modifier = Modifier.size(iconSize).padding(16.dp), contentAlignment = Alignment.Center) {
+                        Image(
+                            imageVector = Icons.Outlined.Create,
+                            contentDescription = "Create Icon",
+                            colorFilter = tint(MaterialTheme.colorScheme.onSurface),
+                            modifier = Modifier.fillMaxSize(0.5f)
+                        )
+                    }
+                },
+                secondaryContent = {
+                    Text(
+                        "Create elegant solutions",
+                        modifier = Modifier.padding(8.dp),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+
+                    )
+                },
+            )
+
         }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
 
 @Composable
-fun FeedCard(item: FeedItem) {
+fun FeedCard(
+    modifier: Modifier = Modifier,
+    primaryContent: @Composable () -> Unit,
+    secondaryContent: @Composable () -> Unit,
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
 
@@ -401,35 +489,21 @@ fun FeedCard(item: FeedItem) {
         animationSpec = tween(durationMillis = 200)
     )
 
-    ElevatedCard(
+    AdaptiveCard(
         modifier = Modifier
             .fillMaxWidth()
-            .height(item.height.dp)
             .scale(animatedScale)
-            .hoverable(interactionSource),
+            .hoverable(interactionSource).then(modifier),
         elevation = CardDefaults.elevatedCardElevation(
             defaultElevation = animatedElevation
         ),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text(
-                text = "${item.title} (Glassmorphism)",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = item.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        primaryContent = primaryContent,
+        secondaryContent = secondaryContent,
+    )
 }
 
 
