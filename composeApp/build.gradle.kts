@@ -13,10 +13,10 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.androidApplication) // To delete
-    id("com.google.devtools.ksp") version "2.1.21-2.0.1"
+    id("com.google.devtools.ksp") version "2.2.0-RC3-2.0.2"
 
     id("org.openapi.generator") version "7.13.0"
-    kotlin("plugin.serialization") version "2.1.21"
+    kotlin("plugin.serialization") version "2.2.0"
     id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha10"
 }
 
@@ -38,8 +38,10 @@ kotlin {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
+            freeCompilerArgs.add("-Xcontext-parameters")
         }
     } // To delete
+
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
@@ -65,15 +67,18 @@ kotlin {
         }
         compilerOptions {
             freeCompilerArgs.add("-Xwasm-debugger-custom-formatters")
+            freeCompilerArgs.add("-Xcontext-parameters")
         }
         binaries.executable()
     }
 
     sourceSets {
 
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         jvm("desktop") {
-            compilations.all {
-                kotlinOptions.jvmTarget = "21"
+            compilerOptions {
+                jvmTarget.set(JvmTarget.JVM_21)
+                freeCompilerArgs.add("-Xcontext-parameters")
             }
         }
 
@@ -82,6 +87,7 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlin.coroutines.swing)
+                implementation(libs.ktor.client.cio)
             }
         }
 
@@ -91,15 +97,16 @@ kotlin {
         @Suppress("unused")
         val wasmJsMain by getting {
             dependencies {
+                implementation(libs.ktor.client.js)
             }
         }
-
-
+        
 
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlin.coroutines.android)
+            implementation(libs.ktor.client.android)
         } // To delete
         commonMain {
             kotlin.srcDir("${layout.buildDirectory.get()}/generated/openapi/src/commonMain/kotlin")
@@ -132,6 +139,7 @@ kotlin {
                 implementation(libs.material3.window.size.class1)
                 implementation(libs.bundles.compottie)
                 implementation(libs.ui.util)
+                implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.35.0")
             }
         }
         commonTest {
@@ -180,10 +188,12 @@ tasks.named("compileKotlinWasmJs") {
 tasks.withType<KotlinCompile>().configureEach {
     dependsOn("openApiGenerate")
     dependsOn("kspCommonMainKotlinMetadata")
+    compilerOptions.freeCompilerArgs.addAll(listOf("-Xcontext-parameters"))
 }
 tasks.withType<KotlinCompileCommon>().configureEach {
     dependsOn("openApiGenerate")
     dependsOn("kspCommonMainKotlinMetadata")
+    compilerOptions.freeCompilerArgs.addAll(listOf("-Xcontext-parameters"))
 }
 tasks.withType<KspAATask> {
     dependsOn("openApiGenerate")

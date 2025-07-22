@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -29,6 +30,8 @@ fun IconComponent(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     tint: Color = Color.Unspecified,
+    enabled: Boolean = true,
+    iconSize: Dp = 24.dp,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
@@ -38,7 +41,7 @@ fun IconComponent(
             .size(32.dp)
             .hoverable(interactionSource, hoverable)
             .then(
-                if (onClick != null) {
+                if (onClick != null && enabled) {
                     Modifier.clickable(
                         interactionSource = interactionSource,
                         indication = null,
@@ -59,7 +62,7 @@ fun IconComponent(
             tint = tint,
             modifier =
             Modifier
-                .size(24.dp)
+                .size(iconSize)
         )
     }
 }

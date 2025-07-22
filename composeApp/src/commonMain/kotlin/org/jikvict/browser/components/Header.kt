@@ -23,8 +23,8 @@ import org.jikvict.browser.LocalNavController
 import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.icons.myiconpack.Ijlogo
 import org.jikvict.browser.screens.MakeJarScreen
-import org.jikvict.browser.screens.NotFoundScreen
-import org.jikvict.browser.screens.NotFoundScreenRouterRegistrar
+import org.jikvict.browser.screens.TasksScreen
+import org.jikvict.browser.screens.TasksScreenRouterRegistrar
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.ThemeSwitcherProvider
 
@@ -63,13 +63,13 @@ fun Header(modifier: Modifier = Modifier) {
                 animationPath = "files/code-animation.json",
                 hoverable = true,
                 onClick = {
-                    if (!NotFoundScreenRouterRegistrar.matchRoute(
+                    if (!TasksScreenRouterRegistrar.matchRoute(
                             navController.currentBackStackEntry?.destination?.route ?: ""
                         )
                     ) {
                         coroutineScope.launch {
                             delay(150)
-                            navController.navigate(NotFoundScreen())
+                            navController.navigate(TasksScreen())
                         }
                     }
                 },
