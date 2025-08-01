@@ -9,22 +9,22 @@ object DarkTheme: CustomTheme {
     val colorScheme: ColorScheme =
         darkColorScheme(
             // Primary colors
-            primary = DarkColors.Blue4,         // Darker Primary
+            primary = DarkColors.Blue6,         // Primary
             onPrimary = DarkColors.Gray14,      // White
-            primaryContainer = DarkColors.Gray1, // Main background (editor)
+            primaryContainer = DarkColors.Blue1, // Darker blue background
             onPrimaryContainer = DarkColors.Blue10,
-            inversePrimary = DarkColors.Blue4,   // Darker Primary
+            inversePrimary = DarkColors.Blue8,   // Lighter blue
 
             // Secondary colors
             secondary = DarkColors.Purple6,     // Primary
             onSecondary = DarkColors.Gray14,    // White
-            secondaryContainer = DarkColors.Gray2, // Secondary background
-            onSecondaryContainer = DarkColors.Purple10,
+            secondaryContainer = DarkColors.Blue2, // Darker blue background
+            onSecondaryContainer = DarkColors.Blue10,
 
             // Tertiary colors
             tertiary = DarkColors.Purple6,      // Primary
             onTertiary = DarkColors.Gray14,     // White
-            tertiaryContainer = DarkColors.Gray3, // Lines & separators
+            tertiaryContainer = DarkColors.Purple2, // Darker purple background
             onTertiaryContainer = DarkColors.Purple10,
 
             // Background colors
@@ -37,7 +37,7 @@ object DarkTheme: CustomTheme {
 
             surfaceVariant = DarkColors.Gray3,  // Lines & separators
             onSurfaceVariant = DarkColors.Gray9, // Current line number
-            surfaceTint = DarkColors.Blue4,     // Darker Primary
+            surfaceTint = DarkColors.Blue6,     // Primary
 
             inverseSurface = DarkColors.Gray12, // Primary text
             inverseOnSurface = DarkColors.Gray2, // Secondary background
@@ -54,7 +54,7 @@ object DarkTheme: CustomTheme {
             scrim = Color(0, 0, 0, 0x80),       // Semi-transparent black
 
             // Additional surface colors for Material 3
-            surfaceBright = DarkColors.Gray3,   // Lines & separators
+            surfaceBright = DarkColors.Gray4,   // Brighter surface
             surfaceDim = DarkColors.Gray1,      // Main background (editor)
             surfaceContainer = DarkColors.Gray2, // Secondary background
             surfaceContainerHigh = DarkColors.Gray3, // Lines & separators

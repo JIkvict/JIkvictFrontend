@@ -15,20 +15,25 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.jikvict.browser.util.responsive.adaptiveComponent
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SmallCard(
     modifier: Modifier = Modifier,
     primaryContent: @Composable () -> Unit,
     secondaryContent: @Composable () -> Unit,
     elevation: CardElevation = CardDefaults.elevatedCardElevation(),
-    colors: CardColors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+    colors: CardColors = CardDefaults.elevatedCardColors(
+        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+    ),
 ) {
     ElevatedCard(
         modifier = modifier,
@@ -44,7 +49,10 @@ fun SmallCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .background(colors.contentColor, RoundedCornerShape(24.dp))
+                    .background(
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
+                        RoundedCornerShape(24.dp)
+                    )
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
@@ -64,13 +72,16 @@ fun SmallCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LargeCard(
     modifier: Modifier = Modifier,
     primaryContent: @Composable () -> Unit,
     secondaryContent: @Composable () -> Unit,
     elevation: CardElevation = CardDefaults.elevatedCardElevation(),
-    colors: CardColors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+    colors: CardColors = CardDefaults.elevatedCardColors(
+        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+    ),
 ) {
     ElevatedCard(
         modifier = modifier,
@@ -87,7 +98,10 @@ fun LargeCard(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .background(colors.contentColor, RoundedCornerShape(24.dp))
+                    .background(
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
+                        RoundedCornerShape(24.dp)
+                    )
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
@@ -107,13 +121,16 @@ fun LargeCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AdaptiveCard(
     modifier: Modifier = Modifier,
     primaryContent: @Composable () -> Unit,
     secondaryContent: @Composable () -> Unit,
     elevation: CardElevation = CardDefaults.elevatedCardElevation(),
-    colors: CardColors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+    colors: CardColors = CardDefaults.elevatedCardColors(
+        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+    ),
 ) = adaptiveComponent(
     small =
         {

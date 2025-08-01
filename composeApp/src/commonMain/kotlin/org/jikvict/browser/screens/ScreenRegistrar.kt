@@ -1,9 +1,10 @@
 package org.jikvict.browser.screens
 
 import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
@@ -42,16 +43,18 @@ inline fun <reified T : NavigableScreen> createRegistrar(): ScreenRegistrar<T> {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 fun NavGraphBuilder.registerNavForScreen(
     screenRegistrar: ScreenRegistrar<out NavigableScreen>,
-    scope: DefaultScreenScope
+    scope: DefaultScreenScope,
+    motionScheme: MotionScheme
 ) {
     composable(
         route = screenRegistrar.getType(),
-        enterTransition = { fadeIn(animationSpec = tween(0)) },
-        exitTransition = { fadeOut(animationSpec = tween(0)) },
-        popEnterTransition = { fadeIn(animationSpec = tween(0)) },
-        popExitTransition = { fadeOut(animationSpec = tween(0)) },
+        enterTransition = { fadeIn(animationSpec = motionScheme.slowEffectsSpec()) },
+        exitTransition = { fadeOut(animationSpec = motionScheme.slowEffectsSpec()) },
+        popEnterTransition = { fadeIn(animationSpec = motionScheme.slowEffectsSpec()) },
+        popExitTransition = { fadeOut(animationSpec = motionScheme.slowEffectsSpec()) },
     ) {
         screenRegistrar.UseNavEntry(this, it, scope)
     }

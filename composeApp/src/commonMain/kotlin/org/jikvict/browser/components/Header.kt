@@ -1,14 +1,16 @@
 package org.jikvict.browser.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -28,7 +30,7 @@ import org.jikvict.browser.screens.TasksScreenRouterRegistrar
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.ThemeSwitcherProvider
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun Header(modifier: Modifier = Modifier) {
     val navController = LocalNavController.current
@@ -42,67 +44,74 @@ fun Header(modifier: Modifier = Modifier) {
 
     val moonTint = if (!theme) Color.Black else Color.Unspecified
 
-    Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(horizontal = 8.dp, vertical = 8.dp)
-            .then(modifier),
-        verticalAlignment = Alignment.CenterVertically,
+            .height(48.dp),
+        color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+        tonalElevation = 2.dp,
+        shadowElevation = 2.dp
     ) {
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 8.dp)
+                .then(modifier),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(35.dp),
         ) {
-            IconComponent(Ijlogo, hoverable = true, tint = purple, onClick = {
-                navController.navigate(MakeJarScreen())
-            })
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(35.dp),
+            ) {
+                IconComponent(Ijlogo, hoverable = true, tint = purple, onClick = {
+                    navController.navigate(MakeJarScreen())
+                })
 
-            AnimatedIconComponent(
-                animationPath = "files/code-animation.json",
-                hoverable = true,
-                onClick = {
-                    if (!TasksScreenRouterRegistrar.matchRoute(
-                            navController.currentBackStackEntry?.destination?.route ?: ""
-                        )
-                    ) {
-                        coroutineScope.launch {
-                            delay(150)
-                            navController.navigate(TasksScreen())
+                AnimatedIconComponent(
+                    animationPath = "files/code-animation.json",
+                    hoverable = true,
+                    onClick = {
+                        if (!TasksScreenRouterRegistrar.matchRoute(
+                                navController.currentBackStackEntry?.destination?.route ?: ""
+                            )
+                        ) {
+                            coroutineScope.launch {
+                                delay(150)
+                                navController.navigate(TasksScreen())
+                            }
                         }
-                    }
-                },
-                animationType = AnimationType.TOGGLE,
-                tint = MaterialTheme.colorScheme.onSurface,
-                speed = 2f
-            )
-        }
+                    },
+                    animationType = AnimationType.TOGGLE,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    speed = 2f
+                )
+            }
 
-        Spacer(modifier = Modifier.weight(1f))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(35.dp),
-        ) {
-            AnimatedIconComponent(
-                animationPath = "files/sun-moon.json",
-                hoverable = true,
-                tint = moonTint,
-                initialProgress = if (theme) 0f else 1f,
-                onEnd = {
-                    themeSwitcher.switchTheme()
-                },
-                animationType = AnimationType.TOGGLE,
-                speed = 1f
-            )
+            Spacer(modifier = Modifier.weight(1f))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(35.dp),
+            ) {
+                AnimatedIconComponent(
+                    animationPath = "files/sun-moon.json",
+                    hoverable = true,
+                    tint = moonTint,
+                    initialProgress = if (theme) 0f else 1f,
+                    onEnd = {
+                        themeSwitcher.switchTheme()
+                    },
+                    animationType = AnimationType.TOGGLE,
+                    speed = 1f
+                )
 
-            AnimatedIconComponent(
-                animationPath = "files/user-animation.json",
-                hoverable = true,
-                tint = MaterialTheme.colorScheme.onSurface,
-                animationType = AnimationType.ONCE_FORWARD,
-                speed = 1f
-            )
+                AnimatedIconComponent(
+                    animationPath = "files/user-animation.json",
+                    hoverable = true,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    animationType = AnimationType.ONCE_FORWARD,
+                    speed = 1f
+                )
+            }
         }
     }
 }

@@ -8,58 +8,58 @@ import org.jikvict.browser.constant.LightColors
 object LightTheme : CustomTheme {
     val colorScheme = lightColorScheme(
         // Primary colors
-        primary = LightColors.Blue4,         // Blue 4 (Primary)
+        primary = LightColors.Blue5,         // Primary, more vibrant
         onPrimary = LightColors.Gray14,      // White
-        primaryContainer = LightColors.Blue11, // Blue 11
-        onPrimaryContainer = LightColors.Blue1, // Blue 1
-        inversePrimary = LightColors.Blue8,   // Blue 8
+        primaryContainer = LightColors.Blue10, // Light blue background
+        onPrimaryContainer = LightColors.Blue2, // Darker blue for text on light blue
+        inversePrimary = LightColors.Blue7,   // Medium blue
 
         // Secondary colors
-        secondary = LightColors.Blue4,        // Blue 4 (Primary)
-        onSecondary = LightColors.Gray14,     // White
-        secondaryContainer = LightColors.Blue10, // Blue 10
-        onSecondaryContainer = LightColors.Blue1, // Blue 1
+        secondary = LightColors.Blue5,       // Primary, more vibrant
+        onSecondary = LightColors.Gray14,    // White
+        secondaryContainer = LightColors.Blue9, // Light blue background
+        onSecondaryContainer = LightColors.Blue2, // Darker blue for text on light blue
 
         // Tertiary colors
-        tertiary = LightColors.Purple4,        // Purple 4 (Primary)
-        onTertiary = LightColors.Gray14,       // White
-        tertiaryContainer = LightColors.Purple8, // Purple 8
-        onTertiaryContainer = LightColors.Purple1, // Purple 1
+        tertiary = LightColors.Purple5,      // Primary, more vibrant
+        onTertiary = LightColors.Gray14,     // White
+        tertiaryContainer = LightColors.Purple7, // Light purple background
+        onTertiaryContainer = LightColors.Purple2, // Darker purple for text on light purple
 
         // Background colors
-        background = LightColors.Gray14,      // Gray 14
-        onBackground = LightColors.Gray1,     // Gray 1 (Primary)
+        background = LightColors.Gray14,     // Main background (white)
+        onBackground = LightColors.Gray2,    // Dark text for better readability
 
         // Surface colors
-        surface = LightColors.Gray14,         // Gray 14
-        onSurface = LightColors.Gray1,        // Gray 1 (Primary)
+        surface = LightColors.Gray13,        // Secondary background (light gray)
+        onSurface = LightColors.Gray2,       // Dark text for better readability
 
-        surfaceVariant = LightColors.Gray13,  // Gray 13
-        onSurfaceVariant = LightColors.Gray6, // Gray 6
-        surfaceTint = LightColors.Blue4,      // Blue 4 (Primary)
+        surfaceVariant = LightColors.Gray12, // Lines & separators
+        onSurfaceVariant = LightColors.Gray5, // Secondary text & icons
+        surfaceTint = LightColors.Blue5,     // Primary, more vibrant
 
-        inverseSurface = LightColors.Gray2,   // Gray 2
-        inverseOnSurface = LightColors.Gray10, // Gray 10
+        inverseSurface = LightColors.Gray3,  // Dark background
+        inverseOnSurface = LightColors.Gray12, // Light text on dark background
 
         // Error colors
-        error = LightColors.Red4,             // Red 4 (Primary)
-        onError = LightColors.Gray14,         // White
-        errorContainer = LightColors.Red10,   // Red 10
-        onErrorContainer = LightColors.Red1,  // Red 1
+        error = LightColors.Red5,            // Primary, more vibrant
+        onError = LightColors.Gray14,        // White
+        errorContainer = LightColors.Red9,   // Light red background
+        onErrorContainer = LightColors.Red2, // Darker red for text on light red
 
         // Other system colors
-        outline = LightColors.Gray8,          // Gray 8
-        outlineVariant = LightColors.Gray11,  // Gray 11
-        scrim = Color(0, 0, 0, 0x66),         // Semi-transparent black
+        outline = LightColors.Gray7,         // Secondary text & icons
+        outlineVariant = LightColors.Gray10, // Lines & separators
+        scrim = Color(0, 0, 0, 0x66),        // Semi-transparent black
 
         // Additional surface colors for Material 3
-        surfaceBright = LightColors.Gray13,   // Gray 13
-        surfaceDim = LightColors.Gray12,      // Gray 12
-        surfaceContainer = LightColors.Gray13, // Gray 13
-        surfaceContainerHigh = LightColors.Gray12, // Gray 12
-        surfaceContainerHighest = LightColors.Gray11, // Gray 11
-        surfaceContainerLow = LightColors.Gray14, // Gray 14
-        surfaceContainerLowest = LightColors.Gray14, // Gray 14
+        surfaceBright = LightColors.Gray14,  // Brightest surface (white)
+        surfaceDim = LightColors.Gray12,     // Dimmed surface
+        surfaceContainer = LightColors.Gray13, // Container surface
+        surfaceContainerHigh = LightColors.Gray11, // Higher container surface
+        surfaceContainerHighest = LightColors.Gray10, // Highest container surface
+        surfaceContainerLow = LightColors.Gray13, // Lower container surface
+        surfaceContainerLowest = LightColors.Gray14, // Lowest container surface
     )
 
     override fun colorScheme(): ColorScheme {

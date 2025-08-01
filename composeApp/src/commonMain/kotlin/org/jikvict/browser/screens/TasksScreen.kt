@@ -1,8 +1,6 @@
 package org.jikvict.browser.screens
 
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,7 +34,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
@@ -120,7 +117,7 @@ private suspend fun fetchAssignments(page: Int = 0, pageSize: Int = 20): Assignm
                 id = (page * pageSize) + index,
                 title = dto.title,
                 description = dto.description ?: "No description",
-                taskNumber = dto.taskNumber
+                taskNumber = dto.taskId
             )
         }
 
@@ -172,7 +169,7 @@ private suspend fun loadMoreAssignments(currentState: AssignmentsUiState.Success
                 id = (nextPage * 20) + index,
                 title = dto.title,
                 description = dto.description ?: "No description",
-                taskNumber = dto.taskNumber
+                taskNumber = dto.taskId
             )
         }
 
@@ -254,7 +251,6 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit = with(default
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Place the RefreshButton at the top of the Column
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -271,7 +267,6 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit = with(default
                         }
                     }
 
-                    // Display the appropriate content based on the UI state
                     when (uiState) {
                         is AssignmentsUiState.Loading -> {
                             Box(
@@ -428,7 +423,8 @@ private fun AssignmentListItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Row(
             modifier = Modifier
@@ -483,13 +479,15 @@ private fun AssignmentDetailPane(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            OutlinedTextField(
-                value = assignment.title,
-                onValueChange = { /* Read-only */ },
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = true
-            )
+            OutlinedContentContainer(
+                label = "Title",
+            ) {
+                Text(
+                    text = assignment.title,
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
 
             OutlinedContentContainer(label = "Description") {
                 LazyColumn(
@@ -596,6 +594,7 @@ fun OutlinedContentContainer(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RefreshButton(
     isRefreshing: Boolean,
@@ -606,12 +605,10 @@ fun RefreshButton(
 
     val rotation by animateFloatAsState(
         targetValue = if (isAnimating) totalRotation + 360f else totalRotation,
-        animationSpec = tween(
-            durationMillis = 800,
-            easing = LinearEasing
-        ),
+        animationSpec = MaterialTheme.motionScheme.slowEffectsSpec(),
         finishedListener = { finalValue ->
             if (isAnimating) {
+                @Suppress("AssignedValueIsNeverRead")
                 totalRotation = finalValue
                 isAnimating = false
             }

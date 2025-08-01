@@ -8,6 +8,8 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -21,6 +23,7 @@ import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AnimatedBackground(
     modifier: Modifier = Modifier.Companion,
@@ -33,7 +36,7 @@ fun AnimatedBackground(
         initialValue = 0f,
         targetValue = 500f,
         animationSpec = infiniteRepeatable(
-            animation = tween(15000, easing = LinearEasing),
+            animation = tween(18000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "x"
@@ -43,7 +46,7 @@ fun AnimatedBackground(
         initialValue = 0f,
         targetValue = 500f,
         animationSpec = infiniteRepeatable(
-            animation = tween(17000, easing = LinearEasing),
+            animation = tween(20000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "y"
@@ -53,7 +56,7 @@ fun AnimatedBackground(
         initialValue = radiusMinSize,
         targetValue = radiusMaxSize,
         animationSpec = infiniteRepeatable(
-            animation = tween(12000, easing = LinearEasing),
+            animation = tween(15000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "radius"
@@ -62,6 +65,7 @@ fun AnimatedBackground(
 
     val colors = if (themeColors is DarkColors) {
         listOf(
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
             themeColors.Blue9.copy(alpha = 0.35f),
             themeColors.Purple7.copy(alpha = 0.25f),
             Color.Transparent
@@ -69,12 +73,13 @@ fun AnimatedBackground(
     } else {
         themeColors as LightColors
         listOf(
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
             DarkColors.Blue9.copy(alpha = 0.75f),
             DarkColors.Purple7.copy(alpha = 0.65f),
             Color.Transparent
         )
     }
-    Canvas(modifier = modifier.fillMaxSize().blur(150.dp)) {
+    Canvas(modifier = modifier.fillMaxSize().blur(120.dp)) {
         val centerX = size.width / 2f
         val centerY = -(size.height * 0.1f)
 
@@ -90,11 +95,11 @@ fun AnimatedBackground(
         val moveUp = (size.height - animatedRadius).coerceAtMost(size.height / 2)
 
         drawRect(
-            brush = Brush.Companion.radialGradient(
+            brush = Brush.radialGradient(
                 colors = colors,
                 center = Offset(currentOffsetX, currentOffsetY + moveUp),
                 radius = animatedRadius,
-                tileMode = TileMode.Companion.Clamp
+                tileMode = TileMode.Clamp
             ),
             size = size,
         )

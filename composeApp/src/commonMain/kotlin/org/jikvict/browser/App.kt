@@ -1,6 +1,9 @@
 package org.jikvict.browser
 
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -27,7 +30,6 @@ import org.jikvict.browser.theme.rememberJetBrainsMonoFontFamily
 import org.jikvict.browser.util.ThemeSwitcher
 import org.jikvict.browser.util.ThemeSwitcherProvider
 import org.jikvict.browser.util.getTheme
-import org.koin.compose.KoinContext
 import org.koin.core.context.startKoin
 
 
@@ -37,6 +39,7 @@ import org.koin.core.context.startKoin
 
 private var isKoinStarted = false
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Preview
 @Composable
 fun App(navController: NavHostController, onNavHostReady: (Boolean) -> Unit = {}) {
@@ -51,29 +54,29 @@ fun App(navController: NavHostController, onNavHostReady: (Boolean) -> Unit = {}
         }
         isKoinStarted = true
     }
-    KoinContext {
-        MaterialTheme(
-            colorScheme = theme.value.colorScheme(),
-            typography = fonts.typography
+    MaterialExpressiveTheme(
+        colorScheme = theme.value.colorScheme(),
+        typography = fonts.typography,
+        motionScheme = MotionScheme.expressive()
+    ) {
+        val motionScheme = MaterialTheme.motionScheme
+        CompositionLocalProvider(
+            LocalNavController provides navController,
+            ThemeSwitcherProvider provides themeSwitcher,
+            LocalAppColors provides colors.value,
         ) {
-            CompositionLocalProvider(
-                LocalNavController provides navController,
-                ThemeSwitcherProvider provides themeSwitcher,
-                LocalAppColors provides colors.value,
-            ) {
-                DefaultScreen { scope ->
-                    LaunchedEffect(navController.currentBackStackEntry?.destination?.route) {
-                        scope.verticalScroll.scrollTo(0)
-                    }
-                    NavHost(navController, startDestination = MakeJarScreen()) {
-                        registeredScreens.forEach { screen ->
-                            registerNavForScreen(screen, scope)
-                        }
-                    }
-                    onNavHostReady(true)
+            DefaultScreen { scope ->
+                LaunchedEffect(navController.currentBackStackEntry?.destination?.route) {
+                    scope.verticalScroll.scrollTo(0)
                 }
-
+                NavHost(navController, startDestination = MakeJarScreen()) {
+                    registeredScreens.forEach { screen ->
+                        registerNavForScreen(screen, scope, motionScheme)
+                    }
+                }
+                onNavHostReady(true)
             }
+
         }
     }
 }

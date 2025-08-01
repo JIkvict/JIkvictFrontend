@@ -13,15 +13,15 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.androidApplication) // To delete
-    id("com.google.devtools.ksp") version "2.2.0-RC3-2.0.2"
+    alias(libs.plugins.ksp)
 
-    id("org.openapi.generator") version "7.13.0"
-    kotlin("plugin.serialization") version "2.2.0"
-    id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha10"
+    alias(libs.plugins.openApiGenerator)
+    alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.composeHotReload)
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
     namespace = "org.jikvict.composeapp"
 
     defaultConfig {
@@ -35,31 +35,27 @@ android {
 } // To delete
 kotlin {
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        compilerOptions {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class) compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
             freeCompilerArgs.add("-Xcontext-parameters")
         }
     } // To delete
 
 
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
+    @OptIn(ExperimentalWasmDsl::class) wasmJs {
         outputModuleName = "composeApp"
         browser {
             val rootDirPath = project.rootDir.path
             val projectDirPath = project.projectDir.path
             commonWebpackConfig {
                 outputFileName = "composeApp.js"
-                devServer =
-                    (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                        static =
-                            (static ?: mutableListOf()).apply {
-                                add(rootDirPath)
-                                add(projectDirPath)
-                            }
-                        open = false
+                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
+                    static = (static ?: mutableListOf()).apply {
+                        add(rootDirPath)
+                        add(projectDirPath)
                     }
+                    open = false
+                }
             }
             testTask {
                 enabled = false
@@ -74,16 +70,14 @@ kotlin {
 
     sourceSets {
 
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        jvm("desktop") {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class) jvm("desktop") {
             compilerOptions {
                 jvmTarget.set(JvmTarget.JVM_21)
                 freeCompilerArgs.add("-Xcontext-parameters")
             }
         }
 
-        @Suppress("unused")
-        val desktopMain by getting {
+        @Suppress("unused") val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlin.coroutines.swing)
@@ -91,16 +85,14 @@ kotlin {
             }
         }
 
-        @Suppress("unused")
-        val desktopTest by getting
+        @Suppress("unused") val desktopTest by getting
 
-        @Suppress("unused")
-        val wasmJsMain by getting {
+        @Suppress("unused") val wasmJsMain by getting {
             dependencies {
                 implementation(libs.ktor.client.js)
             }
         }
-        
+
 
         androidMain.dependencies {
             implementation(compose.preview)
@@ -139,7 +131,8 @@ kotlin {
                 implementation(libs.material3.window.size.class1)
                 implementation(libs.bundles.compottie)
                 implementation(libs.ui.util)
-                implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.35.0")
+                implementation(libs.multiplatform.markdown.renderer)
+                implementation(libs.kotlinx.datetime)
             }
         }
         commonTest {
@@ -157,10 +150,11 @@ openApiGenerate {
     packageName.set("org.jikvict.api")
     configOptions.set(
         mapOf(
-            "dateLibrary" to "kotlinx-datetime",
+            "dateLibrary" to "string",
             "serializationLibrary" to "kotlinx_serialization",
             "parcelizeModels" to "false",
-            "withJava" to "false"
+            "withJava" to "false",
+            "dateTimeFormat" to "iso8601"
         )
     )
 }

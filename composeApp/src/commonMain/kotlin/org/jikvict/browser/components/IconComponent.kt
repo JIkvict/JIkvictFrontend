@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -22,7 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun IconComponent(
     iconVector: ImageVector,
@@ -37,23 +38,23 @@ fun IconComponent(
     val isHovered by interactionSource.collectIsHoveredAsState()
     Box(
         modifier =
-        Modifier
-            .size(32.dp)
-            .hoverable(interactionSource, hoverable)
-            .then(
-                if (onClick != null && enabled) {
-                    Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = null,
-                        onClick = onClick
-                    )
-                } else {
-                    Modifier
-                }
-            ).background(
-                if (isHovered && hoverable) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
-                RoundedCornerShape(8.dp)
-            ).then(modifier),
+            Modifier
+                .size(32.dp)
+                .hoverable(interactionSource, hoverable)
+                .then(
+                    if (onClick != null && enabled) {
+                        Modifier.clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            onClick = onClick
+                        )
+                    } else {
+                        Modifier
+                    }
+                ).background(
+                    if (isHovered && hoverable) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                    RoundedCornerShape(8.dp)
+                ).then(modifier),
         contentAlignment = Alignment.Center
     ) {
         Icon(
@@ -61,8 +62,8 @@ fun IconComponent(
             contentDescription = null,
             tint = tint,
             modifier =
-            Modifier
-                .size(iconSize)
+                Modifier
+                    .size(iconSize)
         )
     }
 }
