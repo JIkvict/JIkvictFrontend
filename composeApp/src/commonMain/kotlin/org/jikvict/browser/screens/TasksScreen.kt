@@ -41,6 +41,7 @@ import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
@@ -55,17 +56,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.m3.Markdown
-import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.plugins.ServerResponseException
 import kotlinx.coroutines.launch
-import kotlinx.io.IOException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jikvict.api.apis.AssignmentControllerApi
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.ThemeSwitcherProvider
+import org.jikvict.browser.viewmodel.TasksScreenViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
 
 @Serializable
@@ -88,103 +87,6 @@ sealed class AssignmentsUiState {
     data class Error(val message: String) : AssignmentsUiState()
 }
 
-private suspend fun fetchAssignments(page: Int = 0, pageSize: Int = 20): AssignmentsUiState {
-    return try {
-        val response = AssignmentControllerApi().getAll(page = page, size = pageSize)
-
-        if (!response.success) {
-            return AssignmentsUiState.Error("Server error: ${response.status}")
-        }
-
-        val body = response.body()
-        val content = body.content
-        val pageMetadata = body.page
-
-        if (content == null) {
-            return AssignmentsUiState.Success(emptyList())
-        }
-
-        if (content.isEmpty()) {
-            return AssignmentsUiState.Success(emptyList())
-        }
-
-        val totalPages = pageMetadata?.totalPages?.toInt() ?: 0
-        val currentPage = pageMetadata?.number?.toInt() ?: 0
-        val hasMorePages = currentPage < totalPages - 1
-
-        val assignments = content.mapIndexed { index, dto ->
-            Assignment(
-                id = (page * pageSize) + index,
-                title = dto.title,
-                description = dto.description ?: "No description",
-                taskNumber = dto.taskId
-            )
-        }
-
-        AssignmentsUiState.Success(
-            assignments = assignments,
-            currentPage = currentPage,
-            hasMorePages = hasMorePages,
-            isLoadingMore = false
-        )
-    } catch (e: ClientRequestException) {
-        AssignmentsUiState.Error("Request error: ${e.message}")
-    } catch (e: ServerResponseException) {
-        AssignmentsUiState.Error("Server error: ${e.message}")
-    } catch (e: IOException) {
-        AssignmentsUiState.Error("Network error: ${e.message}")
-    } catch (e: Exception) {
-        AssignmentsUiState.Error("Unknown error: ${e.message}")
-    }
-}
-
-private suspend fun loadMoreAssignments(currentState: AssignmentsUiState.Success): AssignmentsUiState {
-    if (!currentState.hasMorePages || currentState.isLoadingMore) {
-        return currentState
-    }
-
-    val nextPage = currentState.currentPage + 1
-
-    return try {
-        val response = AssignmentControllerApi().getAll(page = nextPage, size = 20)
-
-        if (!response.success) {
-            return AssignmentsUiState.Error("Server error: ${response.status}")
-        }
-
-        val body = response.body()
-        val content = body.content
-        val pageMetadata = body.page
-
-        if (content == null || content.isEmpty()) {
-            return currentState.copy(hasMorePages = false, isLoadingMore = false)
-        }
-
-        val totalPages = pageMetadata?.totalPages?.toInt() ?: 0
-        val currentPageFromResponse = pageMetadata?.number?.toInt() ?: 0
-        val hasMorePages = currentPageFromResponse < totalPages - 1
-
-        val newAssignments = content.mapIndexed { index, dto ->
-            Assignment(
-                id = (nextPage * 20) + index,
-                title = dto.title,
-                description = dto.description ?: "No description",
-                taskNumber = dto.taskId
-            )
-        }
-
-        val combinedAssignments = currentState.assignments + newAssignments
-
-        AssignmentsUiState.Success(
-            assignments = combinedAssignments,
-            currentPage = nextPage,
-            hasMorePages = hasMorePages,
-            isLoadingMore = false
-        )
-    } catch (_: Exception) {
-        currentState.copy(isLoadingMore = false)
-    }
-}
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -192,46 +94,23 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit = with(default
     val navigator = rememberListDetailPaneScaffoldNavigator<Int>()
     val scope = rememberCoroutineScope()
 
-    // Observe theme changes
+    val viewModel = koinViewModel<TasksScreenViewModel>()
+    
     val themeSwitcher = ThemeSwitcherProvider.current
     val theme by themeSwitcher.isDark
 
-    var uiState by remember { mutableStateOf<AssignmentsUiState>(AssignmentsUiState.Loading) }
+    val uiState by viewModel.assignmentsState.collectAsState()
+    val assignments by viewModel.assignments.collectAsState()
+    val isLoadingMore by viewModel.isLoadingMore.collectAsState()
+    
     var selectedAssignmentId by remember { mutableIntStateOf(-1) }
 
     fun refreshAssignments() {
-        uiState = AssignmentsUiState.Loading
-        scope.launch {
-            uiState = fetchAssignments(page = 0)
-        }
+        viewModel.refreshAssignments()
     }
 
     fun loadMoreAssignments() {
-        if (uiState is AssignmentsUiState.Success) {
-            val successState = uiState as AssignmentsUiState.Success
-
-            if (successState.hasMorePages && !successState.isLoadingMore) {
-                uiState = successState.copy(isLoadingMore = true)
-
-                scope.launch {
-                    uiState = loadMoreAssignments(successState)
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        uiState = fetchAssignments(page = 0)
-    }
-
-    val assignments = when (uiState) {
-        is AssignmentsUiState.Success -> (uiState as AssignmentsUiState.Success).assignments
-        else -> emptyList()
-    }
-
-    val isLoadingMore = when (uiState) {
-        is AssignmentsUiState.Success -> (uiState as AssignmentsUiState.Success).isLoadingMore
-        else -> false
+        viewModel.loadMoreAssignments()
     }
 
     val selectedAssignment: Assignment? = remember(selectedAssignmentId, assignments) {
