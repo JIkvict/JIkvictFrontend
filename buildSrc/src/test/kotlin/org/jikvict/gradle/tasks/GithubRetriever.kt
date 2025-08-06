@@ -1,6 +1,6 @@
 package org.jikvict.gradle.tasks
 
-import org.jikvict.gradle.tasks.logic.GithubRetriever
+import org.jikvict.gradle.logic.GithubRetriever
 import org.junit.jupiter.api.Test
 
 class GithubRetrieverTests {

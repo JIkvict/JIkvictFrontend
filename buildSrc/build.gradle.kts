@@ -1,11 +1,18 @@
 plugins {
+    kotlin("jvm") version "2.2.0"
     `kotlin-dsl`
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
+
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
     gradlePluginPortal()
+    google()
+
 }
 kotlin {
     jvmToolchain(22)
@@ -16,11 +23,20 @@ tasks.test {
 }
 
 dependencies {
-    //noinspection UseTomlInstead
-    implementation("org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r")
+    implementation(libs.openApiGenerator)
+    implementation(libs.kotlin.gradle.plugin)
+    implementation(libs.androidx.lifecycle.runtimeCompose)
+    implementation(libs.jgit)
+    implementation(libs.ksp)
+    implementation(libs.android.gradle)
+
+
+    implementation(libs.kotlin.gradle.plugin.api)
+    implementation(libs.kotlin.gradle.plugin.model)
+
     implementation(gradleApi())
     implementation(localGroovy())
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.13.4")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.13.4")
-    testImplementation("org.junit.platform:junit-platform-launcher:1.13.4")
+    testImplementation(libs.jupiter.api)
+    testImplementation(libs.jupiter.engine)
+    testImplementation(libs.jupiter.launcher)
 }

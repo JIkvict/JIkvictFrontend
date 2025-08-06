@@ -1,4 +1,4 @@
-package org.jikvict.gradle.tasks.logic
+package org.jikvict.gradle.logic
 
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.internal.storage.dfs.DfsRepositoryDescription

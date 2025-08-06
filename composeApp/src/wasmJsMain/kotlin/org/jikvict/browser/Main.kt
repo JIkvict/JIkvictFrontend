@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import androidx.navigation.ExperimentalBrowserHistoryApi
-import androidx.navigation.bindToNavigation
+import androidx.navigation.bindToBrowserNavigation
 import androidx.navigation.compose.rememberNavController
 import androidx.savedstate.read
 import kotlinx.browser.document
@@ -58,11 +58,11 @@ fun main() {
             } else {
                 navController.navigate(NotFoundScreen())
             }
-            window.bindToNavigation(navController) { entry ->
+            navController.bindToBrowserNavigation { entry ->
                 println("Binding to navigation: ${entry.destination.route}")
                 var mapping = mapOf<String, Any?>()
                 entry.arguments?.read {
-                    mapping = this.toMap()
+                    mapping = toMap()
                 }
 
                 val baseRoute = entry.destination.route?.substringBefore("?")?.substringBefore("{") ?: ""
@@ -75,7 +75,7 @@ fun main() {
                     ""
                 }
 
-                return@bindToNavigation "#$baseRoute$queryParams"
+                return@bindToBrowserNavigation "#$baseRoute$queryParams"
             }
         }
     }

@@ -1,24 +1,16 @@
-import com.google.devtools.ksp.gradle.KspAATask
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
-import org.jikvict.gradle.tasks.CleanUpSerializableTask
-import org.jikvict.gradle.tasks.GetOpenApiTask
 
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.androidApplication) // To delete
-    alias(libs.plugins.ksp)
-
-    alias(libs.plugins.openApiGenerator)
-    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.kotlinSerialization)
+    id(libs.plugins.kotlinMultiplatform.get().pluginId)
+    id(libs.plugins.androidApplication.get().pluginId) // To delete
+
+    id("jikvict-frontend-plugin")
 }
 
 android {
@@ -27,6 +19,7 @@ android {
 
     defaultConfig {
         minSdk = 24
+        //noinspection OldTargetApi
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -143,96 +136,9 @@ kotlin {
         }
     }
 }
-openApiGenerate {
-    generatorName.set("kotlin")
-    library.set("multiplatform")
-    inputSpec.set("${layout.buildDirectory.get()}/openapi.json")
-    outputDir.set("${layout.buildDirectory.get()}/generated/openapi")
-    packageName.set("org.jikvict.api")
-    configOptions.set(
-        mapOf(
-            "dateLibrary" to "string",
-            "serializationLibrary" to "kotlinx_serialization",
-            "parcelizeModels" to "false",
-            "withJava" to "false",
-            "dateTimeFormat" to "iso8601"
-        )
-    )
-}
 
 dependencies {
     ksp(project(":processor"))
     debugImplementation(compose.uiTooling)
 }
-tasks.named("openApiGenerate") {
-    dependsOn("getOpenApiJson")
-    finalizedBy("cleanUpSerializable")
-}
-tasks.register<CleanUpSerializableTask>("cleanUpSerializable") {
-    group = "build"
-    description = "Clean up generated Kotlin files to remove unnecessary annotations and imports"
-    inputDir.set(layout.buildDirectory.dir("generated/openapi/src"))
-}
 
-tasks.register<GetOpenApiTask>("getOpenApiJson") {
-    repoUrl.set("https://github.com/JIkvict/JIkvictBackend.git")
-    branch.set("docs")
-    version.set("latest")
-    outputFile.set(layout.buildDirectory.file("openapi.json"))
-}
-
-tasks.withType<KotlinWebpack>().configureEach {
-    dependsOn("openApiGenerate")
-}
-tasks.named("compileKotlinWasmJs") {
-    dependsOn("openApiGenerate")
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-    dependsOn("openApiGenerate")
-    dependsOn("kspCommonMainKotlinMetadata")
-    compilerOptions.freeCompilerArgs.addAll(listOf("-Xcontext-parameters"))
-}
-tasks.withType<KotlinCompileCommon>().configureEach {
-    dependsOn("openApiGenerate")
-    dependsOn("kspCommonMainKotlinMetadata")
-    compilerOptions.freeCompilerArgs.addAll(listOf("-Xcontext-parameters"))
-}
-tasks.withType<KspAATask> {
-    dependsOn("openApiGenerate")
-}
-
-afterEvaluate {
-    tasks.withType<KspAATask>().configureEach {
-        if (name != "kspCommonMainKotlinMetadata") {
-            dependsOn("kspCommonMainKotlinMetadata")
-        }
-    }
-
-    tasks.named("kspKotlinWasmJs").configure {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
-    tasks.named("kspDebugKotlinAndroid").configure {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
-    tasks.named("kspReleaseKotlinAndroid").configure {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
-}
-tasks.withType<org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink>().configureEach {
-    dependsOn("kspKotlinWasmJs")
-}
-
-tasks.matching { it.name.startsWith("kspReleaseKotlinAndroid") }.configureEach {
-    enabled = false
-}
-tasks.matching { it.name.startsWith("kspDebugKotlinAndroid") }.configureEach {
-    enabled = false
-}
-tasks.matching { it.name.startsWith("kspKotlinWasmJs") }.configureEach {
-    enabled = false
-}
-
-tasks.matching { it.name.startsWith("kspCommonMain") }.configureEach {
-    enabled = true
-}

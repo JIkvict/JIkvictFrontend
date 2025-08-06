@@ -7,7 +7,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.jikvict.gradle.tasks.logic.GithubRetriever
+import org.jikvict.gradle.logic.GithubRetriever
 
 abstract class GetOpenApiTask : DefaultTask() {
     @get:Input
