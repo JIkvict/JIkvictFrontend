@@ -116,10 +116,10 @@ fun Header(modifier: Modifier = Modifier) {
     }
 }
 
-@Preview
+@Preview(widthDp = 1920, heightDp = 1080)
 @Composable
 fun HeaderPreview() {
-    DefaultPreview(false) {
+    DefaultPreview(true) {
         Header()
     }
 }

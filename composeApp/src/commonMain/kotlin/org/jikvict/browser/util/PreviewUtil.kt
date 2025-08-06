@@ -15,11 +15,11 @@ import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.di.appModule
 import org.jikvict.browser.theme.DarkTheme
 import org.jikvict.browser.theme.LightTheme
-import org.koin.compose.KoinContext
 import org.koin.core.context.startKoin
 
 
 private var isKoinStarted = false
+
 @Composable
 fun DefaultPreview(isDark: Boolean = true, content: @Composable (DefaultScreenScope) -> Unit) {
     val theme = if (isDark) {
@@ -34,18 +34,16 @@ fun DefaultPreview(isDark: Boolean = true, content: @Composable (DefaultScreenSc
         isKoinStarted = true
     }
 
-    KoinContext {
-        MaterialTheme(colorScheme = theme.colorScheme()) {
-            val navController = rememberNavController()
-            val themeSwitcher = PreviewThemeSwitcher(isDark)
-            CompositionLocalProvider(
-                LocalNavController provides navController,
-                ThemeSwitcherProvider provides themeSwitcher,
-                LocalAppColors provides if (isDark) DarkColors else LightColors
-            ) {
-                DefaultScreen {
-                    content(it)
-                }
+    MaterialTheme(colorScheme = theme.colorScheme()) {
+        val navController = rememberNavController()
+        val themeSwitcher = PreviewThemeSwitcher(isDark)
+        CompositionLocalProvider(
+            LocalNavController provides navController,
+            ThemeSwitcherProvider provides themeSwitcher,
+            LocalAppColors provides if (isDark) DarkColors else LightColors
+        ) {
+            DefaultScreen {
+                content(it)
             }
         }
     }

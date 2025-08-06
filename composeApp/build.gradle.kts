@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
 import org.jikvict.gradle.tasks.CleanUpSerializableTask
+import org.jikvict.gradle.tasks.GetOpenApiTask
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -145,7 +146,7 @@ kotlin {
 openApiGenerate {
     generatorName.set("kotlin")
     library.set("multiplatform")
-    inputSpec.set("$rootDir/openapi.json")
+    inputSpec.set("${layout.buildDirectory.get()}/openapi.json")
     outputDir.set("${layout.buildDirectory.get()}/generated/openapi")
     packageName.set("org.jikvict.api")
     configOptions.set(
@@ -164,12 +165,20 @@ dependencies {
     debugImplementation(compose.uiTooling)
 }
 tasks.named("openApiGenerate") {
+    dependsOn("getOpenApiJson")
     finalizedBy("cleanUpSerializable")
 }
 tasks.register<CleanUpSerializableTask>("cleanUpSerializable") {
     group = "build"
     description = "Clean up generated Kotlin files to remove unnecessary annotations and imports"
     inputDir.set(layout.buildDirectory.dir("generated/openapi/src"))
+}
+
+tasks.register<GetOpenApiTask>("getOpenApiJson") {
+    repoUrl.set("https://github.com/JIkvict/JIkvictBackend.git")
+    branch.set("docs")
+    version.set("latest")
+    outputFile.set(layout.buildDirectory.file("openapi.json"))
 }
 
 tasks.withType<KotlinWebpack>().configureEach {
