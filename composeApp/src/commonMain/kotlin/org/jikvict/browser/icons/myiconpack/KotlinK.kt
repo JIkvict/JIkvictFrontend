@@ -29,7 +29,7 @@ val KotlinK: ImageVector
                 defaultWidth = 128.dp,
                 defaultHeight = 128.dp,
                 viewportWidth = 91f,
-                viewportHeight = 92f
+                viewportHeight = 92f,
             ).apply {
                 path(
                     fill = SolidColor(purpleColor),
@@ -38,7 +38,7 @@ val KotlinK: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(90.1016f, 90.139f)
                     curveTo(90.4269f, 90.4508f, 90.2062f, 91f, 89.7556f, 91f)

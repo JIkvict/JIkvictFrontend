@@ -49,65 +49,70 @@ fun GlassmorphismContainer(
     backgroundAlpha: Float = 0.1f,
     noiseAlpha: Float = 0.01f,
     contentPadding: Dp = 16.dp,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
-
     Box(modifier = modifier) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(CurvedBorder(cornerRadius = cornerRadius))
-                .background(backgroundColor.copy(alpha = backgroundAlpha))
-                .blur(
-                    radius = blurRadius,
-                    edgeTreatment = androidx.compose.ui.draw.BlurredEdgeTreatment.Rectangle
-                )
-                .drawWithCache {
-                    onDrawWithContent {
-                        this.drawContent()
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .clip(CurvedBorder(cornerRadius = cornerRadius))
+                    .background(backgroundColor.copy(alpha = backgroundAlpha))
+                    .blur(
+                        radius = blurRadius,
+                        edgeTreatment = androidx.compose.ui.draw.BlurredEdgeTreatment.Rectangle,
+                    ).drawWithCache {
+                        onDrawWithContent {
+                            this.drawContent()
 
-                        drawRect(
-                            color = Color.White.copy(alpha = noiseAlpha),
-                            blendMode = BlendMode.Overlay
-                        )
+                            drawRect(
+                                color = Color.White.copy(alpha = noiseAlpha),
+                                blendMode = BlendMode.Overlay,
+                            )
 
-                        drawRect(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    Color(0x65F3F0F0),
-                                    Color(0x19BBBABA)
-                                ),
-                                center = Offset(
-                                    size.width * 0.2f,
-                                    size.height * 0.5f
-                                ),
-                                radius = size.width.coerceAtLeast(size.height) * 0.8f
-                            ),
-                            blendMode = BlendMode.Luminosity,
-                        )
+                            drawRect(
+                                brush =
+                                    Brush.radialGradient(
+                                        colors =
+                                            listOf(
+                                                Color(0x65F3F0F0),
+                                                Color(0x19BBBABA),
+                                            ),
+                                        center =
+                                            Offset(
+                                                size.width * 0.2f,
+                                                size.height * 0.5f,
+                                            ),
+                                        radius = size.width.coerceAtLeast(size.height) * 0.8f,
+                                    ),
+                                blendMode = BlendMode.Luminosity,
+                            )
 
-                        drawPath(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0x80FFFFFF),
-                                    Color(0x65AAA7A7)
-                                ),
-                                start = Offset(size.width * 0.8f, size.height * 0.2f),
-                                end = Offset(size.width, size.height)
-                            ),
-                            path = blurPath(size, cornerRadius.toPx()),
-                            style = Stroke(1.5.dp.toPx()),
-                            blendMode = BlendMode.Luminosity
-                        )
-                    }
-                }
+                            drawPath(
+                                brush =
+                                    Brush.linearGradient(
+                                        colors =
+                                            listOf(
+                                                Color(0x80FFFFFF),
+                                                Color(0x65AAA7A7),
+                                            ),
+                                        start = Offset(size.width * 0.8f, size.height * 0.2f),
+                                        end = Offset(size.width, size.height),
+                                    ),
+                                path = blurPath(size, cornerRadius.toPx()),
+                                style = Stroke(1.5.dp.toPx()),
+                                blendMode = BlendMode.Luminosity,
+                            )
+                        }
+                    },
         )
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding),
-            content = content
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding),
+            content = content,
         )
     }
 }
@@ -115,15 +120,17 @@ fun GlassmorphismContainer(
 /**
  * A custom shape for the glass container with curved borders
  */
-class CurvedBorder(private val cornerRadius: Dp) : Shape {
+class CurvedBorder(
+    private val cornerRadius: Dp,
+) : Shape {
     override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,
-        density: Density
+        density: Density,
     ): androidx.compose.ui.graphics.Outline {
         val cornerRadius = with(density) { cornerRadius.toPx() }
         return androidx.compose.ui.graphics.Outline.Generic(
-            path = blurPath(size = size, cornerRadius = cornerRadius)
+            path = blurPath(size = size, cornerRadius = cornerRadius),
         )
     }
 }
@@ -131,8 +138,11 @@ class CurvedBorder(private val cornerRadius: Dp) : Shape {
 /**
  * Creates a path for the curved border shape
  */
-private fun blurPath(size: Size, cornerRadius: Float): Path {
-    return Path().apply {
+private fun blurPath(
+    size: Size,
+    cornerRadius: Float,
+): Path =
+    Path().apply {
         // Start from top-left corner
         moveTo(cornerRadius, 0f)
 
@@ -141,15 +151,16 @@ private fun blurPath(size: Size, cornerRadius: Float): Path {
 
         // Top-right corner
         arcTo(
-            rect = Rect(
-                left = size.width - cornerRadius * 2,
-                top = 0f,
-                right = size.width,
-                bottom = cornerRadius * 2
-            ),
+            rect =
+                Rect(
+                    left = size.width - cornerRadius * 2,
+                    top = 0f,
+                    right = size.width,
+                    bottom = cornerRadius * 2,
+                ),
             startAngleDegrees = 270f,
             sweepAngleDegrees = 90f,
-            forceMoveTo = false
+            forceMoveTo = false,
         )
 
         // Right edge to bottom-right corner
@@ -157,15 +168,16 @@ private fun blurPath(size: Size, cornerRadius: Float): Path {
 
         // Bottom-right corner
         arcTo(
-            rect = Rect(
-                left = size.width - cornerRadius * 2,
-                top = size.height - cornerRadius * 2,
-                right = size.width,
-                bottom = size.height
-            ),
+            rect =
+                Rect(
+                    left = size.width - cornerRadius * 2,
+                    top = size.height - cornerRadius * 2,
+                    right = size.width,
+                    bottom = size.height,
+                ),
             startAngleDegrees = 0f,
             sweepAngleDegrees = 90f,
-            forceMoveTo = false
+            forceMoveTo = false,
         )
 
         // Bottom edge to bottom-left corner
@@ -173,15 +185,16 @@ private fun blurPath(size: Size, cornerRadius: Float): Path {
 
         // Bottom-left corner
         arcTo(
-            rect = Rect(
-                left = 0f,
-                top = size.height - cornerRadius * 2,
-                right = cornerRadius * 2,
-                bottom = size.height
-            ),
+            rect =
+                Rect(
+                    left = 0f,
+                    top = size.height - cornerRadius * 2,
+                    right = cornerRadius * 2,
+                    bottom = size.height,
+                ),
             startAngleDegrees = 90f,
             sweepAngleDegrees = 90f,
-            forceMoveTo = false
+            forceMoveTo = false,
         )
 
         // Left edge to top-left corner
@@ -189,24 +202,24 @@ private fun blurPath(size: Size, cornerRadius: Float): Path {
 
         // Top-left corner
         arcTo(
-            rect = Rect(
-                left = 0f,
-                top = 0f,
-                right = cornerRadius * 2,
-                bottom = cornerRadius * 2
-            ),
+            rect =
+                Rect(
+                    left = 0f,
+                    top = 0f,
+                    right = cornerRadius * 2,
+                    bottom = cornerRadius * 2,
+                ),
             startAngleDegrees = 180f,
             sweepAngleDegrees = 90f,
-            forceMoveTo = false
+            forceMoveTo = false,
         )
 
         close()
     }
-}
 
 @Preview
 @Composable
-fun GlassmorphismContainerPreview() {
+private fun GlassmorphismContainerPreview() {
     DefaultPreview {
         GlassmorphismContainer(
             modifier = Modifier.padding(16.dp),
@@ -214,16 +227,16 @@ fun GlassmorphismContainerPreview() {
             blurRadius = 10.dp,
             backgroundColor = Color.White,
             backgroundAlpha = 0.1f,
-            contentPadding = 16.dp
+            contentPadding = 16.dp,
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = androidx.compose.ui.Alignment.Center,
             ) {
                 Text(
                     text = "Glassmorphism Effect",
                     style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
@@ -232,7 +245,7 @@ fun GlassmorphismContainerPreview() {
 
 @Preview
 @Composable
-fun GlassmorphismContainerSmallPaddingPreview() {
+private fun GlassmorphismContainerSmallPaddingPreview() {
     DefaultPreview {
         GlassmorphismContainer(
             modifier = Modifier.padding(16.dp),
@@ -240,16 +253,16 @@ fun GlassmorphismContainerSmallPaddingPreview() {
             blurRadius = 10.dp,
             backgroundColor = Color.White,
             backgroundAlpha = 0.1f,
-            contentPadding = 8.dp  // Smaller padding
+            contentPadding = 8.dp, // Smaller padding
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = androidx.compose.ui.Alignment.Center,
             ) {
                 Text(
                     text = "Small Padding (8.dp)",
                     style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
@@ -258,7 +271,7 @@ fun GlassmorphismContainerSmallPaddingPreview() {
 
 @Preview
 @Composable
-fun GlassmorphismContainerDarkPreview() {
+private fun GlassmorphismContainerDarkPreview() {
     DefaultPreview(isDark = true) {
         GlassmorphismContainer(
             modifier = Modifier.padding(16.dp),
@@ -266,16 +279,16 @@ fun GlassmorphismContainerDarkPreview() {
             blurRadius = 10.dp,
             backgroundColor = Color.Black,
             backgroundAlpha = 0.1f,
-            contentPadding = 16.dp
+            contentPadding = 16.dp,
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = androidx.compose.ui.Alignment.Center,
             ) {
                 Text(
                     text = "Glassmorphism Effect (Dark)",
                     style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
                 )
             }
         }

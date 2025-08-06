@@ -15,47 +15,54 @@ import org.jikvict.browser.util.StateSaver
 
 class TasksScreenViewModel(
     savedStateHandle: StateSaver,
-    private val assignmentControllerApi: AssignmentControllerApi
+    private val assignmentControllerApi: AssignmentControllerApi,
 ) : ExtendedViewModel(savedStateHandle) {
-
     private val _assignmentsState = MutableStateFlow<AssignmentsUiState>(AssignmentsUiState.Loading)
 
     val assignmentsState: StateFlow<AssignmentsUiState> = _assignmentsState.asStateFlow()
 
-    val assignments: StateFlow<List<Assignment>> = assignmentsState.map { state ->
-        when (state) {
-            is AssignmentsUiState.Success -> state.assignments
-            else -> emptyList()
-        }
-    }.stateIn(
-        viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = emptyList()
-    )
+    val assignments: StateFlow<List<Assignment>> =
+        assignmentsState
+            .map { state ->
+                when (state) {
+                    is AssignmentsUiState.Success -> state.assignments
+                    else -> emptyList()
+                }
+            }.stateIn(
+                viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = emptyList(),
+            )
 
-    val isLoading: StateFlow<Boolean> = assignmentsState.map { state ->
-        state is AssignmentsUiState.Loading
-    }.stateIn(
-        viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = true
-    )
+    val isLoading: StateFlow<Boolean> =
+        assignmentsState
+            .map { state ->
+                state is AssignmentsUiState.Loading
+            }.stateIn(
+                viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = true,
+            )
 
-    val isLoadingMore: StateFlow<Boolean> = assignmentsState.map { state ->
-        (state as? AssignmentsUiState.Success)?.isLoadingMore ?: false
-    }.stateIn(
-        viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = false
-    )
+    val isLoadingMore: StateFlow<Boolean> =
+        assignmentsState
+            .map { state ->
+                (state as? AssignmentsUiState.Success)?.isLoadingMore ?: false
+            }.stateIn(
+                viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = false,
+            )
 
-    val hasMorePages: StateFlow<Boolean> = assignmentsState.map { state ->
-        (state as? AssignmentsUiState.Success)?.hasMorePages ?: false
-    }.stateIn(
-        viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = false
-    )
+    val hasMorePages: StateFlow<Boolean> =
+        assignmentsState
+            .map { state ->
+                (state as? AssignmentsUiState.Success)?.hasMorePages ?: false
+            }.stateIn(
+                viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = false,
+            )
 
     init {
         loadAssignments()
@@ -89,8 +96,10 @@ class TasksScreenViewModel(
         }
     }
 
-
-    private suspend fun fetchAssignments(page: Int = 0, pageSize: Int = 20): AssignmentsUiState {
+    private suspend fun fetchAssignments(
+        page: Int = 0,
+        pageSize: Int = 20,
+    ): AssignmentsUiState {
         return try {
             val response = assignmentControllerApi.getAll(page = page, size = pageSize)
 
@@ -114,20 +123,21 @@ class TasksScreenViewModel(
             val currentPage = pageMetadata?.number?.toInt() ?: 0
             val hasMorePages = currentPage < totalPages - 1
 
-            val assignments = content.mapIndexed { index, dto ->
-                Assignment(
-                    id = (page * pageSize) + index,
-                    title = dto.title,
-                    description = dto.description ?: "No description",
-                    taskNumber = dto.taskId
-                )
-            }
+            val assignments =
+                content.mapIndexed { index, dto ->
+                    Assignment(
+                        id = (page * pageSize) + index,
+                        title = dto.title,
+                        description = dto.description ?: "No description",
+                        taskNumber = dto.taskId,
+                    )
+                }
 
             AssignmentsUiState.Success(
                 assignments = assignments,
                 currentPage = currentPage,
                 hasMorePages = hasMorePages,
-                isLoadingMore = false
+                isLoadingMore = false,
             )
         } catch (e: Exception) {
             AssignmentsUiState.Error("Error: ${e.message}")
@@ -160,14 +170,15 @@ class TasksScreenViewModel(
             val currentPageFromResponse = pageMetadata?.number?.toInt() ?: 0
             val hasMorePages = currentPageFromResponse < totalPages - 1
 
-            val newAssignments = content.mapIndexed { index, dto ->
-                Assignment(
-                    id = (nextPage * 20) + index,
-                    title = dto.title,
-                    description = dto.description ?: "No description",
-                    taskNumber = dto.taskId
-                )
-            }
+            val newAssignments =
+                content.mapIndexed { index, dto ->
+                    Assignment(
+                        id = (nextPage * 20) + index,
+                        title = dto.title,
+                        description = dto.description ?: "No description",
+                        taskNumber = dto.taskId,
+                    )
+                }
 
             val combinedAssignments = currentState.assignments + newAssignments
 
@@ -175,7 +186,7 @@ class TasksScreenViewModel(
                 assignments = combinedAssignments,
                 currentPage = nextPage,
                 hasMorePages = hasMorePages,
-                isLoadingMore = false
+                isLoadingMore = false,
             )
         } catch (_: Exception) {
             currentState.copy(isLoadingMore = false)

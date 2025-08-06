@@ -21,7 +21,8 @@ import org.jikvict.browser.screens.routers
 @OptIn(
     ExperimentalComposeUiApi::class,
     ExperimentalBrowserHistoryApi::class,
-    ExperimentalSerializationApi::class, InternalSerializationApi::class
+    ExperimentalSerializationApi::class,
+    InternalSerializationApi::class,
 )
 fun main() {
     val body = document.body ?: return
@@ -40,17 +41,21 @@ fun main() {
             if (!isNavHostReady) {
                 return@LaunchedEffect
             }
-            val initRoute = window.location.hash.substringAfter('#', "").substringBefore("/?")
+            val initRoute =
+                window.location.hash
+                    .substringAfter('#', "")
+                    .substringBefore("/?")
             val paramsRaw = window.location.hash.substringAfter('?', "")
             val splitParams = paramsRaw.split("&").filter { it.isNotBlank() }
-            val params = if (splitParams.isEmpty()) {
-                emptyMap()
-            } else {
-                paramsRaw.split("&").associate {
-                    val (key, value) = it.split("=", limit = 2)
-                    key to value.ifEmpty { null }
+            val params =
+                if (splitParams.isEmpty()) {
+                    emptyMap()
+                } else {
+                    paramsRaw.split("&").associate {
+                        val (key, value) = it.split("=", limit = 2)
+                        key to value.ifEmpty { null }
+                    }
                 }
-            }
             val router = routers.firstOrNull { it.matchRoute(initRoute) }
             if (router != null) {
                 val screen = router.constructScreen(params)
@@ -65,15 +70,19 @@ fun main() {
                     mapping = toMap()
                 }
 
-                val baseRoute = entry.destination.route?.substringBefore("?")?.substringBefore("{") ?: ""
+                val baseRoute =
+                    entry.destination.route
+                        ?.substringBefore("?")
+                        ?.substringBefore("{") ?: ""
 
-                val queryParams = if (mapping.isNotEmpty()) {
-                    mapping.entries.joinToString(prefix = "?", separator = "&") { (key, value) ->
-                        "$key=${value?.toString() ?: ""}"
+                val queryParams =
+                    if (mapping.isNotEmpty()) {
+                        mapping.entries.joinToString(prefix = "?", separator = "&") { (key, value) ->
+                            "$key=${value?.toString() ?: ""}"
+                        }
+                    } else {
+                        ""
                     }
-                } else {
-                    ""
-                }
 
                 return@bindToBrowserNavigation "#$baseRoute$queryParams"
             }

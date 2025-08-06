@@ -2,7 +2,6 @@
 
 package org.jikvict.browser.components
 
-
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.text.InlineTextContent
@@ -44,7 +43,6 @@ import org.jikvict.browser.util.intPxToSp
 import org.jikvict.browser.util.spRoundToPx
 import org.jikvict.browser.util.spToIntPx
 import kotlin.math.min
-
 
 /**
  * Composable function that automatically adjusts the text size to fit within given constraints, considering the ratio of line spacing to text size.
@@ -185,22 +183,27 @@ fun AutoSizeText(
             modifier = modifier,
             contentAlignment = alignment,
         ) {
-            val combinedTextStyle = LocalTextStyle.current + style.copy(
-                color = color.takeIf { it.isSpecified } ?: style.color,
-                fontStyle = fontStyle ?: style.fontStyle,
-                fontWeight = fontWeight ?: style.fontWeight,
-                fontFamily = fontFamily ?: style.fontFamily,
-                letterSpacing = letterSpacing.takeIf { it.isSpecified } ?: style.letterSpacing,
-                textDecoration = textDecoration ?: style.textDecoration,
-                textAlign = if (style.textAlign == TextAlign.Justify)
-                    TextAlign.Justify
-                else when (alignment) {
-                    Alignment.TopStart, Alignment.CenterStart, Alignment.BottomStart -> TextAlign.Start
-                    Alignment.TopCenter, Alignment.Center, Alignment.BottomCenter -> TextAlign.Center
-                    Alignment.TopEnd, Alignment.CenterEnd, Alignment.BottomEnd -> TextAlign.End
-                    else -> TextAlign.Unspecified
-                },
-            )
+            val combinedTextStyle =
+                LocalTextStyle.current +
+                    style.copy(
+                        color = color.takeIf { it.isSpecified } ?: style.color,
+                        fontStyle = fontStyle ?: style.fontStyle,
+                        fontWeight = fontWeight ?: style.fontWeight,
+                        fontFamily = fontFamily ?: style.fontFamily,
+                        letterSpacing = letterSpacing.takeIf { it.isSpecified } ?: style.letterSpacing,
+                        textDecoration = textDecoration ?: style.textDecoration,
+                        textAlign =
+                            if (style.textAlign == TextAlign.Justify) {
+                                TextAlign.Justify
+                            } else {
+                                when (alignment) {
+                                    Alignment.TopStart, Alignment.CenterStart, Alignment.BottomStart -> TextAlign.Start
+                                    Alignment.TopCenter, Alignment.Center, Alignment.BottomCenter -> TextAlign.Center
+                                    Alignment.TopEnd, Alignment.CenterEnd, Alignment.BottomEnd -> TextAlign.End
+                                    else -> TextAlign.Unspecified
+                                }
+                            },
+                    )
 
             val layoutDirection = LocalLayoutDirection.current
             val density = LocalDensity.current
@@ -210,10 +213,11 @@ fun AutoSizeText(
             val shouldMoveBackward: (TextUnit) -> Boolean = {
                 shouldShrink(
                     text = text,
-                    textStyle = combinedTextStyle.copy(
-                        fontSize = it,
-                        lineHeight = it * coercedLineSpacingRatio,
-                    ),
+                    textStyle =
+                        combinedTextStyle.copy(
+                            fontSize = it,
+                            lineHeight = it * coercedLineSpacingRatio,
+                        ),
                     maxLines = maxLines,
                     layoutDirection = layoutDirection,
                     softWrap = softWrap,
@@ -223,40 +227,42 @@ fun AutoSizeText(
                 )
             }
 
-            val electedFontSize = remember(
-                key1 = suggestedFontSizes,
-                key2 = suggestedFontSizesStatus,
-            ) {
-                if (suggestedFontSizesStatus == SuggestedFontSizesStatus.VALID)
-                    suggestedFontSizes
-                else
-                    suggestedFontSizes.validSuggestedFontSizes
-            }?.let {
+            val electedFontSize =
                 remember(
-                    key1 = it,
-                    key2 = shouldMoveBackward,
+                    key1 = suggestedFontSizes,
+                    key2 = suggestedFontSizesStatus,
                 ) {
-                    it.findElectedValue(shouldMoveBackward = shouldMoveBackward)
+                    if (suggestedFontSizesStatus == SuggestedFontSizesStatus.VALID) {
+                        suggestedFontSizes
+                    } else {
+                        suggestedFontSizes.validSuggestedFontSizes
+                    }
+                }?.let {
+                    remember(
+                        key1 = it,
+                        key2 = shouldMoveBackward,
+                    ) {
+                        it.findElectedValue(shouldMoveBackward = shouldMoveBackward)
+                    }
+                } ?: run {
+                    val candidateFontSizesIntProgress =
+                        rememberCandidateFontSizesIntProgress(
+                            density = density,
+                            containerDpSize = DpSize(maxWidth, maxHeight),
+                            maxTextSize = maxTextSize,
+                            minTextSize = minTextSize,
+                            stepGranularityTextSize = stepGranularityTextSize,
+                        )
+                    remember(
+                        key1 = candidateFontSizesIntProgress,
+                        key2 = shouldMoveBackward,
+                    ) {
+                        candidateFontSizesIntProgress.findElectedValue(
+                            transform = { density.intPxToSp(it) },
+                            shouldMoveBackward = shouldMoveBackward,
+                        )
+                    }
                 }
-            } ?: run {
-                val candidateFontSizesIntProgress = rememberCandidateFontSizesIntProgress(
-                    density = density,
-                    containerDpSize = DpSize(maxWidth, maxHeight),
-                    maxTextSize = maxTextSize,
-                    minTextSize = minTextSize,
-                    stepGranularityTextSize = stepGranularityTextSize,
-                )
-                remember(
-                    key1 = candidateFontSizesIntProgress,
-                    key2 = shouldMoveBackward,
-                ) {
-                    candidateFontSizesIntProgress.findElectedValue(
-                        transform = { density.intPxToSp(it) },
-                        shouldMoveBackward = shouldMoveBackward,
-                    )
-                }
-            }
-
 
             Text(
                 text = text,
@@ -266,10 +272,11 @@ fun AutoSizeText(
                 minLines = minLines,
                 inlineContent = inlineContent,
                 onTextLayout = onTextLayout,
-                style = combinedTextStyle.copy(
-                    fontSize = electedFontSize,
-                    lineHeight = electedFontSize * coercedLineSpacingRatio,
-                ),
+                style =
+                    combinedTextStyle.copy(
+                        fontSize = electedFontSize,
+                        lineHeight = electedFontSize * coercedLineSpacingRatio,
+                    ),
             )
         }
     }
@@ -284,17 +291,18 @@ private fun BoxWithConstraintsScope.shouldShrink(
     density: Density,
     fontFamilyResolver: FontFamily.Resolver,
     textMeasurer: TextMeasurer,
-) = textMeasurer.measure(
-    text = text,
-    style = textStyle,
-    overflow = TextOverflow.Clip,
-    softWrap = softWrap,
-    maxLines = maxLines,
-    constraints = constraints,
-    layoutDirection = layoutDirection,
-    density = density,
-    fontFamilyResolver = fontFamilyResolver,
-).hasVisualOverflow
+) = textMeasurer
+    .measure(
+        text = text,
+        style = textStyle,
+        overflow = TextOverflow.Clip,
+        softWrap = softWrap,
+        maxLines = maxLines,
+        constraints = constraints,
+        layoutDirection = layoutDirection,
+        density = density,
+        fontFamilyResolver = fontFamilyResolver,
+    ).hasVisualOverflow
 
 @Stable
 @Composable
@@ -305,51 +313,56 @@ private fun rememberCandidateFontSizesIntProgress(
     maxTextSize: TextUnit = TextUnit.Unspecified,
     stepGranularityTextSize: TextUnit = TextUnit.Unspecified,
 ): IntProgression {
-    val max = remember(key1 = density, key2 = maxTextSize, key3 = containerDpSize) {
-        val intSize = density.dpSizeRoundToIntSize(containerDpSize)
-        min(intSize.width, intSize.height).let { max ->
-            maxTextSize
-                .takeIf { it.isSp }
-                ?.let { density.spRoundToPx(it) }
-                ?.coerceIn(range = 0..max)
-                ?: max
+    val max =
+        remember(key1 = density, key2 = maxTextSize, key3 = containerDpSize) {
+            val intSize = density.dpSizeRoundToIntSize(containerDpSize)
+            min(intSize.width, intSize.height).let { max ->
+                maxTextSize
+                    .takeIf { it.isSp }
+                    ?.let { density.spRoundToPx(it) }
+                    ?.coerceIn(range = 0..max)
+                    ?: max
+            }
         }
-    }
 
-    val min = remember(key1 = density, key2 = minTextSize, key3 = max) {
-        minTextSize
-            .takeIf { it.isSp }
-            ?.let { density.spToIntPx(it) }
-            ?.coerceIn(range = 0..max)
-            ?: 0
-    }
+    val min =
+        remember(key1 = density, key2 = minTextSize, key3 = max) {
+            minTextSize
+                .takeIf { it.isSp }
+                ?.let { density.spToIntPx(it) }
+                ?.coerceIn(range = 0..max)
+                ?: 0
+        }
 
-    val step = remember(
-        key1 = listOf(
-            density,
-            min,
-            max,
-            stepGranularityTextSize,
-        )
-    ) {
-        stepGranularityTextSize
-            .takeIf { it.isSp }
-            ?.let { density.spToIntPx(it) }
-            ?.coerceIn(1, max - min)
-            ?: 1
-    }
+    val step =
+        remember(
+            key1 =
+                listOf(
+                    density,
+                    min,
+                    max,
+                    stepGranularityTextSize,
+                ),
+        ) {
+            stepGranularityTextSize
+                .takeIf { it.isSp }
+                ?.let { density.spToIntPx(it) }
+                ?.coerceIn(1, max - min)
+                ?: 1
+        }
 
     return remember(key1 = min, key2 = max, key3 = step) {
         min..max step step
     }
 }
 
-internal fun <T> List<T>.findElectedValue(shouldMoveBackward: (T) -> Boolean) = run {
-    indices.findElectedValue(
-        transform = { this[it] },
-        shouldMoveBackward = shouldMoveBackward,
-    )
-}
+internal fun <T> List<T>.findElectedValue(shouldMoveBackward: (T) -> Boolean) =
+    run {
+        indices.findElectedValue(
+            transform = { this[it] },
+            shouldMoveBackward = shouldMoveBackward,
+        )
+    }
 
 private fun <T> IntProgression.findElectedValue(
     transform: (Int) -> T,
@@ -359,28 +372,35 @@ private fun <T> IntProgression.findElectedValue(
     var high = last / step
     while (low <= high) {
         val mid = low + (high - low) / 2
-        if (shouldMoveBackward(transform(mid * step)))
+        if (shouldMoveBackward(transform(mid * step))) {
             high = mid - 1
-        else
+        } else {
             low = mid + 1
+        }
     }
     transform((high * step).coerceAtLeast(first * step))
 }
 
 enum class SuggestedFontSizesStatus {
-    VALID, INVALID, UNKNOWN;
+    VALID,
+    INVALID,
+    UNKNOWN,
+    ;
 
     companion object {
         val List<TextUnit>.suggestedFontSizesStatus: SuggestedFontSizesStatus
-            get() = if (isNotEmpty() && fastAll { it.isSp } && sortedBy { it.value } == this)
-                VALID
-            else
-                INVALID
+            get() =
+                if (isNotEmpty() && fastAll { it.isSp } && sortedBy { it.value } == this) {
+                    VALID
+                } else {
+                    INVALID
+                }
 
         val List<TextUnit>.validSuggestedFontSizes: List<TextUnit>?
-            get() = takeIf { it.isNotEmpty() }
-                ?.fastFilter { it.isSp }
-                ?.takeIf { it.isNotEmpty() }
-                ?.sortedBy { it.value }
+            get() =
+                takeIf { it.isNotEmpty() }
+                    ?.fastFilter { it.isSp }
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.sortedBy { it.value }
     }
 }

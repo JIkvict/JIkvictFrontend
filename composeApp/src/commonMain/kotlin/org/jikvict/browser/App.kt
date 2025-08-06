@@ -12,7 +12,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.components.DefaultScreen
 import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
@@ -27,11 +26,10 @@ import org.jikvict.browser.theme.JIkvictTypography
 import org.jikvict.browser.theme.LightTheme
 import org.jikvict.browser.theme.rememberInterFontFamily
 import org.jikvict.browser.theme.rememberJetBrainsMonoFontFamily
+import org.jikvict.browser.util.LocalThemeSwitcherProvider
 import org.jikvict.browser.util.ThemeSwitcher
-import org.jikvict.browser.util.ThemeSwitcherProvider
 import org.jikvict.browser.util.getTheme
 import org.koin.core.context.startKoin
-
 
 // TODO: Сделать @Register(name) аннотацию чтобы создать список name с обьектами помеченными этой аннотацией
 
@@ -40,9 +38,11 @@ import org.koin.core.context.startKoin
 private var isKoinStarted = false
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Preview
 @Composable
-fun App(navController: NavHostController, onNavHostReady: (Boolean) -> Unit = {}) {
+fun App(
+    navController: NavHostController,
+    onNavHostReady: (Boolean) -> Unit = {},
+) {
     val fonts = JIkvictTypography(rememberInterFontFamily(), rememberJetBrainsMonoFontFamily())
     val themeToSet = if (getTheme()) DarkTheme else LightTheme
     val theme = remember { mutableStateOf(themeToSet) }
@@ -57,12 +57,12 @@ fun App(navController: NavHostController, onNavHostReady: (Boolean) -> Unit = {}
     MaterialExpressiveTheme(
         colorScheme = theme.value.colorScheme(),
         typography = fonts.typography,
-        motionScheme = MotionScheme.expressive()
+        motionScheme = MotionScheme.expressive(),
     ) {
         val motionScheme = MaterialTheme.motionScheme
         CompositionLocalProvider(
             LocalNavController provides navController,
-            ThemeSwitcherProvider provides themeSwitcher,
+            LocalThemeSwitcherProvider provides themeSwitcher,
             LocalAppColors provides colors.value,
         ) {
             DefaultScreen { scope ->
@@ -76,11 +76,9 @@ fun App(navController: NavHostController, onNavHostReady: (Boolean) -> Unit = {}
                 }
                 onNavHostReady(true)
             }
-
         }
     }
 }
-
 
 val LocalNavController =
     staticCompositionLocalOf<NavHostController> {

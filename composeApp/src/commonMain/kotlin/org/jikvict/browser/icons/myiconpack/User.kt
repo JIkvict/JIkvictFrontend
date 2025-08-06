@@ -116,12 +116,11 @@ val User: ImageVector
         }
     }
 
-
 @Preview
 @Composable
 private fun Preview() {
     MaterialTheme(
-        colorScheme = LightTheme.colorScheme
+        colorScheme = LightTheme.colorScheme,
     ) {
         Box(modifier = Modifier.padding(12.dp).background(MaterialTheme.colorScheme.background)) {
             Image(imageVector = User, contentDescription = "")

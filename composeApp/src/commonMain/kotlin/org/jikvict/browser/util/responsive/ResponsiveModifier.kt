@@ -37,9 +37,7 @@ class ResponsiveModifierScope {
 class ResponsiveModifierBuilder {
     private val scope = ResponsiveModifierScope()
 
-    operator fun invoke(init: ResponsiveModifierScope.() -> Unit): ResponsiveModifierScope {
-        return scope.apply(init)
-    }
+    operator fun invoke(init: ResponsiveModifierScope.() -> Unit): ResponsiveModifierScope = scope.apply(init)
 
     companion object Companion {
         operator fun invoke(init: ResponsiveModifierScope.() -> Unit): ResponsiveModifierBuilder {
@@ -50,15 +48,11 @@ class ResponsiveModifierBuilder {
     }
 
     @Composable
-    fun toModifier(): Modifier {
-        return scope.build()
-    }
+    fun toModifier(): Modifier = scope.build()
 }
 
 @Composable
-fun Modifier.responsive(responsive: ResponsiveModifierBuilder): Modifier {
-    return this.then(responsive.toModifier())
-}
+fun Modifier.responsive(responsive: ResponsiveModifierBuilder): Modifier = this.then(responsive.toModifier())
 
 @Composable
 fun responsiveModifier(builder: ResponsiveModifierScope.() -> Unit): Modifier {

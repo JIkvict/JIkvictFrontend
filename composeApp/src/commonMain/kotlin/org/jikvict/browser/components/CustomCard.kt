@@ -20,7 +20,10 @@ import androidx.compose.ui.unit.sp
 import org.jikvict.browser.util.responsive.adaptiveValue
 
 @Composable
-fun CustomCard(imageVector: ImageVector, text: String) {
+fun CustomCard(
+    imageVector: ImageVector,
+    text: String,
+) {
     val iconSize = adaptiveValue(128.dp, 256.dp)
     val minTextSize = 8.sp
     val maxTextSize = 24.sp
@@ -29,13 +32,13 @@ fun CustomCard(imageVector: ImageVector, text: String) {
         primaryContent = {
             Box(
                 modifier = Modifier.size(iconSize).padding(16.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Image(
                     imageVector = imageVector,
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                    modifier = Modifier.fillMaxSize(0.5f)
+                    modifier = Modifier.fillMaxSize(0.5f),
                 )
             }
         },
@@ -43,11 +46,12 @@ fun CustomCard(imageVector: ImageVector, text: String) {
             Text(
                 text = text,
                 modifier = Modifier.padding(8.dp),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium,
-                    lineHeight = lineHeight
-                ),
+                style =
+                    MaterialTheme.typography.bodyLarge.copy(
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = lineHeight,
+                    ),
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 autoSize = TextAutoSize.StepBased(minTextSize, maxTextSize),

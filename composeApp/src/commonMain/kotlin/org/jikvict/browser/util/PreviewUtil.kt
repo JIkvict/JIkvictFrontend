@@ -17,16 +17,19 @@ import org.jikvict.browser.theme.DarkTheme
 import org.jikvict.browser.theme.LightTheme
 import org.koin.core.context.startKoin
 
-
 private var isKoinStarted = false
 
 @Composable
-fun DefaultPreview(isDark: Boolean = true, content: @Composable (DefaultScreenScope) -> Unit) {
-    val theme = if (isDark) {
-        DarkTheme
-    } else {
-        LightTheme
-    }
+fun DefaultPreview(
+    isDark: Boolean = true,
+    content: @Composable (DefaultScreenScope) -> Unit,
+) {
+    val theme =
+        if (isDark) {
+            DarkTheme
+        } else {
+            LightTheme
+        }
     if (!isKoinStarted) {
         startKoin {
             modules(appModule)
@@ -39,8 +42,8 @@ fun DefaultPreview(isDark: Boolean = true, content: @Composable (DefaultScreenSc
         val themeSwitcher = PreviewThemeSwitcher(isDark)
         CompositionLocalProvider(
             LocalNavController provides navController,
-            ThemeSwitcherProvider provides themeSwitcher,
-            LocalAppColors provides if (isDark) DarkColors else LightColors
+            LocalThemeSwitcherProvider provides themeSwitcher,
+            LocalAppColors provides if (isDark) DarkColors else LightColors,
         ) {
             DefaultScreen {
                 content(it)
@@ -49,7 +52,9 @@ fun DefaultPreview(isDark: Boolean = true, content: @Composable (DefaultScreenSc
     }
 }
 
-class PreviewThemeSwitcher(var isDarkT: Boolean) : IThemeSwitcher {
+class PreviewThemeSwitcher(
+    var isDarkT: Boolean,
+) : IThemeSwitcher {
     override val isDark: State<Boolean>
         get() = mutableStateOf(isDarkT)
 

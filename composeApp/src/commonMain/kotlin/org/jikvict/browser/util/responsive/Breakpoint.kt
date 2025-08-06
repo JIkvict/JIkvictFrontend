@@ -6,10 +6,13 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-enum class Breakpoint(val minWidth: Dp) {
+enum class Breakpoint(
+    val minWidth: Dp,
+) {
     SM(0.dp),
     MD(600.dp),
-    LG(1200.dp);
+    LG(1200.dp),
+    ;
 
     companion object {
         @Composable

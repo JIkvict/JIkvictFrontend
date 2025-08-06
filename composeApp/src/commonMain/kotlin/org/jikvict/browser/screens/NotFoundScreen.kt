@@ -21,27 +21,26 @@ import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.util.DefaultPreview
 import kotlin.reflect.KClass
 
-
 @Composable
-fun NotFoundScreenComposable(defaultScreenScope: DefaultScreenScope) = with(defaultScreenScope) {
-    val animation by rememberLottieComposition {
-        LottieCompositionSpec.JsonString(
-            Res.readBytes("files/404-animation.json").decodeToString()
-        )
+fun NotFoundScreenComposable(defaultScreenScope: DefaultScreenScope) =
+    with(defaultScreenScope) {
+        val animation by rememberLottieComposition {
+            LottieCompositionSpec.JsonString(
+                Res.readBytes("files/404-animation.json").decodeToString(),
+            )
+        }
+        Box(
+            modifier = Modifier.fitContentToScreen(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                rememberLottiePainter(animation, iterations = Int.MAX_VALUE),
+                contentDescription = "Not Found Animation",
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.fillMaxSize(0.75f),
+            )
+        }
     }
-    Box(
-        modifier = Modifier.fitContentToScreen(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            rememberLottiePainter(animation, iterations = Int.MAX_VALUE),
-            contentDescription = "Not Found Animation",
-            tint = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.fillMaxSize(0.75f)
-        )
-    }
-}
-
 
 @Register
 @Serializable
@@ -51,23 +50,20 @@ class NotFoundScreen : NavigableScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit) = {
         NotFoundScreenComposable(it)
     }
-
 }
 
 object NotFoundScreenRouterRegistrar : ScreenRouterRegistrar<NotFoundScreen> {
     override val screen: KClass<NotFoundScreen>
         get() = NotFoundScreen::class
 
-    override fun constructScreen(params: Map<String, String?>): NavigableScreen {
-        return NotFoundScreen()
-    }
+    override fun constructScreen(params: Map<String, String?>): NavigableScreen = NotFoundScreen()
 }
 
 object NotFoundScreenRegistrar : ScreenRegistrar<NotFoundScreen> by createRegistrar()
 
 @Preview
 @Composable
-fun NotFoundScreenPreview() {
+private fun NotFoundScreenPreview() {
     DefaultPreview {
         NotFoundScreenComposable(it)
     }

@@ -39,7 +39,7 @@ actual fun rememberJetBrainsMonoFontFamily(): FontFamily {
         FontFamily(
             jetBrainsMono.value!!,
             jetBrainsMonoBold.value!!,
-            jetBrainsMonoMedium.value!!
+            jetBrainsMonoMedium.value!!,
         )
     } else {
         FontFamily.Default

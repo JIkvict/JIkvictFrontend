@@ -27,26 +27,30 @@ fun FeedCard(
 
     val animatedElevation by animateDpAsState(
         targetValue = if (isHovered) 12.dp else 6.dp,
-        animationSpec = tween(durationMillis = 200)
+        animationSpec = tween(durationMillis = 200),
     )
 
     val animatedScale by animateFloatAsState(
         targetValue = if (isHovered) 1.02f else 1f,
-        animationSpec = tween(durationMillis = 200)
+        animationSpec = tween(durationMillis = 200),
     )
 
     AdaptiveCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(animatedScale)
-            .hoverable(interactionSource).then(modifier),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = animatedElevation
-        ),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .scale(animatedScale)
+                .hoverable(interactionSource)
+                .then(modifier),
+        elevation =
+            CardDefaults.elevatedCardElevation(
+                defaultElevation = animatedElevation,
+            ),
+        colors =
+            CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
         primaryContent = primaryContent,
         secondaryContent = secondaryContent,
     )

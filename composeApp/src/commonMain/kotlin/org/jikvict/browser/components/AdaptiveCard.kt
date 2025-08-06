@@ -31,9 +31,10 @@ fun SmallCard(
     primaryContent: @Composable () -> Unit,
     secondaryContent: @Composable () -> Unit,
     elevation: CardElevation = CardDefaults.elevatedCardElevation(),
-    colors: CardColors = CardDefaults.elevatedCardColors(
-        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-    ),
+    colors: CardColors =
+        CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+        ),
 ) {
     ElevatedCard(
         modifier = modifier,
@@ -46,25 +47,26 @@ fun SmallCard(
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .background(
-                        MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
-                        RoundedCornerShape(24.dp)
-                    )
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .background(
+                            MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
+                            RoundedCornerShape(24.dp),
+                        ).fillMaxHeight(),
+                contentAlignment = Alignment.Center,
             ) {
                 primaryContent()
             }
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .background(colors.containerColor, RoundedCornerShape(24.dp))
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .background(colors.containerColor, RoundedCornerShape(24.dp))
+                        .padding(16.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 secondaryContent()
             }
@@ -79,41 +81,43 @@ fun LargeCard(
     primaryContent: @Composable () -> Unit,
     secondaryContent: @Composable () -> Unit,
     elevation: CardElevation = CardDefaults.elevatedCardElevation(),
-    colors: CardColors = CardDefaults.elevatedCardColors(
-        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-    ),
+    colors: CardColors =
+        CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+        ),
 ) {
     ElevatedCard(
         modifier = modifier,
         elevation = elevation,
         colors = colors,
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(24.dp),
     ) {
         Row(
             modifier = Modifier.height(IntrinsicSize.Min).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .background(
-                        MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
-                        RoundedCornerShape(24.dp)
-                    )
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(
+                            MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
+                            RoundedCornerShape(24.dp),
+                        ).fillMaxHeight(),
+                contentAlignment = Alignment.Center,
             ) {
                 primaryContent()
             }
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .background(colors.containerColor, RoundedCornerShape(24.dp))
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(colors.containerColor, RoundedCornerShape(24.dp))
+                        .padding(16.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 secondaryContent()
             }
@@ -128,9 +132,10 @@ fun AdaptiveCard(
     primaryContent: @Composable () -> Unit,
     secondaryContent: @Composable () -> Unit,
     elevation: CardElevation = CardDefaults.elevatedCardElevation(),
-    colors: CardColors = CardDefaults.elevatedCardColors(
-        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-    ),
+    colors: CardColors =
+        CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+        ),
 ) = adaptiveComponent(
     small =
         {
@@ -139,7 +144,7 @@ fun AdaptiveCard(
                 primaryContent = primaryContent,
                 secondaryContent = secondaryContent,
                 elevation = elevation,
-                colors = colors
+                colors = colors,
             )
         },
     large = {
@@ -148,7 +153,7 @@ fun AdaptiveCard(
             primaryContent = primaryContent,
             secondaryContent = secondaryContent,
             elevation = elevation,
-            colors = colors
+            colors = colors,
         )
-    }
+    },
 )

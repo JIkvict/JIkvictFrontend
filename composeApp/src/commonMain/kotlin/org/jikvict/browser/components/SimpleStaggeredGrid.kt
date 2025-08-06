@@ -11,11 +11,11 @@ fun SimpleStaggeredGrid(
     columns: Int = 2,
     verticalSpacing: Int = 0,
     horizontalSpacing: Int = 0,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Layout(
         content = content,
-        modifier = modifier
+        modifier = modifier,
     ) { measurables, constraints ->
 
         val safeColumns = columns.coerceAtLeast(1)
@@ -26,24 +26,26 @@ fun SimpleStaggeredGrid(
         val columnWidths = IntArray(safeColumns)
         val columnHeights = IntArray(safeColumns)
 
-        val placeables = measurables.map { measurable ->
-            val column = columnHeights.indices.minByOrNull { columnHeights[it] } ?: 0
+        val placeables =
+            measurables.map { measurable ->
+                val column = columnHeights.indices.minByOrNull { columnHeights[it] } ?: 0
 
-            val placeable = measurable.measure(
-                Constraints(
-                    minWidth = 0,
-                    maxWidth = columnWidth.coerceAtLeast(0),
-                    minHeight = 0,
-                    maxHeight = Constraints.Infinity
-                )
-            )
+                val placeable =
+                    measurable.measure(
+                        Constraints(
+                            minWidth = 0,
+                            maxWidth = columnWidth.coerceAtLeast(0),
+                            minHeight = 0,
+                            maxHeight = Constraints.Infinity,
+                        ),
+                    )
 
-            columnWidths[column] = maxOf(columnWidths[column], placeable.width)
-            if (columnHeights[column] > 0) columnHeights[column] += verticalSpacing
-            columnHeights[column] += placeable.height
+                columnWidths[column] = maxOf(columnWidths[column], placeable.width)
+                if (columnHeights[column] > 0) columnHeights[column] += verticalSpacing
+                columnHeights[column] += placeable.height
 
-            column to placeable
-        }
+                column to placeable
+            }
 
         val layoutWidth = columnWidths.sum() + horizontalSpacing * (safeColumns - 1)
         val layoutHeight = columnHeights.maxOrNull() ?: 0
@@ -59,7 +61,7 @@ fun SimpleStaggeredGrid(
             placeables.forEach { (column, placeable) ->
                 placeable.placeRelative(
                     x = columnX[column],
-                    y = columnY[column]
+                    y = columnY[column],
                 )
                 columnY[column] += placeable.height + verticalSpacing
             }

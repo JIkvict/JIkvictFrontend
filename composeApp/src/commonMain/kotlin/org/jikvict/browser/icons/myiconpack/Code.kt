@@ -27,7 +27,7 @@ val Code: ImageVector
                 defaultWidth = 24.0.dp,
                 defaultHeight = 16.0.dp,
                 viewportWidth = 24.0f,
-                viewportHeight = 16.0f
+                viewportHeight = 16.0f,
             ).apply {
                 path(
                     fill = SolidColor(onSurfaceColor),
@@ -36,7 +36,7 @@ val Code: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(8.32f, 1.923f)
                     curveTo(8.655f, 1.597f, 8.655f, 1.07f, 8.32f, 0.744f)
@@ -57,7 +57,7 @@ val Code: ImageVector
                     strokeLineCap = Butt,
                     strokeLineJoin = Miter,
                     strokeLineMiter = 4.0f,
-                    pathFillType = NonZero
+                    pathFillType = NonZero,
                 ) {
                     moveTo(16.892f, 0.744f)
                     curveTo(16.557f, 0.419f, 16.014f, 0.419f, 15.68f, 0.744f)
@@ -74,7 +74,6 @@ val Code: ImageVector
             }.build()
         }
     }
-
 
 @Preview
 @Composable

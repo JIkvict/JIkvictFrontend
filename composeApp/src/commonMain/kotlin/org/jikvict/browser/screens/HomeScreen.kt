@@ -20,16 +20,15 @@ import org.jikvict.browser.util.DefaultPreview
 import kotlin.reflect.KClass
 
 @Composable
-private fun HomeScreenComposable(
-    i: Int,
-) {
+private fun HomeScreenComposable(i: Int) {
     DefaultScreen {
         SelectionContainer {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(16.dp)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(16.dp),
             ) {
                 Text("Parameter i: $i", color = MaterialTheme.colorScheme.onBackground)
 
@@ -46,7 +45,7 @@ private fun HomeScreenComposable(
 @SerialName("home2")
 data class HomeScreen(
     val i: Int,
-    val b: String = "default"
+    val b: String = "default",
 ) : NavigableScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = {
@@ -75,9 +74,8 @@ object HomeScreenRegistrar : ScreenRegistrar<HomeScreen> by createRegistrar()
 
 @Preview
 @Composable
-fun HomeScreenPreview() {
+private fun HomeScreenPreview() {
     DefaultPreview {
         HomeScreenComposable(1)
     }
-
 }

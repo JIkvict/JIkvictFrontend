@@ -28,57 +28,60 @@ import org.jikvict.browser.constant.LocalAppColors
 fun AnimatedBackground(
     modifier: Modifier = Modifier.Companion,
     radiusMinSize: Float = 0.5f,
-    radiusMaxSize: Float = 1.2f
+    radiusMaxSize: Float = 1.2f,
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "gradient")
     val themeColors = LocalAppColors.current
     val offsetX by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 500f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(18000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "x"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(18000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "x",
     )
 
     val offsetY by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 500f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(20000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "y"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(20000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "y",
     )
 
     val radiusScale by infiniteTransition.animateFloat(
         initialValue = radiusMinSize,
         targetValue = radiusMaxSize,
-        animationSpec = infiniteRepeatable(
-            animation = tween(15000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "radius"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(15000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "radius",
     )
 
-
-    val colors = if (themeColors is DarkColors) {
-        listOf(
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-            themeColors.Blue9.copy(alpha = 0.35f),
-            themeColors.Purple7.copy(alpha = 0.25f),
-            Color.Transparent
-        )
-    } else {
-        themeColors as LightColors
-        listOf(
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-            DarkColors.Blue9.copy(alpha = 0.75f),
-            DarkColors.Purple7.copy(alpha = 0.65f),
-            Color.Transparent
-        )
-    }
+    val colors =
+        if (themeColors is DarkColors) {
+            listOf(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                themeColors.Blue9.copy(alpha = 0.35f),
+                themeColors.Purple7.copy(alpha = 0.25f),
+                Color.Transparent,
+            )
+        } else {
+            themeColors as LightColors
+            listOf(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                DarkColors.Blue9.copy(alpha = 0.75f),
+                DarkColors.Purple7.copy(alpha = 0.65f),
+                Color.Transparent,
+            )
+        }
     Canvas(modifier = modifier.fillMaxSize().blur(120.dp)) {
         val centerX = size.width / 2f
         val centerY = -(size.height * 0.1f)
@@ -95,12 +98,13 @@ fun AnimatedBackground(
         val moveUp = (size.height - animatedRadius).coerceAtMost(size.height / 2)
 
         drawRect(
-            brush = Brush.radialGradient(
-                colors = colors,
-                center = Offset(currentOffsetX, currentOffsetY + moveUp),
-                radius = animatedRadius,
-                tileMode = TileMode.Clamp
-            ),
+            brush =
+                Brush.radialGradient(
+                    colors = colors,
+                    center = Offset(currentOffsetX, currentOffsetY + moveUp),
+                    radius = animatedRadius,
+                    tileMode = TileMode.Clamp,
+                ),
             size = size,
         )
     }

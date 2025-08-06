@@ -46,16 +46,16 @@ fun IconComponent(
                         Modifier.clickable(
                             interactionSource = interactionSource,
                             indication = null,
-                            onClick = onClick
+                            onClick = onClick,
                         )
                     } else {
                         Modifier
-                    }
+                    },
                 ).background(
                     if (isHovered && hoverable) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
-                    RoundedCornerShape(8.dp)
+                    RoundedCornerShape(8.dp),
                 ).then(modifier),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             iconVector,
@@ -63,7 +63,7 @@ fun IconComponent(
             tint = tint,
             modifier =
                 Modifier
-                    .size(iconSize)
+                    .size(iconSize),
         )
     }
 }
@@ -88,16 +88,16 @@ fun IconComponent(
                         Modifier.clickable(
                             interactionSource = interactionSource,
                             indication = null,
-                            onClick = onClick
+                            onClick = onClick,
                         )
                     } else {
                         Modifier
-                    }
+                    },
                 ).background(
                     if (isHovered && hoverable) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
-                    RoundedCornerShape(8.dp)
+                    RoundedCornerShape(8.dp),
                 ).then(modifier),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             iconPainter,
@@ -105,7 +105,7 @@ fun IconComponent(
             tint = tint,
             modifier =
                 Modifier
-                    .size(24.dp)
+                    .size(24.dp),
         )
     }
 }

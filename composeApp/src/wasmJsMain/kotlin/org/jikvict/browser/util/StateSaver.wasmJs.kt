@@ -9,15 +9,20 @@ import kotlin.reflect.KType
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 actual class StateSaver {
-    val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        prettyPrint = false
-    }
+    val json =
+        Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            prettyPrint = false
+        }
 
     val stateFlows = mutableMapOf<String, MutableStateFlow<Any>>()
 
-    actual fun <T : Any> asStateFlow(key: String, default: T, clazz: KType): StateFlow<T> {
+    actual fun <T : Any> asStateFlow(
+        key: String,
+        default: T,
+        clazz: KType,
+    ): StateFlow<T> {
         @Suppress("UNCHECKED_CAST")
         return stateFlows.getOrPut(key) {
             val initialValue = get(key, clazz) ?: default
@@ -26,7 +31,10 @@ actual class StateSaver {
     }
 
     @Suppress("UNCHECKED_CAST")
-    actual operator fun <T : Any> get(key: String, clazz: KType): T? {
+    actual operator fun <T : Any> get(
+        key: String,
+        clazz: KType,
+    ): T? {
         val jsonString = localStorage.getItem(key) ?: return null
         return try {
             json.decodeFromString(serializer(clazz), jsonString) as T
@@ -42,7 +50,11 @@ actual class StateSaver {
         }
     }
 
-    actual operator fun <T> set(key: String,clazz: KType, value: T?) {
+    actual operator fun <T> set(
+        key: String,
+        clazz: KType,
+        value: T?,
+    ) {
         if (value == null) {
             return
         }
@@ -52,7 +64,7 @@ actual class StateSaver {
                 is Int, is Long, is Float, is Double, is Boolean -> localStorage.setItem(key, value.toString())
                 else -> {
                     try {
-                        val jsonString = json.encodeToString(serializer(clazz),value)
+                        val jsonString = json.encodeToString(serializer(clazz), value)
                         localStorage.setItem(key, jsonString)
                     } catch (e: Exception) {
                         localStorage.setItem(key, value.toString())

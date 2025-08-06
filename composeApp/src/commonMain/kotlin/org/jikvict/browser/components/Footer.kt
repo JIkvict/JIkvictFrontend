@@ -21,17 +21,18 @@ import org.jikvict.browser.util.DefaultPreview
 @Composable
 fun Footer(modifier: Modifier = Modifier) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(48.dp),
         color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
         tonalElevation = 2.dp,
-        shadowElevation = 2.dp
+        shadowElevation = 2.dp,
     ) {
         Row(
             modifier = modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = "JIkvict",
@@ -39,7 +40,7 @@ fun Footer(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodyMedium,
                 fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.CenterVertically)
+                modifier = Modifier.align(Alignment.CenterVertically),
             )
         }
     }
@@ -47,7 +48,7 @@ fun Footer(modifier: Modifier = Modifier) {
 
 @Preview
 @Composable
-fun PreviewFooter() {
+private fun PreviewFooter() {
     DefaultPreview(true) {
         Footer()
     }

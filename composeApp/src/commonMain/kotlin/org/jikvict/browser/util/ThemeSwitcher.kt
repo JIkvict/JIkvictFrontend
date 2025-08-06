@@ -13,9 +13,8 @@ import org.jikvict.browser.theme.LightTheme
 
 class ThemeSwitcher(
     var theme: MutableState<CustomTheme>,
-    var localColors: MutableState<ThemeColors>
+    var localColors: MutableState<ThemeColors>,
 ) : IThemeSwitcher {
-
     private val _isDark = derivedStateOf { theme.value == DarkTheme }
     override val isDark: State<Boolean> get() = _isDark
 
@@ -25,10 +24,12 @@ class ThemeSwitcher(
         setTheme(theme.value == DarkTheme)
     }
 }
-val ThemeSwitcherProvider =
+
+val LocalThemeSwitcherProvider =
     staticCompositionLocalOf<IThemeSwitcher> {
         error("No ThemeSwitcher provided")
     }
 
 expect fun setTheme(isDark: Boolean)
+
 expect fun getTheme(): Boolean

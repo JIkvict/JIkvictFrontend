@@ -62,7 +62,7 @@ import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.util.DefaultPreview
-import org.jikvict.browser.util.ThemeSwitcherProvider
+import org.jikvict.browser.util.LocalThemeSwitcherProvider
 import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
@@ -72,173 +72,182 @@ data class Assignment(
     val id: Int,
     val title: String,
     val description: String,
-    val taskNumber: Int
+    val taskNumber: Int,
 )
 
 sealed class AssignmentsUiState {
     data object Loading : AssignmentsUiState()
+
     data class Success(
         val assignments: List<Assignment>,
         val currentPage: Int = 0,
         val hasMorePages: Boolean = false,
-        val isLoadingMore: Boolean = false
+        val isLoadingMore: Boolean = false,
     ) : AssignmentsUiState()
 
-    data class Error(val message: String) : AssignmentsUiState()
+    data class Error(
+        val message: String,
+    ) : AssignmentsUiState()
 }
-
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit = with(defaultScope) {
-    val navigator = rememberListDetailPaneScaffoldNavigator<Int>()
-    val scope = rememberCoroutineScope()
+fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
+    with(defaultScope) {
+        val navigator = rememberListDetailPaneScaffoldNavigator<Int>()
+        val scope = rememberCoroutineScope()
 
-    val viewModel = koinViewModel<TasksScreenViewModel>()
-    
-    val themeSwitcher = ThemeSwitcherProvider.current
-    val theme by themeSwitcher.isDark
+        val viewModel = koinViewModel<TasksScreenViewModel>()
 
-    val uiState by viewModel.assignmentsState.collectAsState()
-    val assignments by viewModel.assignments.collectAsState()
-    val isLoadingMore by viewModel.isLoadingMore.collectAsState()
-    
-    var selectedAssignmentId by remember { mutableIntStateOf(-1) }
+        val themeSwitcher = LocalThemeSwitcherProvider.current
+        val theme by themeSwitcher.isDark
 
-    fun refreshAssignments() {
-        viewModel.refreshAssignments()
-    }
+        val uiState by viewModel.assignmentsState.collectAsState()
+        val assignments by viewModel.assignments.collectAsState()
+        val isLoadingMore by viewModel.isLoadingMore.collectAsState()
 
-    fun loadMoreAssignments() {
-        viewModel.loadMoreAssignments()
-    }
+        var selectedAssignmentId by remember { mutableIntStateOf(-1) }
 
-    val selectedAssignment: Assignment? = remember(selectedAssignmentId, assignments) {
-        if (selectedAssignmentId != -1) {
-            assignments.find { it.id == selectedAssignmentId }
-        } else {
-            null
+        fun refreshAssignments() {
+            viewModel.refreshAssignments()
         }
-    }
 
-    // Use theme state to force recomposition when theme changes
-    key(theme) {
-        ListDetailPaneScaffold(
-            directive = navigator.scaffoldDirective,
-            value = navigator.scaffoldValue,
-            listPane = {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.End
+        fun loadMoreAssignments() {
+            viewModel.loadMoreAssignments()
+        }
+
+        val selectedAssignment: Assignment? =
+            remember(selectedAssignmentId, assignments) {
+                if (selectedAssignmentId != -1) {
+                    assignments.find { it.id == selectedAssignmentId }
+                } else {
+                    null
+                }
+            }
+
+        // Use theme state to force recomposition when theme changes
+        key(theme) {
+            ListDetailPaneScaffold(
+                directive = navigator.scaffoldDirective,
+                value = navigator.scaffoldValue,
+                listPane = {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
                     ) {
-                        Box(
-                            modifier = Modifier.padding(4.dp),
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.End,
                         ) {
-                            RefreshButton(
-                                isRefreshing = uiState is AssignmentsUiState.Loading,
-                                onClick = { refreshAssignments() }
-                            )
-                        }
-                    }
-
-                    when (uiState) {
-                        is AssignmentsUiState.Loading -> {
                             Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(1f),
-                                contentAlignment = Alignment.Center
+                                modifier = Modifier.padding(4.dp),
                             ) {
-                                CircularWavyProgressIndicator()
+                                RefreshButton(
+                                    isRefreshing = uiState is AssignmentsUiState.Loading,
+                                    onClick = { refreshAssignments() },
+                                )
                             }
                         }
 
-                        is AssignmentsUiState.Error -> {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(1f)
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                        when (uiState) {
+                            is AssignmentsUiState.Loading -> {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize()
+                                            .weight(1f),
+                                    contentAlignment = Alignment.Center,
                                 ) {
-                                    Text(
-                                        text = "An error occurred",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = (uiState as AssignmentsUiState.Error).message,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
+                                    CircularWavyProgressIndicator()
                                 }
                             }
-                        }
 
-                        is AssignmentsUiState.Success -> {
-                            if (assignments.isEmpty()) {
+                            is AssignmentsUiState.Error -> {
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .weight(1f),
-                                    contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize()
+                                            .weight(1f)
+                                            .padding(16.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
+                                        verticalArrangement = Arrangement.Center,
                                     ) {
                                         Text(
-                                            text = "No available assignments",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                            text = "An error occurred",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = MaterialTheme.colorScheme.error,
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = (uiState as AssignmentsUiState.Error).message,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface,
                                         )
                                     }
                                 }
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .weight(1f)
-                                ) {
-                                    AssignmentListPane(
-                                        assignments = assignments,
-                                        onAssignmentClick = { assignment ->
-                                            selectedAssignmentId = assignment.id
-                                            scope.launch {
-                                                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, assignment.id)
-                                            }
-                                        },
-                                        isLoadingMore = isLoadingMore,
-                                        hasMorePages = (uiState as? AssignmentsUiState.Success)?.hasMorePages ?: false,
-                                        onLoadMore = { loadMoreAssignments() }
-                                    )
+                            }
+
+                            is AssignmentsUiState.Success -> {
+                                if (assignments.isEmpty()) {
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .fillMaxSize()
+                                                .weight(1f),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center,
+                                        ) {
+                                            Text(
+                                                text = "No available assignments",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .fillMaxSize()
+                                                .weight(1f),
+                                    ) {
+                                        AssignmentListPane(
+                                            assignments = assignments,
+                                            onAssignmentClick = { assignment ->
+                                                selectedAssignmentId = assignment.id
+                                                scope.launch {
+                                                    navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, assignment.id)
+                                                }
+                                            },
+                                            isLoadingMore = isLoadingMore,
+                                            hasMorePages = (uiState as? AssignmentsUiState.Success)?.hasMorePages ?: false,
+                                            onLoadMore = { loadMoreAssignments() },
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            },
-            detailPane = {
-                selectedAssignment?.let { assignment ->
-                    AssignmentDetailPane(
-                        assignment = assignment
-                    )
-                } ?: EmptyDetailPane()
-            },
-            modifier = Modifier.fitContentToScreen(),
-        )
+                },
+                detailPane = {
+                    selectedAssignment?.let { assignment ->
+                        AssignmentDetailPane(
+                            assignment = assignment,
+                        )
+                    } ?: EmptyDetailPane()
+                },
+                modifier = Modifier.fitContentToScreen(),
+            )
+        }
     }
-}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -247,13 +256,13 @@ private fun AssignmentListPane(
     onAssignmentClick: (Assignment) -> Unit,
     isLoadingMore: Boolean = false,
     hasMorePages: Boolean = false,
-    onLoadMore: () -> Unit = {}
+    onLoadMore: () -> Unit = {},
 ) {
-
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -276,10 +285,11 @@ private fun AssignmentListPane(
             if (isLoadingMore) {
                 item {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
                         CircularWavyProgressIndicator()
                     }
@@ -299,39 +309,41 @@ private fun AssignmentListItem(
     onClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = assignment.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
 
                 Text(
                     text = assignment.description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                    maxLines = 2
+                    maxLines = 2,
                 )
 
                 Text(
                     text = "Task #${assignment.taskNumber}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
+                    color = MaterialTheme.colorScheme.outline,
                 )
             }
         }
@@ -340,22 +352,21 @@ private fun AssignmentListItem(
 
 @Composable
 context(scope: DefaultScreenScope)
-private fun AssignmentDetailPane(
-    assignment: Assignment
-) {
+private fun AssignmentDetailPane(assignment: Assignment) {
     val scrollState = rememberScrollState()
     with(scope) {
         Column(
-            modifier = Modifier
-                .fitContentToScreen()
-                .padding(16.dp)
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier =
+                Modifier
+                    .fitContentToScreen()
+                    .padding(16.dp)
+                    .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
                 text = "Task Details",
                 style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
 
             OutlinedContentContainer(
@@ -364,28 +375,27 @@ private fun AssignmentDetailPane(
                 Text(
                     text = assignment.title,
                     style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
             }
 
             OutlinedContentContainer(label = "Description") {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = scope.screenHeight * 0.5f),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = scope.screenHeight * 0.5f),
                 ) {
                     item {
                         Markdown(assignment.description)
                     }
                 }
-
             }
-
 
             Text(
                 text = "Task #${assignment.taskNumber}",
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline
+                color = MaterialTheme.colorScheme.outline,
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -393,7 +403,7 @@ private fun AssignmentDetailPane(
             Text(
                 text = "ID: ${assignment.id}",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline
+                color = MaterialTheme.colorScheme.outline,
             )
         }
     }
@@ -404,12 +414,12 @@ private fun AssignmentDetailPane(
 private fun EmptyDetailPane() {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = "Select a task to view details",
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         )
     }
 }
@@ -425,9 +435,7 @@ object TasksScreenRouterRegistrar : ScreenRouterRegistrar<TasksScreen> {
     override val screen: KClass<TasksScreen>
         get() = TasksScreen::class
 
-    override fun constructScreen(params: Map<String, String?>): NavigableScreen {
-        return TasksScreen()
-    }
+    override fun constructScreen(params: Map<String, String?>): NavigableScreen = TasksScreen()
 }
 
 object TasksScreenRegistrar : ScreenRegistrar<TasksScreen> by createRegistrar()
@@ -452,11 +460,12 @@ fun OutlinedContentContainer(
 
     Box(modifier = modifier) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-                .border(1.dp, borderColor, RoundedCornerShape(4.dp))
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+                    .border(1.dp, borderColor, RoundedCornerShape(4.dp))
+                    .padding(16.dp),
         ) {
             content()
         }
@@ -465,10 +474,11 @@ fun OutlinedContentContainer(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             color = labelColor,
-            modifier = Modifier
-                .offset(x = 12.dp)
-                .background(backgroundColor)
-                .padding(horizontal = 4.dp)
+            modifier =
+                Modifier
+                    .offset(x = 12.dp)
+                    .background(backgroundColor)
+                    .padding(horizontal = 4.dp),
         )
     }
 }
@@ -477,7 +487,7 @@ fun OutlinedContentContainer(
 @Composable
 fun RefreshButton(
     isRefreshing: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     var totalRotation by remember { mutableFloatStateOf(0f) }
     var isAnimating by remember { mutableStateOf(false) }
@@ -492,7 +502,7 @@ fun RefreshButton(
                 isAnimating = false
             }
         },
-        label = "rotation"
+        label = "rotation",
     )
 
     LaunchedEffect(isRefreshing) {
@@ -501,11 +511,12 @@ fun RefreshButton(
         }
     }
 
-    val iconTint = if (isRefreshing || isAnimating) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.95f)
-    }
+    val iconTint =
+        if (isRefreshing || isAnimating) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.95f)
+        }
 
     val iconSize = 28.dp
 
@@ -515,17 +526,18 @@ fun RefreshButton(
         modifier = Modifier.padding(4.dp).background(Color.Transparent, CircleShape),
         shape = CircleShape,
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        contentPadding = PaddingValues(4.dp)
+        contentPadding = PaddingValues(4.dp),
     ) {
         Icon(
             imageVector = Icons.Default.Refresh,
             contentDescription = "Refresh",
-            modifier = Modifier
-                .size(iconSize)
-                .graphicsLayer {
-                    rotationZ = rotation
-                },
-            tint = iconTint
+            modifier =
+                Modifier
+                    .size(iconSize)
+                    .graphicsLayer {
+                        rotationZ = rotation
+                    },
+            tint = iconTint,
         )
     }
 }

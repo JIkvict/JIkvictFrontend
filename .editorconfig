@@ -1,7 +1,2 @@
-root = true
-
-
-# noinspection EditorConfigKeyCorrectness
-[{**/generated/**,**/build/**}]
-ktlint_disabled_rules = no-trailing-comma, unused-import, type-annotation-spacing, no-trailing-spaces, no-empty-first-line-in-method-block, no-space-before-parentheses, no-empty-blocks, comma-spacing, when-spacing, assignment-wrap, parameter-list-wrapping, brace-spacing, indent, import-ordering
-ktlint_disabled = true
+[**/generated/**]
+ktlint = disabled

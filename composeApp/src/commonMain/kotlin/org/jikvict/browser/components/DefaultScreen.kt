@@ -31,7 +31,7 @@ import org.jikvict.browser.util.DefaultPreview
 fun DefaultScreen(content: @Composable ColumnScope.(DefaultScreenScope) -> Unit) {
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         val boxWithConstraintsScope = this@BoxWithConstraints
         val verticalScroll = rememberScrollState()
@@ -47,17 +47,20 @@ fun DefaultScreen(content: @Composable ColumnScope.(DefaultScreenScope) -> Unit)
             }
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(verticalScroll)
-                .background(MaterialTheme.colorScheme.background),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(verticalScroll)
+                    .background(MaterialTheme.colorScheme.background),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally,
-        )
-        {
-            Header(modifier = Modifier.onGloballyPositioned {
-                headerHeight.value = it.size.height
-            })
+        ) {
+            Header(
+                modifier =
+                    Modifier.onGloballyPositioned {
+                        headerHeight.value = it.size.height
+                    },
+            )
 
             content(
                 DefaultScreenScope(
@@ -66,17 +69,19 @@ fun DefaultScreen(content: @Composable ColumnScope.(DefaultScreenScope) -> Unit)
                     verticalScroll,
                     headerHeight.value,
                     footerHeight.value,
-                    screenHeight = screenHeight.value
-                )
+                    screenHeight = screenHeight.value,
+                ),
             )
 
-            Footer(modifier = Modifier.onGloballyPositioned {
-                footerHeight.value = it.size.height
-            })
+            Footer(
+                modifier =
+                    Modifier.onGloballyPositioned {
+                        footerHeight.value = it.size.height
+                    },
+            )
         }
     }
 }
-
 
 data class DefaultScreenScope(
     val boxWithConstraintsScope: BoxWithConstraintsScope,
@@ -87,17 +92,14 @@ data class DefaultScreenScope(
     val screenWidth: Dp = boxWithConstraintsScope.maxWidth,
     val screenHeight: Dp,
 ) {
-    fun Modifier.fitContentToScreen(): Modifier {
-        return this.fillMaxWidth().height(screenHeight)
-    }
+    fun Modifier.fitContentToScreen(): Modifier = this.fillMaxWidth().height(screenHeight)
 }
 
 @Preview
 @Composable
-fun DefaultScreenPreview() {
+private fun DefaultScreenPreview() {
     DefaultPreview {
         DefaultScreen {
-
         }
     }
 }

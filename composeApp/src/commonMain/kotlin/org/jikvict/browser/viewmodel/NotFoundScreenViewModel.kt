@@ -11,19 +11,24 @@ import org.jikvict.browser.delegates.stateHandle
 import org.jikvict.browser.util.StateSaver
 
 class NotFoundScreenViewModel(
-    savedStateHandle: StateSaver
+    savedStateHandle: StateSaver,
 ) : ExtendedViewModel(savedStateHandle) {
     private val _someType = stateHandle("someType", NotFoundScreenState("Anton", 18))
 
-    val someType = _someType.asStateFlow().onStart {
-    }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = NotFoundScreenState("Anton", 18))
+    val someType =
+        _someType
+            .asStateFlow()
+            .onStart {
+            }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = NotFoundScreenState("Anton", 18))
 
     private var _timer = stateHandle("timer", 0)
 
-    val timer = _timer.asStateFlow().onStart {
+    val timer =
+        _timer
+            .asStateFlow()
+            .onStart {
 //        startTimer()
-    }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = 0)
-
+            }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = 0)
 
     fun startTimer() {
         viewModelScope.launch {
@@ -40,5 +45,5 @@ class NotFoundScreenViewModel(
 @Serializable
 data class NotFoundScreenState(
     val name: String,
-    val age: Int = 0
+    val age: Int = 0,
 )

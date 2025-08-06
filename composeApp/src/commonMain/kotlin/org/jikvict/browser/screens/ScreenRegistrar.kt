@@ -18,7 +18,7 @@ interface ScreenRegistrar<T : NavigableScreen> {
     fun UseNavEntry(
         scope: AnimatedContentScope,
         entry: NavBackStackEntry,
-        defaultScope: DefaultScreenScope
+        defaultScope: DefaultScreenScope,
     ) {
         val block = provideRegisterFunction()
         scope.block(entry, defaultScope)
@@ -26,28 +26,23 @@ interface ScreenRegistrar<T : NavigableScreen> {
 
     fun getType(): KClass<T>
 
-    fun provideRegisterFunction(): @Composable (AnimatedContentScope.(NavBackStackEntry, DefaultScreenScope) -> Unit) {
-        return { entry, scope ->
+    fun provideRegisterFunction(): @Composable (AnimatedContentScope.(NavBackStackEntry, DefaultScreenScope) -> Unit) =
+        { entry, scope ->
             val route = entry.toRoute<T>(getType())
             route.compose(scope)
         }
-    }
 }
 
-
-inline fun <reified T : NavigableScreen> createRegistrar(): ScreenRegistrar<T> {
-    return object : ScreenRegistrar<T> {
-        override fun getType(): KClass<T> {
-            return T::class
-        }
+inline fun <reified T : NavigableScreen> createRegistrar(): ScreenRegistrar<T> =
+    object : ScreenRegistrar<T> {
+        override fun getType(): KClass<T> = T::class
     }
-}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 fun NavGraphBuilder.registerNavForScreen(
     screenRegistrar: ScreenRegistrar<out NavigableScreen>,
     scope: DefaultScreenScope,
-    motionScheme: MotionScheme
+    motionScheme: MotionScheme,
 ) {
     composable(
         route = screenRegistrar.getType(),

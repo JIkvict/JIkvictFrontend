@@ -34,6 +34,6 @@ actual fun rememberJetBrainsMonoFontFamily(): FontFamily {
     return FontFamily(
         jetBrainsMono,
         jetBrainsMonoBold,
-        jetBrainsMonoMedium
+        jetBrainsMonoMedium,
     )
 }

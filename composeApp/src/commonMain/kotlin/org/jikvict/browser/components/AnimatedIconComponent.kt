@@ -36,11 +36,13 @@ fun AnimatedIconComponent(
     tint: Color = Color.Unspecified,
     initialProgress: Float = 0f,
     animationType: AnimationType = AnimationType.ONCE_FORWARD_THEN_BACKWARD,
-    speed: Float = 1f
+    speed: Float = 1f,
 ) {
     val animatedIcon by rememberLottieComposition {
         LottieCompositionSpec.JsonString(
-            jikvictfrontend.composeapp.generated.resources.Res.readBytes(animationPath).decodeToString()
+            jikvictfrontend.composeapp.generated.resources.Res
+                .readBytes(animationPath)
+                .decodeToString(),
         )
     }
 
@@ -134,10 +136,11 @@ fun AnimatedIconComponent(
     }
 
     IconComponent(
-        iconPainter = rememberLottiePainter(
-            composition = animatedIcon,
-            progress = { progress }
-        ),
+        iconPainter =
+            rememberLottiePainter(
+                composition = animatedIcon,
+                progress = { progress },
+            ),
         hoverable = hoverable,
         modifier = modifier,
         tint = tint,
@@ -148,7 +151,7 @@ fun AnimatedIconComponent(
                     onClick()
                 }
             }
-        }
+        },
     )
 }
 
@@ -174,5 +177,5 @@ enum class AnimationType {
     /**
      * Animate from current progress to 1, then back to 0.
      */
-    ONCE_FORWARD_THEN_BACKWARD
+    ONCE_FORWARD_THEN_BACKWARD,
 }

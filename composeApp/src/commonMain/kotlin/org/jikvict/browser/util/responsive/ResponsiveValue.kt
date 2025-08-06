@@ -8,7 +8,6 @@ class ResponsiveValueScope<T> {
     private var baseValue: T? = null
     private val breakpointValues = mutableMapOf<Breakpoint, T>()
 
-
     fun base(value: () -> T) {
         baseValue = value()
     }
@@ -17,10 +16,9 @@ class ResponsiveValueScope<T> {
         breakpointValues[this] = block()
     }
 
-
     @Composable
     internal fun build(): T {
-        val currentBreakpoint = Breakpoint.Companion.current()
+        val currentBreakpoint = Breakpoint.current()
 
         return Breakpoint.entries
             .filter { it.minWidth <= currentBreakpoint.minWidth }
@@ -31,13 +29,10 @@ class ResponsiveValueScope<T> {
     }
 }
 
-
 class ResponsiveValueBuilder<T> {
     private val scope = ResponsiveValueScope<T>()
 
-    operator fun invoke(init: ResponsiveValueScope<T>.() -> Unit): ResponsiveValueScope<T> {
-        return scope.apply(init)
-    }
+    operator fun invoke(init: ResponsiveValueScope<T>.() -> Unit): ResponsiveValueScope<T> = scope.apply(init)
 
     companion object {
         operator fun <T> invoke(init: ResponsiveValueScope<T>.() -> Unit): ResponsiveValueBuilder<T> {
@@ -48,9 +43,7 @@ class ResponsiveValueBuilder<T> {
     }
 
     @Composable
-    fun toValue(): T {
-        return scope.build()
-    }
+    fun toValue(): T = scope.build()
 }
 
 @Composable
@@ -58,4 +51,3 @@ fun <T> responsiveValue(builder: ResponsiveValueScope<T>.() -> Unit): T {
     val scope = ResponsiveValueScope<T>().apply(builder)
     return scope.build()
 }
-

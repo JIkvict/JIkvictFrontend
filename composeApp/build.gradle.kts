@@ -7,9 +7,17 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
-    id(libs.plugins.kotlinMultiplatform.get().pluginId)
-    id(libs.plugins.androidApplication.get().pluginId) // To delete
-
+    id(
+        libs.plugins.kotlinMultiplatform
+            .get()
+            .pluginId,
+    )
+    id(
+        libs.plugins.androidApplication
+            .get()
+            .pluginId,
+    ) // To delete
+    id("org.jlleitschuh.gradle.ktlint") version "13.0.0"
     id("jikvict-frontend-plugin")
 }
 
@@ -28,28 +36,36 @@ android {
     sourceSets["main"].manifest.srcFile("src/commonMain/AndroidManifest.xml")
 } // To delete
 kotlin {
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.add("-Xcontext-parameters")
+    }
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class) compilerOptions {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
             freeCompilerArgs.add("-Xcontext-parameters")
         }
     } // To delete
 
-
-    @OptIn(ExperimentalWasmDsl::class) wasmJs {
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
         outputModuleName = "composeApp"
         browser {
             val rootDirPath = project.rootDir.path
             val projectDirPath = project.projectDir.path
             commonWebpackConfig {
                 outputFileName = "composeApp.js"
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    static = (static ?: mutableListOf()).apply {
-                        add(rootDirPath)
-                        add(projectDirPath)
+                devServer =
+                    (devServer ?: KotlinWebpackConfig.DevServer()).apply {
+                        static =
+                            (static ?: mutableListOf()).apply {
+                                add(rootDirPath)
+                                add(projectDirPath)
+                            }
+                        open = false
                     }
-                    open = false
-                }
             }
             testTask {
                 enabled = false
@@ -64,14 +80,16 @@ kotlin {
 
     sourceSets {
 
-        @OptIn(ExperimentalKotlinGradlePluginApi::class) jvm("desktop") {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        jvm("desktop") {
             compilerOptions {
                 jvmTarget.set(JvmTarget.JVM_21)
                 freeCompilerArgs.add("-Xcontext-parameters")
             }
         }
 
-        @Suppress("unused") val desktopMain by getting {
+        @Suppress("unused")
+        val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlin.coroutines.swing)
@@ -79,14 +97,15 @@ kotlin {
             }
         }
 
-        @Suppress("unused") val desktopTest by getting
+        @Suppress("unused")
+        val desktopTest by getting
 
-        @Suppress("unused") val wasmJsMain by getting {
+        @Suppress("unused")
+        val wasmJsMain by getting {
             dependencies {
                 implementation(libs.ktor.client.js)
             }
         }
-
 
         androidMain.dependencies {
             implementation(compose.preview)
@@ -140,5 +159,26 @@ kotlin {
 dependencies {
     ksp(project(":processor"))
     debugImplementation(compose.uiTooling)
+    ktlintRuleset(libs.ktlint)
 }
 
+ktlint {
+    version.set("1.7.1")
+    ktlint {
+        filter {
+            exclude { element ->
+                val path = element.file.path
+                path.contains("/generated/")
+            }
+        }
+    }
+}
+
+tasks.named("runKtlintFormatOverCommonMainSourceSet") {
+    dependsOn("openApiGenerate")
+    dependsOn("kspCommonMainKotlinMetadata")
+}
+tasks.named("runKtlintCheckOverCommonMainSourceSet") {
+    dependsOn("openApiGenerate")
+    dependsOn("kspCommonMainKotlinMetadata")
+}

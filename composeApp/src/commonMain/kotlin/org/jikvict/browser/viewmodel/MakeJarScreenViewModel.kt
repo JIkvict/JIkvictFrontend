@@ -9,16 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.jikvict.browser.constant.ThemeColors
 
 class MakeJarScreenViewModel(
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
-
-
     private val _jarWarOffsetY = MutableStateFlow(0)
     val jarWarOffsetY = _jarWarOffsetY.asStateFlow()
 
     private val _jarWarHeightPx = MutableStateFlow(0)
     val jarWarHeightPx = _jarWarHeightPx.asStateFlow()
-
 
     private val _solveTestCreatePosition = MutableStateFlow(0)
     val solveTestCreatePosition = _solveTestCreatePosition.asStateFlow()
@@ -32,7 +29,6 @@ class MakeJarScreenViewModel(
     private val _redColor = MutableStateFlow<Color>(Color.Unspecified)
     val redColor = _redColor.asStateFlow()
 
-
     fun updateJarWarHeightPx(height: Int) {
         _jarWarHeightPx.value = height
     }
@@ -45,7 +41,10 @@ class MakeJarScreenViewModel(
         _solveTestCreatePosition.value = position
     }
 
-    fun updateColors(isDark: Boolean, appColors: ThemeColors) {
+    fun updateColors(
+        isDark: Boolean,
+        appColors: ThemeColors,
+    ) {
         _purpleColor.value = if (isDark) appColors.Purple6 else appColors.Purple3
         _redColor.value = if (isDark) appColors.Red6 else appColors.Red3
     }

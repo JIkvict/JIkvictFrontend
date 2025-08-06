@@ -28,13 +28,13 @@ import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.TasksScreen
 import org.jikvict.browser.screens.TasksScreenRouterRegistrar
 import org.jikvict.browser.util.DefaultPreview
-import org.jikvict.browser.util.ThemeSwitcherProvider
+import org.jikvict.browser.util.LocalThemeSwitcherProvider
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun Header(modifier: Modifier = Modifier) {
     val navController = LocalNavController.current
-    val themeSwitcher = ThemeSwitcherProvider.current
+    val themeSwitcher = LocalThemeSwitcherProvider.current
     val coroutineScope = rememberCoroutineScope()
 
     val darkPurple = LocalAppColors.current.Purple6
@@ -45,18 +45,20 @@ fun Header(modifier: Modifier = Modifier) {
     val moonTint = if (!theme) Color.Black else Color.Unspecified
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(48.dp),
         color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
         tonalElevation = 2.dp,
-        shadowElevation = 2.dp
+        shadowElevation = 2.dp,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp)
-                .then(modifier),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
+                    .then(modifier),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
@@ -72,7 +74,7 @@ fun Header(modifier: Modifier = Modifier) {
                     hoverable = true,
                     onClick = {
                         if (!TasksScreenRouterRegistrar.matchRoute(
-                                navController.currentBackStackEntry?.destination?.route ?: ""
+                                navController.currentBackStackEntry?.destination?.route ?: "",
                             )
                         ) {
                             coroutineScope.launch {
@@ -83,7 +85,7 @@ fun Header(modifier: Modifier = Modifier) {
                     },
                     animationType = AnimationType.TOGGLE,
                     tint = MaterialTheme.colorScheme.onSurface,
-                    speed = 2f
+                    speed = 2f,
                 )
             }
 
@@ -101,7 +103,7 @@ fun Header(modifier: Modifier = Modifier) {
                         themeSwitcher.switchTheme()
                     },
                     animationType = AnimationType.TOGGLE,
-                    speed = 1f
+                    speed = 1f,
                 )
 
                 AnimatedIconComponent(
@@ -109,7 +111,7 @@ fun Header(modifier: Modifier = Modifier) {
                     hoverable = true,
                     tint = MaterialTheme.colorScheme.onSurface,
                     animationType = AnimationType.ONCE_FORWARD,
-                    speed = 1f
+                    speed = 1f,
                 )
             }
         }
@@ -118,7 +120,7 @@ fun Header(modifier: Modifier = Modifier) {
 
 @Preview(widthDp = 1920, heightDp = 1080)
 @Composable
-fun HeaderPreview() {
+private fun HeaderPreview() {
     DefaultPreview(true) {
         Header()
     }

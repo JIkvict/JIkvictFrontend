@@ -7,17 +7,13 @@ data class SavableStateFlow<T : Any>(
     private val stateSaver: StateSaver,
     private val key: String,
     private val default: T,
-    private val type: KType
+    private val type: KType,
 ) {
     fun set(value: T) {
         stateSaver[key, type] = value
     }
 
-    fun asStateFlow(): StateFlow<T> {
-        return stateSaver.asStateFlow(key = key, default = default, type)
-    }
+    fun asStateFlow(): StateFlow<T> = stateSaver.asStateFlow(key = key, default = default, type)
 
-    fun get(): T {
-        return stateSaver[key, type] ?: default
-    }
+    fun get(): T = stateSaver[key, type] ?: default
 }
