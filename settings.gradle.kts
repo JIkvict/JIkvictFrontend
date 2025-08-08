@@ -36,5 +36,4 @@ dependencyResolutionManagement {
 
 include(":composeApp")
 
-include(":processor")
 

@@ -157,7 +157,6 @@ kotlin {
 }
 
 dependencies {
-    ksp(project(":processor"))
     debugImplementation(compose.uiTooling)
     ktlintRuleset(libs.ktlint)
 }

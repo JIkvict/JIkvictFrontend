@@ -4,6 +4,7 @@ agp = "8.11.1"
 androidx-lifecycle = "2.9.1"
 composeMultiplatform = "1.9.0-beta01"
 kotlin = "2.2.0"
+ktlint = "0.4.26"
 material3 = "1.9.0-alpha04"
 material3WindowSizeClass = "1.8.2"
 navigation = "2.9.0-beta04"
@@ -27,6 +28,7 @@ adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", versi
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "ktlint" }
 material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
 material3-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "composeMultiplatform" }
 material3-window-size-class1 = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClass" }
