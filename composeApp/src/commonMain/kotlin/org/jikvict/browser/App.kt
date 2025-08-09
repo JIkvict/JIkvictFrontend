@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import io.ktor.client.HttpClient
 import org.jikvict.browser.components.DefaultScreen
 import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
@@ -43,6 +44,10 @@ fun App(
     navController: NavHostController,
     onNavHostReady: (Boolean) -> Unit = {},
 ) {
+    HttpClient {
+        expectSuccess = true
+    }
+
     val fonts = JIkvictTypography(rememberInterFontFamily(), rememberJetBrainsMonoFontFamily())
     val themeToSet = if (getTheme()) DarkTheme else LightTheme
     val theme = remember { mutableStateOf(themeToSet) }

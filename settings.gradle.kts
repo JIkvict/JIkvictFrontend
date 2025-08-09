@@ -3,6 +3,12 @@
 rootProject.name = "JIkvictFrontend"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
+buildCache {
+    local {
+        isEnabled = true
+    }
+}
+
 pluginManagement {
     repositories {
         google {

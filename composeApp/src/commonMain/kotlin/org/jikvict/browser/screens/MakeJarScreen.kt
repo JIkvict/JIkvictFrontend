@@ -1,7 +1,6 @@
 package org.jikvict.browser.screens
 
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.hoverable
@@ -50,7 +49,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import io.github.alexzhirkevich.compottie.LottieCompositionSpec
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
@@ -70,45 +68,16 @@ import org.jikvict.browser.components.CustomCard
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.IconComponent
 import org.jikvict.browser.constant.LocalAppColors
+import org.jikvict.browser.theme.mainColumnModifier
+import org.jikvict.browser.theme.maxTextSize
+import org.jikvict.browser.theme.minTextSize
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
-import org.jikvict.browser.util.responsive.Breakpoint
-import org.jikvict.browser.util.responsive.ResponsiveModifierBuilder
-import org.jikvict.browser.util.responsive.ResponsiveValueBuilder
 import org.jikvict.browser.util.responsive.adaptiveValue
 import org.jikvict.browser.util.responsive.responsive
 import org.jikvict.browser.viewmodel.MakeJarScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
-
-val mainColumnModifier =
-    ResponsiveModifierBuilder {
-        base {
-            Modifier.wrapContentHeight()
-        }
-        Breakpoint.SM {
-            Modifier.fillMaxWidth(0.9f)
-        }
-        Breakpoint.MD {
-            Modifier.fillMaxWidth(0.55f)
-        }
-        Breakpoint.LG {
-            Modifier.fillMaxWidth(0.5f)
-        }
-    }
-
-val minTextSize =
-    ResponsiveValueBuilder {
-        Breakpoint.SM { 20.sp }
-        Breakpoint.MD { 30.sp }
-        Breakpoint.LG { 60.sp }
-    }
-val maxTextSize =
-    ResponsiveValueBuilder {
-        Breakpoint.SM { 60.sp }
-        Breakpoint.MD { 60.sp }
-        Breakpoint.LG { 116.sp }
-    }
 
 @OptIn(
     ExperimentalMaterial3AdaptiveApi::class,
@@ -192,20 +161,20 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                             val inlineContent =
                                 mapOf(
                                     iconId to
-                                            InlineTextContent(
-                                                Placeholder(
-                                                    width = 1.em,
-                                                    height = 1.em,
-                                                    placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
-                                                ),
-                                            ) {
-                                                Icon(
-                                                    painter = painterResource(Res.drawable.kotlink),
-                                                    contentDescription = null,
-                                                    tint = purple,
-                                                    modifier = Modifier.fillMaxSize(),
-                                                )
-                                            },
+                                        InlineTextContent(
+                                            Placeholder(
+                                                width = 1.em,
+                                                height = 1.em,
+                                                placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+                                            ),
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(Res.drawable.kotlink),
+                                                contentDescription = null,
+                                                tint = purple,
+                                                modifier = Modifier.fillMaxSize(),
+                                            )
+                                        },
                                 )
 
                             Row(
@@ -320,10 +289,11 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                                 scope.launch {
                                     defaultScope.verticalScroll.animateScrollTo(
                                         solveTestCreatePosition,
-                                        animationSpec = tween(
-                                            durationMillis = 1000,
-                                            easing = FastOutSlowInEasing
-                                        ),
+                                        animationSpec =
+                                            tween(
+                                                durationMillis = 1000,
+                                                easing = FastOutSlowInEasing,
+                                            ),
                                     )
                                 }
                             }
@@ -377,15 +347,16 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                     MaterialTheme.typography.titleLarge.copy(
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.ExtraBold,
-                        shadow = Shadow(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
-                            offset = Offset(1f, 1f),
-                            blurRadius = 32f
-                        ),
+                        shadow =
+                            Shadow(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
+                                offset = Offset(1f, 1f),
+                                blurRadius = 32f,
+                            ),
                     ),
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 softWrap = false,
-                minTextSize = minText,
+                minTextSize = minText * 0.75,
                 maxTextSize = maxText,
             )
 

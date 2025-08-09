@@ -18,15 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.LocalNavController
 import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.icons.myiconpack.Ijlogo
+import org.jikvict.browser.screens.LoginScreen
 import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.TasksScreen
-import org.jikvict.browser.screens.TasksScreenRouterRegistrar
+import org.jikvict.browser.screens.navigateTo
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
 
@@ -66,21 +65,17 @@ fun Header(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.spacedBy(35.dp),
             ) {
                 IconComponent(Ijlogo, hoverable = true, tint = purple, onClick = {
-                    navController.navigate(MakeJarScreen())
+                    context(navController) {
+                        MakeJarScreen().navigateTo()
+                    }
                 })
 
                 AnimatedIconComponent(
                     animationPath = "files/code-animation.json",
                     hoverable = true,
                     onClick = {
-                        if (!TasksScreenRouterRegistrar.matchRoute(
-                                navController.currentBackStackEntry?.destination?.route ?: "",
-                            )
-                        ) {
-                            coroutineScope.launch {
-                                delay(150)
-                                navController.navigate(TasksScreen())
-                            }
+                        context(navController) {
+                            TasksScreen().navigateTo()
                         }
                     },
                     animationType = AnimationType.TOGGLE,
@@ -112,6 +107,11 @@ fun Header(modifier: Modifier = Modifier) {
                     tint = MaterialTheme.colorScheme.onSurface,
                     animationType = AnimationType.ONCE_FORWARD,
                     speed = 1f,
+                    onClick = {
+                        context(navController) {
+                            LoginScreen.navigateTo()
+                        }
+                    },
                 )
             }
         }

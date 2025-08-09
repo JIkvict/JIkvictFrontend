@@ -23,7 +23,9 @@ abstract class ExtendedOpenApiPlugin : Plugin<Project> {
                     "serializationLibrary" to "kotlinx_serialization",
                     "parcelizeModels" to "false",
                     "withJava" to "false",
-                    "dateTimeFormat" to "iso8601"
+                    "dateTimeFormat" to "iso8601",
+                    "exceptionOnFailure" to "true",
+                    "exceptionOnHttpError" to "true"
                 )
             )
         }

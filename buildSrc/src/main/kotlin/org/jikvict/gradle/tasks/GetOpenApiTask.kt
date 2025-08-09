@@ -24,22 +24,36 @@ abstract class GetOpenApiTask : DefaultTask() {
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
+    @Transient
+    private var cachedRemoteJson: String? = null
+
     init {
         outputFile.convention(project.layout.buildDirectory.file("openapi.json"))
+
+        onlyIf {
+            val outFile = outputFile.get().asFile
+            val current = if (outFile.exists()) outFile.readText() else null
+            val remote = fetchRemoteJson()
+            cachedRemoteJson = remote
+            current != remote
+        }
     }
 
     @TaskAction
     fun execute() {
+        val json = cachedRemoteJson ?: fetchRemoteJson()
+        outputFile.get().asFile.writeText(json)
+    }
+
+    private fun fetchRemoteJson(): String {
         val url = repoUrl.get()
-        val branchName = branch.orNull
-        val ver = version.orNull
-
+        val branchName = branch.orNull ?: "docs"
+        val ver = version.orNull ?: "latest"
         val retriever = GithubRetriever(
-            version = ver ?: "latest",
+            version = ver,
             repoUrl = url,
-            branch = branchName ?: "docs"
+            branch = branchName
         )
-
-        outputFile.get().asFile.writeText(retriever.getOpenApiJson())
+        return retriever.getOpenApiJson()
     }
 }

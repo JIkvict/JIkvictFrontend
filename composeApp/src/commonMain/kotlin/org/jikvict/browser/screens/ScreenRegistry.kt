@@ -6,6 +6,7 @@ val registeredScreens =
         NotFoundScreenRegistrar,
         MakeJarScreenRegistrar,
         TasksScreenRegistrar,
+        LoginScreenRegistrar,
     )
 val routers =
     listOf<ScreenRouterRegistrar<out NavigableScreen>>(
@@ -13,4 +14,5 @@ val routers =
         NotFoundScreenRouterRegistrar,
         MakeJarScreenRouterRegistrar,
         TasksScreenRouterRegistrar,
+        LoginScreenRouterRegistrar,
     )
