@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +28,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -45,8 +49,35 @@ import org.jikvict.browser.viewmodel.LoginScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
 
+
 @Composable
-fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) =
+fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) {
+    val viewModel = koinViewModel<LoginScreenViewModel>()
+    LoginScreenComposable(
+        defaultScreenScope,
+        viewModel.aisId,
+        viewModel.password,
+        viewModel::setAisId,
+        viewModel::setPassword,
+        viewModel.viewModelScope,
+        viewModel.loginResult,
+        viewModel::login,
+        viewModel::resetLoginResult
+    )
+}
+
+@Composable
+fun LoginScreenComposable(
+    defaultScreenScope: DefaultScreenScope,
+    aisId: StateFlow<String> = MutableStateFlow(""),
+    password: StateFlow<String> = MutableStateFlow(""),
+    setAisId: (String) -> Unit = {},
+    setPassword: (String) -> Unit = {},
+    viewModelScope: CoroutineScope,
+    loginResult: StateFlow<OperationResult<Unit>?> = MutableStateFlow(null),
+    login: suspend () -> Unit = {},
+    resetLoginResult: () -> Unit = {},
+) =
     with(defaultScreenScope) {
         val navController = LocalNavController.current
         val loginTextSize =
@@ -56,7 +87,6 @@ fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) =
                 Breakpoint.LG { 60.sp }
             }
 
-        val viewModel = koinViewModel<LoginScreenViewModel>()
 
         Box(
             modifier =
@@ -72,10 +102,11 @@ fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) =
                     "Log In",
                     loginTextSize.toValue(),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    shadowColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
                 )
 
-                val aisId by viewModel.aisId.collectAsState()
-                val password by viewModel.password.collectAsState()
+                val aisId by aisId.collectAsState()
+                val password by password.collectAsState()
 
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth(0.7f),
@@ -83,7 +114,7 @@ fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) =
                     onValueChange = { raw ->
                         val fixed = raw.uppercase()
                         if (fixed.length > 20) return@OutlinedTextField
-                        viewModel.setAisId(fixed)
+                        setAisId(fixed)
                     },
                     label = { Text("Ais ID") },
                 )
@@ -94,7 +125,7 @@ fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) =
                     value = password,
                     onValueChange = { raw ->
                         if (raw.length > 40) return@OutlinedTextField
-                        viewModel.setPassword(raw)
+                        setPassword(raw)
                     },
                     label = { Text("Password") },
                     singleLine = true,
@@ -116,18 +147,17 @@ fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) =
                         }
                     },
                 )
-                val viewModelScope = viewModel.viewModelScope
                 Button(
                     onClick = {
-                        viewModel.viewModelScope.launch {
-                            viewModel.login()
+                        viewModelScope.launch {
+                            login()
                         }
                     },
                     modifier = Modifier.fillMaxWidth(0.5f),
                 ) {
                     Text("Let's go")
                 }
-                val loginResult by viewModel.loginResult.collectAsState() // подписка на результат
+                val loginResult by loginResult.collectAsState()
 
                 when (val res = loginResult) {
                     is OperationResult.Error -> {
@@ -138,7 +168,7 @@ fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) =
                     }
 
                     is OperationResult.Success -> {
-                        viewModel.resetLoginResult()
+                        resetLoginResult()
                         context(navController) {
                             TasksScreen().navigateTo()
                         }
@@ -150,29 +180,15 @@ fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) =
         }
     }
 
-@Preview(widthDp = 360, heightDp = 640)
+@Preview(widthDp = 4000, heightDp = 3000)
 @Composable
 private fun LoginScreenComposablePreviewSM() {
     DefaultPreview {
-        LoginScreenComposable(it)
+        val previewScope = rememberCoroutineScope()
+        LoginScreenComposable(it, viewModelScope = previewScope)
     }
 }
 
-@Preview(widthDp = 600, heightDp = 960)
-@Composable
-private fun LoginScreenComposablePreviewMD() {
-    DefaultPreview {
-        LoginScreenComposable(it)
-    }
-}
-
-@Preview(widthDp = 1280, heightDp = 720)
-@Composable
-private fun LoginScreenComposablePreviewLG() {
-    DefaultPreview {
-        LoginScreenComposable(it)
-    }
-}
 
 @Register
 @Serializable
