@@ -38,22 +38,25 @@ class LoginScreenViewModel(
     }
 
     suspend fun login() {
+        _loginResult.value = OperationResult.Loading()
+        
         val request = LoginRequest(aisId.value.lowercase(), password.value)
         try {
             val response = loginApi.login(request)
             val token = response.body()
             println("Token is: $token")
-            OperationResult.Success(Unit).also { _loginResult.value = it }
+            _loginResult.value = OperationResult.Success(Unit)
         } catch (e: CancellationException) {
+            _loginResult.value = null
             throw e
         } catch (e: ClientRequestException) {
             val problem = e.response.body<ProblemDetail>()
-            OperationResult.Error<Unit>(problem.detail ?: "Unknown error").also { _loginResult.value = it }
+            _loginResult.value = OperationResult.Error(problem.detail ?: "Unknown error")
         } catch (e: ServerResponseException) {
             val problem = e.response.body<ProblemDetail>()
-            OperationResult.Error<Unit>(problem.detail ?: "Unknown error").also { _loginResult.value = it }
+            _loginResult.value = OperationResult.Error(problem.detail ?: "Unknown error")
         } catch (e: Exception) {
-            OperationResult.Error<Unit>(e.message ?: "Unknown error").also { _loginResult.value = it }
+            _loginResult.value = OperationResult.Error(e.message ?: "Unknown error")
         }
     }
 }

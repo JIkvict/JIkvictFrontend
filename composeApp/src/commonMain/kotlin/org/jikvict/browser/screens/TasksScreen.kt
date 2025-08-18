@@ -1,13 +1,15 @@
 package org.jikvict.browser.screens
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,8 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -38,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +57,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.m3.Markdown
+import dev.tclement.fonticons.FontIcon
+import dev.tclement.fonticons.rememberStaticIconFont
+import jikvictfrontend.composeapp.generated.resources.`MaterialSymbolsOutlined_VariableFont_FILL,GRAD,opsz,wght`
+import jikvictfrontend.composeapp.generated.resources.Res
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -66,6 +71,7 @@ import org.jikvict.browser.util.LocalThemeSwitcherProvider
 import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
+
 
 @Serializable
 data class Assignment(
@@ -137,8 +143,7 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                         Row(
                             modifier =
                                 Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    .fillMaxWidth(),
                             horizontalArrangement = Arrangement.End,
                         ) {
                             Box(
@@ -224,11 +229,15 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                                             onAssignmentClick = { assignment ->
                                                 selectedAssignmentId = assignment.id
                                                 scope.launch {
-                                                    navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, assignment.id)
+                                                    navigator.navigateTo(
+                                                        ListDetailPaneScaffoldRole.Detail,
+                                                        assignment.id
+                                                    )
                                                 }
                                             },
                                             isLoadingMore = isLoadingMore,
-                                            hasMorePages = (uiState as? AssignmentsUiState.Success)?.hasMorePages ?: false,
+                                            hasMorePages = (uiState as? AssignmentsUiState.Success)?.hasMorePages
+                                                ?: false,
                                             onLoadMore = { loadMoreAssignments() },
                                         )
                                     }
@@ -241,6 +250,7 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                     selectedAssignment?.let { assignment ->
                         AssignmentDetailPane(
                             assignment = assignment,
+                            navigator = navigator,
                         )
                     } ?: EmptyDetailPane()
                 },
@@ -350,9 +360,13 @@ private fun AssignmentListItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 context(scope: DefaultScreenScope)
-private fun AssignmentDetailPane(assignment: Assignment) {
+private fun AssignmentDetailPane(
+    assignment: Assignment,
+    navigator: ThreePaneScaffoldNavigator<Int>
+) {
     val scrollState = rememberScrollState()
     with(scope) {
         Column(
@@ -363,11 +377,61 @@ private fun AssignmentDetailPane(assignment: Assignment) {
                     .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(
-                text = "Task Details",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Task Details",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+
+                val scope = rememberCoroutineScope()
+                val iconFont = rememberStaticIconFont(
+                    fontResource = Res.font.`MaterialSymbolsOutlined_VariableFont_FILL,GRAD,opsz,wght`
+                )
+                navigator.let { nav ->
+                    if (nav.canNavigateBack()) {
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val isHovered by interactionSource.collectIsHoveredAsState()
+
+                        val animatedTint by animateColorAsState(
+                            targetValue = if (isHovered) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            },
+                            label = "back_icon_tint"
+                        )
+
+                        Box(
+                            modifier = Modifier.clickable(
+                                interactionSource = interactionSource,
+                                indication = null
+                            ) {
+                                scope.launch {
+                                    nav.navigateBack()
+                                }
+                            }
+                        ) {
+                            FontIcon(
+                                iconFont = iconFont,
+                                icon = '\uf6ff',
+                                contentDescription = "Back",
+                                tint = animatedTint,
+                                modifier = Modifier.size(32.dp).graphicsLayer {
+                                    rotationY = 180f
+                                },
+                            )
+                        }
+
+
+                    }
+                }
+
+            }
 
             OutlinedContentContainer(
                 label = "Title",
@@ -511,33 +575,42 @@ fun RefreshButton(
         }
     }
 
-    val iconTint =
-        if (isRefreshing || isAnimating) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.95f)
-        }
 
     val iconSize = 28.dp
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val animatedTint by animateColorAsState(
+        targetValue = if (isHovered) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+        } else {
+            MaterialTheme.colorScheme.primary
+        },
+        label = "back_icon_tint"
+    )
 
-    Button(
-        onClick = onClick,
-        enabled = !isRefreshing,
-        modifier = Modifier.padding(4.dp).background(Color.Transparent, CircleShape),
-        shape = CircleShape,
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        contentPadding = PaddingValues(4.dp),
+
+    Box(
+        modifier = Modifier
+            .padding(16.dp)
+            .background(Color.Transparent, CircleShape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = !isRefreshing
+            ) {
+                onClick()
+            }
     ) {
         Icon(
             imageVector = Icons.Default.Refresh,
             contentDescription = "Refresh",
-            modifier =
-                Modifier
-                    .size(iconSize)
-                    .graphicsLayer {
-                        rotationZ = rotation
-                    },
-            tint = iconTint,
+            modifier = Modifier
+                .size(iconSize)
+                .graphicsLayer {
+                    rotationZ = rotation
+                },
+            tint = animatedTint,
         )
     }
+
 }

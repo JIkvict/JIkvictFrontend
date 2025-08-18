@@ -117,6 +117,7 @@ kotlin {
             kotlin.srcDir("${layout.buildDirectory.get()}/generated/openapi/src/commonMain/kotlin")
             kotlin.srcDir("${layout.buildDirectory.get()}/generated/ksp/metadata/commonMain/kotlin")
             dependencies {
+                implementation(libs.icons)
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(libs.material3)

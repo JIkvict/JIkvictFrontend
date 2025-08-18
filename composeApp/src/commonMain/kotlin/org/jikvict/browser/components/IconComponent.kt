@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.jikvict.browser.constant.LightColors
+import org.jikvict.browser.util.LocalThemeSwitcherProvider
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -36,6 +38,9 @@ fun IconComponent(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
+    val theme = LocalThemeSwitcherProvider.current.isDark
+    val bgColor = if (theme.value) MaterialTheme.colorScheme.surfaceVariant else LightColors.Blue11
+
     Box(
         modifier =
             Modifier
@@ -52,7 +57,7 @@ fun IconComponent(
                         Modifier
                     },
                 ).background(
-                    if (isHovered && hoverable) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                    if (isHovered && hoverable) bgColor else Color.Transparent,
                     RoundedCornerShape(8.dp),
                 ).then(modifier),
         contentAlignment = Alignment.Center,
@@ -78,6 +83,9 @@ fun IconComponent(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
+    val theme = LocalThemeSwitcherProvider.current.isDark
+    val bgColor = if (theme.value) MaterialTheme.colorScheme.surfaceVariant else LightColors.Blue11
+
     Box(
         modifier =
             Modifier
@@ -94,7 +102,7 @@ fun IconComponent(
                         Modifier
                     },
                 ).background(
-                    if (isHovered && hoverable) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                    if (isHovered && hoverable) bgColor else Color.Transparent,
                     RoundedCornerShape(8.dp),
                 ).then(modifier),
         contentAlignment = Alignment.Center,
