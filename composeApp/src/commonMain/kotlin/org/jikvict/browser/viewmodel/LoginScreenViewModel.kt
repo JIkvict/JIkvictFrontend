@@ -43,8 +43,10 @@ class LoginScreenViewModel(
         val request = LoginRequest(aisId.value.lowercase(), password.value)
         try {
             val response = loginApi.login(request)
-            val token = response.body()
-            println("Token is: $token")
+            if (!response.success) {
+                _loginResult.value = OperationResult.Error("Server error: ${response.status}")
+                return
+            }
             _loginResult.value = OperationResult.Success(Unit)
         } catch (e: CancellationException) {
             _loginResult.value = null
