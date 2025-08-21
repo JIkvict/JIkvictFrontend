@@ -1,7 +1,13 @@
 package org.jikvict.browser.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,7 +32,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -41,6 +50,7 @@ import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -55,19 +65,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.m3.Markdown
 import dev.tclement.fonticons.FontIcon
 import dev.tclement.fonticons.rememberStaticIconFont
 import jikvictfrontend.composeapp.generated.resources.`MaterialSymbolsOutlined_VariableFont_FILL,GRAD,opsz,wght`
 import jikvictfrontend.composeapp.generated.resources.Res
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.util.DefaultPreview
+import org.jikvict.browser.util.DragDropHandler
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
+import org.jikvict.browser.util.setupDragAndDropHandlers
 import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
@@ -80,6 +94,16 @@ data class Assignment(
     val description: String,
     val taskNumber: Int,
 )
+
+data class TaskNotification(
+    val message: String,
+    val type: NotificationType,
+    val isVisible: Boolean = true
+)
+
+enum class NotificationType {
+    SUCCESS, ERROR
+}
 
 sealed class AssignmentsUiState {
     data object Loading : AssignmentsUiState()
@@ -113,6 +137,8 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
         val isLoadingMore by viewModel.isLoadingMore.collectAsState()
 
         var selectedAssignmentId by remember { mutableIntStateOf(-1) }
+        var notification by remember { mutableStateOf<TaskNotification?>(null) }
+
 
         fun refreshAssignments() {
             viewModel.refreshAssignments()
@@ -120,6 +146,19 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
 
         fun loadMoreAssignments() {
             viewModel.loadMoreAssignments()
+        }
+
+        fun showNotification(message: String, type: NotificationType) {
+            notification = TaskNotification(message, type, true)
+            // Auto-hide after 5 seconds
+            scope.launch {
+                delay(5000)
+                notification = null
+            }
+        }
+
+        fun hideNotification() {
+            notification = null
         }
 
         val selectedAssignment: Assignment? =
@@ -251,10 +290,18 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                         AssignmentDetailPane(
                             assignment = assignment,
                             navigator = navigator,
+                            showNotification = ::showNotification
                         )
                     } ?: EmptyDetailPane()
                 },
                 modifier = Modifier.fitContentToScreen(),
+            )
+        }
+
+        notification?.let { notif ->
+            TaskNotificationOverlay(
+                notification = notif,
+                onDismiss = { hideNotification() }
             )
         }
     }
@@ -365,7 +412,8 @@ private fun AssignmentListItem(
 context(scope: DefaultScreenScope)
 private fun AssignmentDetailPane(
     assignment: Assignment,
-    navigator: ThreePaneScaffoldNavigator<Int>
+    navigator: ThreePaneScaffoldNavigator<Int>,
+    showNotification: (String, NotificationType) -> Unit = { _, _ -> }
 ) {
     val scrollState = rememberScrollState()
     with(scope) {
@@ -462,7 +510,191 @@ private fun AssignmentDetailPane(
                 color = MaterialTheme.colorScheme.outline,
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            // Action buttons: Download and Upload with drag and drop support
+            val vm = koinViewModel<TasksScreenViewModel>()
+            var downloading by remember { mutableStateOf(false) }
+            var uploading by remember { mutableStateOf(false) }
+            var uploadStatus by remember { mutableStateOf("") }
+            val corScope = rememberCoroutineScope()
+
+            // Drag and drop handler setup
+            var isDragOver by remember { mutableStateOf(false) }
+            var dragHandler by remember { mutableStateOf<DragDropHandler?>(null) }
+
+            DisposableEffect(Unit) {
+                dragHandler = setupDragAndDropHandlers(
+                    onDragEnter = { isDragOver = true },
+                    onDragLeave = { isDragOver = false },
+                    onDragOver = { /* keep drag state */ },
+                    onFileDrop = { files ->
+                        isDragOver = false
+                        if (files.isNotEmpty() && !uploading) {
+                            uploading = true
+                            uploadStatus = "Processing dropped file..."
+                            corScope.launch {
+                                vm.submitSolutionWithFile(
+                                    assignmentId = assignment.id,
+                                    file = files.first(),
+                                    onStatus = { response ->
+                                        uploadStatus = when (response.status) {
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING -> "Processing..."
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> "Done"
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> "Failed"
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> "Rejected"
+                                        }
+
+                                        if (response.status != org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING) {
+                                            when (response.status) {
+                                                org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> {
+                                                    showNotification(
+                                                        "Task completed successfully!",
+                                                        NotificationType.SUCCESS
+                                                    )
+                                                }
+
+                                                org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> {
+                                                    val message = response.message ?: "Task failed"
+                                                    showNotification("Task failed: $message", NotificationType.ERROR)
+                                                }
+
+                                                org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> {
+                                                    val message = response.message ?: "Task was rejected"
+                                                    showNotification("Task rejected: $message", NotificationType.ERROR)
+                                                }
+
+                                                else -> {}
+                                            }
+                                            uploading = false
+                                        }
+                                    },
+                                    onFinished = { ok ->
+                                        if (!ok) {
+                                            uploadStatus = "Upload failed"
+                                            uploading = false
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                )
+
+                onDispose {
+                    dragHandler?.cleanup()
+                    dragHandler = null
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Download button
+                ActionIconButton(
+                    icon = Icons.Default.Download,
+                    label = if (downloading) "Downloading..." else "Download",
+                    enabled = !downloading,
+                    onClick = {
+                        downloading = true
+                        corScope.launch {
+                            vm.downloadZipAndSave(assignment.taskNumber) {
+                                println("Result is: $it")
+                                downloading = false
+                            }
+                        }
+                    }
+                )
+
+                // Upload button (submits solution and polls status)
+                ActionIconButton(
+                    icon = Icons.Default.Upload,
+                    label = if (uploading) uploadStatus.ifEmpty { "Uploading..." } else "Upload",
+                    enabled = !uploading,
+                    onClick = {
+                        uploading = true
+                        uploadStatus = "Picking file..."
+                        corScope.launch {
+                            vm.submitSolutionWithPicker(
+                                assignmentId = assignment.id,
+                                onStatus = { response ->
+                                    uploadStatus = when (response.status) {
+                                        org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING -> "Processing..."
+                                        org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> "Done"
+                                        org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> "Failed"
+                                        org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> "Rejected"
+                                    }
+
+                                    // Show notifications for completed tasks
+                                    if (response.status != org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING) {
+                                        when (response.status) {
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> {
+                                                showNotification(
+                                                    "Task completed successfully!",
+                                                    NotificationType.SUCCESS
+                                                )
+                                            }
+
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> {
+                                                val message = response.message ?: "Task failed"
+                                                showNotification("Task failed: $message", NotificationType.ERROR)
+                                            }
+
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> {
+                                                val message = response.message ?: "Task was rejected"
+                                                showNotification("Task rejected: $message", NotificationType.ERROR)
+                                            }
+
+                                            else -> {}
+                                        }
+                                        // allow user to re-upload after completion
+                                        uploading = false
+                                    }
+                                },
+                                onFinished = { ok ->
+                                    if (!ok) {
+                                        uploadStatus = "Upload canceled or failed"
+                                        uploading = false
+                                    } else if (uploadStatus.isEmpty()) {
+                                        uploadStatus = "Processing..."
+                                    }
+                                }
+                            )
+                        }
+                    }
+                )
+            }
+
+            Box(
+                modifier = Modifier.weight(1f).fillMaxSize().then(
+                    if (isDragOver) {
+                        Modifier
+                            .background(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .border(
+                                2.dp,
+                                MaterialTheme.colorScheme.primary,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(8.dp)
+                    } else {
+                        Modifier
+                    }
+                ),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (isDragOver) {
+                    Icon(
+                        Icons.Rounded.FileUpload,
+                        contentDescription = "Drag and drop file here",
+                        modifier = Modifier.fillMaxSize(0.5f),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
 
             Text(
                 text = "ID: ${assignment.id}",
@@ -613,4 +845,151 @@ fun RefreshButton(
         )
     }
 
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ActionIconButton(
+    icon: ImageVector,
+    label: String,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val animatedTint by animateColorAsState(
+        targetValue = if (isHovered) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+        } else {
+            MaterialTheme.colorScheme.primary
+        },
+        label = "action_icon_tint"
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (enabled) 1f else 0.5f,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "action_icon_alpha",
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (isHovered) 1.05f else 1f,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "action_icon_scale",
+    )
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .graphicsLayer { this.alpha = alpha; this.scaleX = scale; this.scaleY = scale }
+            .background(Color.Transparent, CircleShape)
+            .clickable(
+                enabled = enabled,
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(vertical = 8.dp, horizontal = 12.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = animatedTint,
+            modifier = Modifier.size(22.dp)
+        )
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+
+
+@Composable
+private fun TaskNotificationOverlay(
+    notification: TaskNotification,
+    onDismiss: () -> Unit
+) {
+    AnimatedVisibility(
+        visible = notification.isVisible,
+        enter = slideInVertically(
+            initialOffsetY = { -it },
+            animationSpec = tween(300)
+        ) + fadeIn(animationSpec = tween(300)),
+        exit = slideOutVertically(
+            targetOffsetY = { -it },
+            animationSpec = tween(300)
+        ) + fadeOut(animationSpec = tween(300))
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            Card(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(0.9f)
+                    .clickable { onDismiss() },
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = when (notification.type) {
+                        NotificationType.SUCCESS -> MaterialTheme.colorScheme.primaryContainer
+                        NotificationType.ERROR -> MaterialTheme.colorScheme.errorContainer
+                    }
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    val iconFont = rememberStaticIconFont(
+                        fontResource = Res.font.`MaterialSymbolsOutlined_VariableFont_FILL,GRAD,opsz,wght`
+                    )
+
+                    // Icon based on notification type
+                    FontIcon(
+                        iconFont = iconFont,
+                        icon = when (notification.type) {
+                            NotificationType.SUCCESS -> '\ue876' // check_circle
+                            NotificationType.ERROR -> '\ue000' // error
+                        },
+                        contentDescription = when (notification.type) {
+                            NotificationType.SUCCESS -> "Success"
+                            NotificationType.ERROR -> "Error"
+                        },
+                        tint = when (notification.type) {
+                            NotificationType.SUCCESS -> MaterialTheme.colorScheme.primary
+                            NotificationType.ERROR -> MaterialTheme.colorScheme.error
+                        },
+                        modifier = Modifier.size(24.dp)
+                    )
+
+                    Text(
+                        text = notification.message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = when (notification.type) {
+                            NotificationType.SUCCESS -> MaterialTheme.colorScheme.onPrimaryContainer
+                            NotificationType.ERROR -> MaterialTheme.colorScheme.onErrorContainer
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Close button
+                    FontIcon(
+                        iconFont = iconFont,
+                        icon = '\ue5cd', // close
+                        contentDescription = "Dismiss",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable { onDismiss() }
+                    )
+                }
+            }
+        }
+    }
 }
