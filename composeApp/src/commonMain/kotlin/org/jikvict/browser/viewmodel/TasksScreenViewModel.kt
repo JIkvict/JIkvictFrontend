@@ -22,11 +22,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
 import org.jikvict.api.apis.AssignmentControllerApi
 import org.jikvict.api.apis.TaskStatusControllerApi
 import org.jikvict.api.infrastructure.ApiClient
+import org.jikvict.api.models.AssignmentDto
+import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.PendingStatusResponseLong
-import org.jikvict.browser.screens.Assignment
 import org.jikvict.browser.screens.AssignmentsUiState
 import org.jikvict.browser.util.PickedFile
 import org.jikvict.browser.util.StateSaver
@@ -42,11 +44,11 @@ class TasksScreenViewModel(
 
     val assignmentsState: StateFlow<AssignmentsUiState> = _assignmentsState.asStateFlow()
 
-    val assignments: StateFlow<List<Assignment>> =
+    val assignments: StateFlow<List<AssignmentDto>> =
         assignmentsState
             .map { state ->
                 when (state) {
-                    is AssignmentsUiState.Success -> state.assignments
+                    is AssignmentsUiState.Success -> state.assignments.sortedBy { LocalDateTime.parse(it.startDate) }
                     else -> emptyList()
                 }
             }.stateIn(
@@ -57,7 +59,19 @@ class TasksScreenViewModel(
 
     init {
         loadAssignments()
+
+        viewModelScope.launch {
+            assignmentsState.collect { state ->
+                if (state is AssignmentsUiState.Success) {
+                    val assignmentIds = state.assignments.map { it.id }
+                    if (assignmentIds.isNotEmpty()) {
+                        fetchStatuses(assignmentIds)
+                    }
+                }
+            }
+        }
     }
+
 
     fun downloadZipAndSave(
         assignmentId: Int,
@@ -192,9 +206,39 @@ class TasksScreenViewModel(
         }
     }
 
+    private val _assignmentInfoMap = MutableStateFlow<Map<Int, AssignmentInfo>>(emptyMap())
+    val assignmentInfoMap: StateFlow<Map<Int, AssignmentInfo>> = _assignmentInfoMap.asStateFlow()
+
+    private suspend fun fetchStatuses(ids: List<Long>) {
+        try {
+            println("Fetching assignment statuses for ids: $ids")
+            val responses = ids.map { id ->
+                assignmentControllerApi.getAssignmentInfoForUser(id)
+            }
+            val infoMap = mutableMapOf<Int, AssignmentInfo>()
+            responses.forEach { response ->
+                if (response.success) {
+                    val info = response.body()
+                    infoMap[info.assignmentId.toInt()] = info
+                }
+            }
+
+            _assignmentInfoMap.value = infoMap
+        } catch (e: Exception) {
+            println("Error fetching assignment statuses in background: ${e.message}")
+        }
+    }
+
     fun refreshAssignments() {
         _assignmentsState.value = AssignmentsUiState.Loading
         loadAssignments()
+    }
+
+    /**
+     * Get assignment info by assignment ID for convenient access
+     */
+    fun getAssignmentInfo(assignmentId: Int): AssignmentInfo? {
+        return _assignmentInfoMap.value[assignmentId]
     }
 
     private suspend fun fetchAssignments(): AssignmentsUiState {
@@ -211,20 +255,9 @@ class TasksScreenViewModel(
                 return AssignmentsUiState.Success(emptyList())
             }
 
-            val assignmentList =
-                assignments.map { dto ->
-                    Assignment(
-                        id = dto.id.toInt(),
-                        title = dto.title,
-                        description = dto.description ?: "No description",
-                        taskNumber = dto.taskId,
-                    )
-                }
 
             AssignmentsUiState.Success(
-                assignments = assignmentList,
-                currentPage = 0,
-                isLoadingMore = false,
+                assignments = assignments,
             )
         } catch (e: Exception) {
             AssignmentsUiState.Error("Error: ${e.message}")

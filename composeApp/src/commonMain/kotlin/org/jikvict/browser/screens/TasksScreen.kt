@@ -57,7 +57,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -79,15 +79,19 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jikvict.api.models.AssignmentDto
+import org.jikvict.api.models.AssignmentInfo
+import org.jikvict.api.models.PendingStatusResponseLong
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.icons.MyIconPack
+import org.jikvict.browser.icons.myiconpack.Lockeddark
+import org.jikvict.browser.icons.myiconpack.Lockedlight
 import org.jikvict.browser.icons.myiconpack.Taskstatusdark
 import org.jikvict.browser.icons.myiconpack.Taskstatusdonedark
 import org.jikvict.browser.icons.myiconpack.Taskstatusdonelight
 import org.jikvict.browser.icons.myiconpack.Taskstatusfaileddark
 import org.jikvict.browser.icons.myiconpack.Taskstatusfailedlight
 import org.jikvict.browser.icons.myiconpack.Taskstatuslight
-import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.DragDropHandler
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
 import org.jikvict.browser.util.SimplePreview
@@ -96,13 +100,6 @@ import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
 
-@Serializable
-data class Assignment(
-    val id: Int,
-    val title: String,
-    val description: String,
-    val taskNumber: Int,
-)
 
 data class TaskNotification(
     val message: String,
@@ -119,9 +116,7 @@ sealed class AssignmentsUiState {
     data object Loading : AssignmentsUiState()
 
     data class Success(
-        val assignments: List<Assignment>,
-        val currentPage: Int = 0,
-        val isLoadingMore: Boolean = false,
+        val assignments: List<AssignmentDto>,
     ) : AssignmentsUiState()
 
     data class Error(
@@ -143,8 +138,9 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
 
         val uiState by viewModel.assignmentsState.collectAsState()
         val assignments by viewModel.assignments.collectAsState()
+        val assignmentInfos by viewModel.assignmentInfoMap.collectAsState()
 
-        var selectedAssignmentId by remember { mutableIntStateOf(-1) }
+        var selectedAssignmentId by remember { mutableLongStateOf(-1L) }
         var notification by remember { mutableStateOf<TaskNotification?>(null) }
 
         fun refreshAssignments() {
@@ -167,9 +163,9 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
             notification = null
         }
 
-        val selectedAssignment: Assignment? =
+        val selectedAssignment: AssignmentDto? =
             remember(selectedAssignmentId, assignments) {
-                if (selectedAssignmentId != -1) {
+                if (selectedAssignmentId != -1L) {
                     assignments.find { it.id == selectedAssignmentId }
                 } else {
                     null
@@ -276,10 +272,11 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                                                 scope.launch {
                                                     navigator.navigateTo(
                                                         ListDetailPaneScaffoldRole.Detail,
-                                                        assignment.id,
+                                                        assignment.id.toInt(),
                                                     )
                                                 }
                                             },
+                                            assignmentInfos = assignmentInfos
                                         )
                                     }
                                 }
@@ -311,8 +308,9 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AssignmentListPane(
-    assignments: List<Assignment>,
-    onAssignmentClick: (Assignment) -> Unit,
+    assignments: List<AssignmentDto>,
+    onAssignmentClick: (AssignmentDto) -> Unit,
+    assignmentInfos: Map<Int, AssignmentInfo> = emptyMap(),
 ) {
     Column(
         modifier =
@@ -329,6 +327,7 @@ private fun AssignmentListPane(
                 AssignmentListItem(
                     assignment = assignment,
                     onClick = { onAssignmentClick(assignment) },
+                    assignmentInfo = assignmentInfos[assignment.id.toInt()],
                 )
             }
 
@@ -341,8 +340,22 @@ private fun AssignmentListPane(
 
 @Composable
 private fun AssignmentListItem(
-    assignment: Assignment = Assignment(1, "Assignment 1", "This is a very long assignment description.", 1),
+    assignment: AssignmentDto = AssignmentDto(
+        id = 1,
+        title = "Some title",
+        taskId = 1,
+        maxPoints = 20,
+        startDate = "2023-01-01T00:00:00Z",
+        endDate = "2023-01-01T00:00:00Z",
+        timeOutSeconds = 500,
+        memoryLimit = 500,
+        cpuLimit = 500,
+        pidsLimit = 500,
+        isClosed = false,
+        maximumAttempts = 3
+    ),
     onClick: () -> Unit = {},
+    assignmentInfo: AssignmentInfo? = null,
 ) {
     Card(
         modifier =
@@ -370,7 +383,7 @@ private fun AssignmentListItem(
                 )
 
                 Text(
-                    text = assignment.description,
+                    text = assignment.description!!,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     maxLines = 2,
@@ -378,7 +391,7 @@ private fun AssignmentListItem(
                 )
 
                 Text(
-                    text = "Task #${assignment.taskNumber}",
+                    text = "Task #${assignment.taskId}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline,
                 )
@@ -386,10 +399,48 @@ private fun AssignmentListItem(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Box(
-                modifier = Modifier.size(24.dp)
-            ) {
-                TaskIsOpen()
+            if (assignmentInfo != null) {
+                Box(
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    TaskStatusIcon(assignmentInfo = assignmentInfo, assignment = assignment)
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun TaskStatusIcon(assignmentInfo: AssignmentInfo, assignment: AssignmentDto) {
+    if (assignment.isClosed) {
+        when {
+            assignmentInfo.attemptsUsed < 1 -> {
+                TaskIsFailed(Modifier.fillMaxSize())
+            }
+
+            (assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == 0 -> {
+                TaskIsFailed(Modifier.fillMaxSize())
+            }
+
+            (assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == assignment.maxPoints -> {
+                TaskPassed(Modifier.fillMaxSize())
+            }
+
+            else -> {
+                TaskIsClosed(Modifier.fillMaxSize())
+            }
+        }
+    } else {
+        if (assignmentInfo.attemptsUsed < assignment.maximumAttempts) {
+            TaskIsOpen(Modifier.fillMaxSize())
+        } else {
+            if ((assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == assignment.maxPoints) {
+                TaskPassed(Modifier.fillMaxSize())
+            } else if ((assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == 0) {
+                TaskIsFailed(Modifier.fillMaxSize())
+            } else {
+                TaskIsClosed(Modifier.fillMaxSize())
             }
         }
     }
@@ -404,7 +455,7 @@ fun AssignmentListItemPreview() {
 }
 
 @Composable
-private fun TaskPassed() {
+private fun TaskPassed(modifier: Modifier = Modifier) {
     val theme = LocalThemeSwitcherProvider.current
     val isDark = theme.isDark
     val imageVector =
@@ -416,13 +467,13 @@ private fun TaskPassed() {
     Icon(
         imageVector = imageVector,
         contentDescription = "Passed",
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
         tint = Color.Unspecified,
     )
 }
 
 @Composable
-private fun TaskIsOpen() {
+private fun TaskIsOpen(modifier: Modifier = Modifier) {
     val theme = LocalThemeSwitcherProvider.current
     val isDark = theme.isDark
     val imageVector =
@@ -434,13 +485,13 @@ private fun TaskIsOpen() {
     Icon(
         imageVector = imageVector,
         contentDescription = "Passed",
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
         tint = Color.Unspecified,
     )
 }
 
 @Composable
-private fun TaskIsFailed() {
+private fun TaskIsFailed(modifier: Modifier = Modifier) {
     val theme = LocalThemeSwitcherProvider.current
     val isDark = theme.isDark
     val imageVector =
@@ -452,7 +503,25 @@ private fun TaskIsFailed() {
     Icon(
         imageVector = imageVector,
         contentDescription = "Passed",
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
+        tint = Color.Unspecified
+    )
+}
+
+@Composable
+private fun TaskIsClosed(modifier: Modifier = Modifier) {
+    val theme = LocalThemeSwitcherProvider.current
+    val isDark = theme.isDark
+    val imageVector =
+        if (isDark.value) {
+            MyIconPack.Lockeddark
+        } else {
+            MyIconPack.Lockedlight
+        }
+    Icon(
+        imageVector = imageVector,
+        contentDescription = "Closed",
+        modifier = modifier,
         tint = Color.Unspecified
     )
 }
@@ -461,12 +530,15 @@ private fun TaskIsFailed() {
 @Composable
 private fun PreviewIcons() {
     SimplePreview {
-        Column {
-            TaskIsOpen()
+        Row {
+            TaskIsOpen(Modifier.size(24.dp))
             Spacer(modifier = Modifier.weight(1f))
-            TaskIsFailed()
+            TaskIsFailed(Modifier.size(24.dp))
             Spacer(modifier = Modifier.weight(1f))
-            TaskPassed()
+            TaskPassed(Modifier.size(24.dp))
+            Spacer(modifier = Modifier.weight(1f))
+            TaskIsClosed(Modifier.size(24.dp))
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 
@@ -477,7 +549,7 @@ private fun PreviewIcons() {
 @Composable
 context(scope: DefaultScreenScope)
 private fun AssignmentDetailPane(
-    assignment: Assignment,
+    assignment: AssignmentDto,
     navigator: ThreePaneScaffoldNavigator<Int>,
     showNotification: (String, NotificationType) -> Unit = { _, _ -> },
 ) {
@@ -566,13 +638,13 @@ private fun AssignmentDetailPane(
                             .heightIn(max = scope.screenHeight * 0.5f),
                 ) {
                     item {
-                        Markdown(assignment.description)
+                        Markdown(assignment.description!!)
                     }
                 }
             }
 
             Text(
-                text = "Task #${assignment.taskNumber}",
+                text = "Task #${assignment.taskId}",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.outline,
             )
@@ -601,27 +673,27 @@ private fun AssignmentDetailPane(
                                 uploadStatus = "Processing dropped file..."
                                 corScope.launch {
                                     vm.submitSolutionWithFile(
-                                        assignmentId = assignment.id,
+                                        assignmentId = assignment.id.toInt(),
                                         file = files.first(),
                                         onStatus = { response ->
                                             uploadStatus =
                                                 when (response.status) {
-                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING -> "Processing..."
-                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> "Done"
-                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> "Failed"
-                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> "Rejected"
+                                                    PendingStatusResponseLong.Status.PENDING -> "Processing..."
+                                                    PendingStatusResponseLong.Status.DONE -> "Done"
+                                                    PendingStatusResponseLong.Status.FAILED -> "Failed"
+                                                    PendingStatusResponseLong.Status.REJECTED -> "Rejected"
                                                 }
 
-                                            if (response.status != org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING) {
+                                            if (response.status != PendingStatusResponseLong.Status.PENDING) {
                                                 when (response.status) {
-                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> {
+                                                    PendingStatusResponseLong.Status.DONE -> {
                                                         showNotification(
                                                             "Task completed successfully!",
                                                             NotificationType.SUCCESS,
                                                         )
                                                     }
 
-                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> {
+                                                    PendingStatusResponseLong.Status.FAILED -> {
                                                         val message = response.message ?: "Task failed"
                                                         showNotification(
                                                             "Task failed: $message",
@@ -629,7 +701,7 @@ private fun AssignmentDetailPane(
                                                         )
                                                     }
 
-                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> {
+                                                    PendingStatusResponseLong.Status.REJECTED -> {
                                                         val message = response.message ?: "Task was rejected"
                                                         showNotification(
                                                             "Task rejected: $message",
@@ -675,7 +747,7 @@ private fun AssignmentDetailPane(
                     onClick = {
                         downloading = true
                         corScope.launch {
-                            vm.downloadZipAndSave(assignment.id) {
+                            vm.downloadZipAndSave(assignment.id.toInt()) {
                                 println("Result is: $it")
                                 downloading = false
                             }
@@ -693,32 +765,32 @@ private fun AssignmentDetailPane(
                         uploadStatus = "Picking file..."
                         corScope.launch {
                             vm.submitSolutionWithPicker(
-                                assignmentId = assignment.id,
+                                assignmentId = assignment.id.toInt(),
                                 onStatus = { response ->
                                     uploadStatus =
                                         when (response.status) {
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING -> "Processing..."
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> "Done"
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> "Failed"
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> "Rejected"
+                                            PendingStatusResponseLong.Status.PENDING -> "Processing..."
+                                            PendingStatusResponseLong.Status.DONE -> "Done"
+                                            PendingStatusResponseLong.Status.FAILED -> "Failed"
+                                            PendingStatusResponseLong.Status.REJECTED -> "Rejected"
                                         }
 
                                     // Show notifications for completed tasks
-                                    if (response.status != org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING) {
+                                    if (response.status != PendingStatusResponseLong.Status.PENDING) {
                                         when (response.status) {
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> {
+                                            PendingStatusResponseLong.Status.DONE -> {
                                                 showNotification(
                                                     "Task completed successfully!",
                                                     NotificationType.SUCCESS,
                                                 )
                                             }
 
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> {
+                                            PendingStatusResponseLong.Status.FAILED -> {
                                                 val message = response.message ?: "Task failed"
                                                 showNotification("Task failed: $message", NotificationType.ERROR)
                                             }
 
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> {
+                                            PendingStatusResponseLong.Status.REJECTED -> {
                                                 val message = response.message ?: "Task was rejected"
                                                 showNotification("Task rejected: $message", NotificationType.ERROR)
                                             }
