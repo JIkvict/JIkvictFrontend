@@ -64,7 +64,6 @@ import org.jikvict.browser.viewmodel.LoginScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
 
-
 @Composable
 fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) {
     val viewModel = koinViewModel<LoginScreenViewModel>()
@@ -77,7 +76,7 @@ fun LoginScreenComposable(defaultScreenScope: DefaultScreenScope) {
         viewModel.viewModelScope,
         viewModel.loginResult,
         viewModel::login,
-        viewModel::resetLoginResult
+        viewModel::resetLoginResult,
     )
 }
 
@@ -94,11 +93,12 @@ fun LoginScreenComposable(
     resetLoginResult: () -> Unit = {},
 ) = with(defaultScreenScope) {
     val navController = LocalNavController.current
-    val loginTextSize = ResponsiveValueBuilder {
-        Breakpoint.SM { 30.sp }
-        Breakpoint.MD { 45.sp }
-        Breakpoint.LG { 60.sp }
-    }
+    val loginTextSize =
+        ResponsiveValueBuilder {
+            Breakpoint.SM { 30.sp }
+            Breakpoint.MD { 45.sp }
+            Breakpoint.LG { 60.sp }
+        }
     val aisIdFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
 
@@ -133,9 +133,10 @@ fun LoginScreenComposable(
             }
 
             OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .focusRequester(aisIdFocusRequester),
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.7f)
+                        .focusRequester(aisIdFocusRequester),
                 value = aisId,
                 onValueChange = { raw ->
                     val filtered = raw.replace(Regex("[\r\n]"), "")
@@ -146,21 +147,24 @@ fun LoginScreenComposable(
                 label = { Text("Ais ID") },
                 singleLine = true,
                 enabled = !isLoading,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        passwordFocusRequester.requestFocus()
-                    }
-                ),
+                keyboardOptions =
+                    KeyboardOptions(
+                        imeAction = ImeAction.Next,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onNext = {
+                            passwordFocusRequester.requestFocus()
+                        },
+                    ),
             )
 
             val passwordVisible = rememberSaveable { mutableStateOf(false) }
             OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .focusRequester(passwordFocusRequester),
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.7f)
+                        .focusRequester(passwordFocusRequester),
                 value = password,
                 onValueChange = { raw ->
                     val filtered = raw.replace(Regex("[\r\n]"), "")
@@ -170,26 +174,29 @@ fun LoginScreenComposable(
                 label = { Text("Password") },
                 singleLine = true,
                 enabled = !isLoading,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = if (passwordVisible.value) KeyboardType.Text else KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        performLogin()
-                    }
-                ),
-                visualTransformation = if (passwordVisible.value) {
-                    VisualTransformation.None
-                } else {
-                    PasswordVisualTransformation()
-                },
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = if (passwordVisible.value) KeyboardType.Text else KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onDone = {
+                            performLogin()
+                        },
+                    ),
+                visualTransformation =
+                    if (passwordVisible.value) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
                 trailingIcon = {
                     val icon = if (passwordVisible.value) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                     val description = if (passwordVisible.value) "Hide password" else "Show password"
                     IconButton(
                         onClick = { passwordVisible.value = !passwordVisible.value },
-                        enabled = !isLoading
+                        enabled = !isLoading,
                     ) {
                         Icon(imageVector = icon, contentDescription = description)
                     }
@@ -198,7 +205,7 @@ fun LoginScreenComposable(
 
             AnimatedLoginButton(
                 isLoading = isLoading,
-                onClick = { performLogin() }
+                onClick = { performLogin() },
             )
 
             when (val res = loginResult) {
@@ -226,7 +233,7 @@ fun LoginScreenComposable(
 @Composable
 private fun AnimatedLoginButton(
     isLoading: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val slowSpecEffect = MaterialTheme.motionScheme.slowEffectsSpec<Float>()
 
@@ -234,29 +241,29 @@ private fun AnimatedLoginButton(
         targetState = isLoading,
         transitionSpec = {
             fadeIn(slowSpecEffect) togetherWith
-                    fadeOut(slowSpecEffect) using
-                    SizeTransform { initialSize, _ ->
-                        keyframes {
-                            durationMillis = 800
-                            IntSize(
-                                width = if (targetState) (initialSize.width * 0.3f).toInt() else initialSize.width,
-                                height = initialSize.height
-                            ) at 400
-                        }
+                fadeOut(slowSpecEffect) using
+                SizeTransform { initialSize, _ ->
+                    keyframes {
+                        durationMillis = 800
+                        IntSize(
+                            width = if (targetState) (initialSize.width * 0.3f).toInt() else initialSize.width,
+                            height = initialSize.height,
+                        ) at 400
                     }
+                }
         },
         contentAlignment = Alignment.Center,
-        label = "login_button_animation"
+        label = "login_button_animation",
     ) { loading ->
         if (loading) {
             LoadingIndicator(
                 modifier = Modifier.size(64.dp),
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
         } else {
             Button(
                 onClick = onClick,
-                modifier = Modifier.fillMaxWidth(0.5f)
+                modifier = Modifier.fillMaxWidth(0.5f),
             ) {
                 Text("Let's go")
             }
@@ -272,7 +279,6 @@ private fun LoginScreenComposablePreviewSM() {
         LoginScreenComposable(it, viewModelScope = previewScope)
     }
 }
-
 
 @Register
 @Serializable

@@ -52,6 +52,38 @@ fun DefaultPreview(
     }
 }
 
+@Composable
+fun SimplePreview(
+    isDark: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val theme =
+        if (isDark) {
+            DarkTheme
+        } else {
+            LightTheme
+        }
+    if (!isKoinStarted) {
+        startKoin {
+            modules(appModule)
+        }
+        isKoinStarted = true
+    }
+
+    MaterialTheme(colorScheme = theme.colorScheme()) {
+        val navController = rememberNavController()
+        val themeSwitcher = PreviewThemeSwitcher(isDark)
+        CompositionLocalProvider(
+            LocalNavController provides navController,
+            LocalThemeSwitcherProvider provides themeSwitcher,
+            LocalAppColors provides if (isDark) DarkColors else LightColors,
+        ) {
+
+            content()
+        }
+    }
+}
+
 class PreviewThemeSwitcher(
     var isDarkT: Boolean,
 ) : IThemeSwitcher {

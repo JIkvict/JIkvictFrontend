@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -66,11 +67,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.m3.Markdown
 import dev.tclement.fonticons.FontIcon
 import dev.tclement.fonticons.rememberStaticIconFont
-import jikvictfrontend.composeapp.generated.resources.`MaterialSymbolsOutlined_VariableFont_FILL,GRAD,opsz,wght`
+import jikvictfrontend.composeapp.generated.resources.MaterialSymbolsOutlined_VariableFont
 import jikvictfrontend.composeapp.generated.resources.Res
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -78,14 +80,21 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.components.DefaultScreenScope
+import org.jikvict.browser.icons.MyIconPack
+import org.jikvict.browser.icons.myiconpack.Taskstatusdark
+import org.jikvict.browser.icons.myiconpack.Taskstatusdonedark
+import org.jikvict.browser.icons.myiconpack.Taskstatusdonelight
+import org.jikvict.browser.icons.myiconpack.Taskstatusfaileddark
+import org.jikvict.browser.icons.myiconpack.Taskstatusfailedlight
+import org.jikvict.browser.icons.myiconpack.Taskstatuslight
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.DragDropHandler
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
+import org.jikvict.browser.util.SimplePreview
 import org.jikvict.browser.util.setupDragAndDropHandlers
 import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
-
 
 @Serializable
 data class Assignment(
@@ -98,11 +107,12 @@ data class Assignment(
 data class TaskNotification(
     val message: String,
     val type: NotificationType,
-    val isVisible: Boolean = true
+    val isVisible: Boolean = true,
 )
 
 enum class NotificationType {
-    SUCCESS, ERROR
+    SUCCESS,
+    ERROR,
 }
 
 sealed class AssignmentsUiState {
@@ -137,13 +147,14 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
         var selectedAssignmentId by remember { mutableIntStateOf(-1) }
         var notification by remember { mutableStateOf<TaskNotification?>(null) }
 
-
         fun refreshAssignments() {
             viewModel.refreshAssignments()
         }
 
-
-        fun showNotification(message: String, type: NotificationType) {
+        fun showNotification(
+            message: String,
+            type: NotificationType,
+        ) {
             notification = TaskNotification(message, type, true)
             // Auto-hide after 5 seconds
             scope.launch {
@@ -265,7 +276,7 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                                                 scope.launch {
                                                     navigator.navigateTo(
                                                         ListDetailPaneScaffoldRole.Detail,
-                                                        assignment.id
+                                                        assignment.id,
                                                     )
                                                 }
                                             },
@@ -281,7 +292,7 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                         AssignmentDetailPane(
                             assignment = assignment,
                             navigator = navigator,
-                            showNotification = ::showNotification
+                            showNotification = ::showNotification,
                         )
                     } ?: EmptyDetailPane()
                 },
@@ -292,7 +303,7 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
         notification?.let { notif ->
             TaskNotificationOverlay(
                 notification = notif,
-                onDismiss = { hideNotification() }
+                onDismiss = { hideNotification() },
             )
         }
     }
@@ -330,8 +341,8 @@ private fun AssignmentListPane(
 
 @Composable
 private fun AssignmentListItem(
-    assignment: Assignment,
-    onClick: () -> Unit,
+    assignment: Assignment = Assignment(1, "Assignment 1", "This is a very long assignment description.", 1),
+    onClick: () -> Unit = {},
 ) {
     Card(
         modifier =
@@ -350,7 +361,7 @@ private fun AssignmentListItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
             ) {
                 Text(
                     text = assignment.title,
@@ -363,6 +374,7 @@ private fun AssignmentListItem(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
@@ -371,9 +383,95 @@ private fun AssignmentListItem(
                     color = MaterialTheme.colorScheme.outline,
                 )
             }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Box(
+                modifier = Modifier.size(24.dp)
+            ) {
+                TaskIsOpen()
+            }
         }
     }
 }
+
+@Composable
+@Preview
+fun AssignmentListItemPreview() {
+    SimplePreview(isDark = false) {
+        AssignmentListItem()
+    }
+}
+
+@Composable
+private fun TaskPassed() {
+    val theme = LocalThemeSwitcherProvider.current
+    val isDark = theme.isDark
+    val imageVector =
+        if (isDark.value) {
+            MyIconPack.Taskstatusdonedark
+        } else {
+            MyIconPack.Taskstatusdonelight
+        }
+    Icon(
+        imageVector = imageVector,
+        contentDescription = "Passed",
+        modifier = Modifier.fillMaxSize(),
+        tint = Color.Unspecified,
+    )
+}
+
+@Composable
+private fun TaskIsOpen() {
+    val theme = LocalThemeSwitcherProvider.current
+    val isDark = theme.isDark
+    val imageVector =
+        if (isDark.value) {
+            MyIconPack.Taskstatusdark
+        } else {
+            MyIconPack.Taskstatuslight
+        }
+    Icon(
+        imageVector = imageVector,
+        contentDescription = "Passed",
+        modifier = Modifier.fillMaxSize(),
+        tint = Color.Unspecified,
+    )
+}
+
+@Composable
+private fun TaskIsFailed() {
+    val theme = LocalThemeSwitcherProvider.current
+    val isDark = theme.isDark
+    val imageVector =
+        if (isDark.value) {
+            MyIconPack.Taskstatusfaileddark
+        } else {
+            MyIconPack.Taskstatusfailedlight
+        }
+    Icon(
+        imageVector = imageVector,
+        contentDescription = "Passed",
+        modifier = Modifier.fillMaxSize(),
+        tint = Color.Unspecified
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewIcons() {
+    SimplePreview {
+        Column {
+            TaskIsOpen()
+            Spacer(modifier = Modifier.weight(1f))
+            TaskIsFailed()
+            Spacer(modifier = Modifier.weight(1f))
+            TaskPassed()
+        }
+    }
+
+}
+
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -381,7 +479,7 @@ context(scope: DefaultScreenScope)
 private fun AssignmentDetailPane(
     assignment: Assignment,
     navigator: ThreePaneScaffoldNavigator<Int>,
-    showNotification: (String, NotificationType) -> Unit = { _, _ -> }
+    showNotification: (String, NotificationType) -> Unit = { _, _ -> },
 ) {
     val scrollState = rememberScrollState()
     with(scope) {
@@ -396,7 +494,7 @@ private fun AssignmentDetailPane(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "Task Details",
@@ -405,48 +503,49 @@ private fun AssignmentDetailPane(
                 )
 
                 val scope = rememberCoroutineScope()
-                val iconFont = rememberStaticIconFont(
-                    fontResource = Res.font.`MaterialSymbolsOutlined_VariableFont_FILL,GRAD,opsz,wght`
-                )
+                val iconFont =
+                    rememberStaticIconFont(
+                        fontResource = Res.font.MaterialSymbolsOutlined_VariableFont,
+                    )
                 navigator.let { nav ->
                     if (nav.canNavigateBack()) {
                         val interactionSource = remember { MutableInteractionSource() }
                         val isHovered by interactionSource.collectIsHoveredAsState()
 
                         val animatedTint by animateColorAsState(
-                            targetValue = if (isHovered) {
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                            } else {
-                                MaterialTheme.colorScheme.primary
-                            },
-                            label = "back_icon_tint"
+                            targetValue =
+                                if (isHovered) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                                } else {
+                                    MaterialTheme.colorScheme.primary
+                                },
+                            label = "back_icon_tint",
                         )
 
                         Box(
-                            modifier = Modifier.clickable(
-                                interactionSource = interactionSource,
-                                indication = null
-                            ) {
-                                scope.launch {
-                                    nav.navigateBack()
-                                }
-                            }
+                            modifier =
+                                Modifier.clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null,
+                                ) {
+                                    scope.launch {
+                                        nav.navigateBack()
+                                    }
+                                },
                         ) {
                             FontIcon(
                                 iconFont = iconFont,
                                 icon = '\uf6ff',
                                 contentDescription = "Back",
                                 tint = animatedTint,
-                                modifier = Modifier.size(32.dp).graphicsLayer {
-                                    rotationY = 180f
-                                },
+                                modifier =
+                                    Modifier.size(32.dp).graphicsLayer {
+                                        rotationY = 180f
+                                    },
                             )
                         }
-
-
                     }
                 }
-
             }
 
             OutlinedContentContainer(
@@ -490,62 +589,70 @@ private fun AssignmentDetailPane(
             var dragHandler by remember { mutableStateOf<DragDropHandler?>(null) }
 
             DisposableEffect(Unit) {
-                dragHandler = setupDragAndDropHandlers(
-                    onDragEnter = { isDragOver = true },
-                    onDragLeave = { isDragOver = false },
-                    onDragOver = { /* keep drag state */ },
-                    onFileDrop = { files ->
-                        isDragOver = false
-                        if (files.isNotEmpty() && !uploading) {
-                            uploading = true
-                            uploadStatus = "Processing dropped file..."
-                            corScope.launch {
-                                vm.submitSolutionWithFile(
-                                    assignmentId = assignment.id,
-                                    file = files.first(),
-                                    onStatus = { response ->
-                                        uploadStatus = when (response.status) {
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING -> "Processing..."
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> "Done"
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> "Failed"
-                                            org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> "Rejected"
-                                        }
-
-                                        if (response.status != org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING) {
-                                            when (response.status) {
-                                                org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> {
-                                                    showNotification(
-                                                        "Task completed successfully!",
-                                                        NotificationType.SUCCESS
-                                                    )
+                dragHandler =
+                    setupDragAndDropHandlers(
+                        onDragEnter = { isDragOver = true },
+                        onDragLeave = { isDragOver = false },
+                        onDragOver = { /* keep drag state */ },
+                        onFileDrop = { files ->
+                            isDragOver = false
+                            if (files.isNotEmpty() && !uploading) {
+                                uploading = true
+                                uploadStatus = "Processing dropped file..."
+                                corScope.launch {
+                                    vm.submitSolutionWithFile(
+                                        assignmentId = assignment.id,
+                                        file = files.first(),
+                                        onStatus = { response ->
+                                            uploadStatus =
+                                                when (response.status) {
+                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING -> "Processing..."
+                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> "Done"
+                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> "Failed"
+                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> "Rejected"
                                                 }
 
-                                                org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> {
-                                                    val message = response.message ?: "Task failed"
-                                                    showNotification("Task failed: $message", NotificationType.ERROR)
-                                                }
+                                            if (response.status != org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING) {
+                                                when (response.status) {
+                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> {
+                                                        showNotification(
+                                                            "Task completed successfully!",
+                                                            NotificationType.SUCCESS,
+                                                        )
+                                                    }
 
-                                                org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> {
-                                                    val message = response.message ?: "Task was rejected"
-                                                    showNotification("Task rejected: $message", NotificationType.ERROR)
-                                                }
+                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> {
+                                                        val message = response.message ?: "Task failed"
+                                                        showNotification(
+                                                            "Task failed: $message",
+                                                            NotificationType.ERROR
+                                                        )
+                                                    }
 
-                                                else -> {}
+                                                    org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> {
+                                                        val message = response.message ?: "Task was rejected"
+                                                        showNotification(
+                                                            "Task rejected: $message",
+                                                            NotificationType.ERROR
+                                                        )
+                                                    }
+
+                                                    else -> {}
+                                                }
+                                                uploading = false
                                             }
-                                            uploading = false
-                                        }
-                                    },
-                                    onFinished = { ok ->
-                                        if (!ok) {
-                                            uploadStatus = "Upload failed"
-                                            uploading = false
-                                        }
-                                    }
-                                )
+                                        },
+                                        onFinished = { ok ->
+                                            if (!ok) {
+                                                uploadStatus = "Upload failed"
+                                                uploading = false
+                                            }
+                                        },
+                                    )
+                                }
                             }
-                        }
-                    }
-                )
+                        },
+                    )
 
                 onDispose {
                     dragHandler?.cleanup()
@@ -554,10 +661,11 @@ private fun AssignmentDetailPane(
             }
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Download button
                 ActionIconButton(
@@ -572,7 +680,7 @@ private fun AssignmentDetailPane(
                                 downloading = false
                             }
                         }
-                    }
+                    },
                 )
 
                 // Upload button (submits solution and polls status)
@@ -587,12 +695,13 @@ private fun AssignmentDetailPane(
                             vm.submitSolutionWithPicker(
                                 assignmentId = assignment.id,
                                 onStatus = { response ->
-                                    uploadStatus = when (response.status) {
-                                        org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING -> "Processing..."
-                                        org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> "Done"
-                                        org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> "Failed"
-                                        org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> "Rejected"
-                                    }
+                                    uploadStatus =
+                                        when (response.status) {
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING -> "Processing..."
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> "Done"
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.FAILED -> "Failed"
+                                            org.jikvict.api.models.PendingStatusResponseLong.Status.REJECTED -> "Rejected"
+                                        }
 
                                     // Show notifications for completed tasks
                                     if (response.status != org.jikvict.api.models.PendingStatusResponseLong.Status.PENDING) {
@@ -600,7 +709,7 @@ private fun AssignmentDetailPane(
                                             org.jikvict.api.models.PendingStatusResponseLong.Status.DONE -> {
                                                 showNotification(
                                                     "Task completed successfully!",
-                                                    NotificationType.SUCCESS
+                                                    NotificationType.SUCCESS,
                                                 )
                                             }
 
@@ -627,31 +736,30 @@ private fun AssignmentDetailPane(
                                     } else if (uploadStatus.isEmpty()) {
                                         uploadStatus = "Processing..."
                                     }
-                                }
+                                },
                             )
                         }
-                    }
+                    },
                 )
             }
 
             Box(
-                modifier = Modifier.weight(1f).fillMaxSize().then(
-                    if (isDragOver) {
-                        Modifier
-                            .background(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                RoundedCornerShape(8.dp)
-                            )
-                            .border(
-                                2.dp,
-                                MaterialTheme.colorScheme.primary,
-                                RoundedCornerShape(8.dp)
-                            )
-                            .padding(8.dp)
-                    } else {
-                        Modifier
-                    }
-                ),
+                modifier =
+                    Modifier.weight(1f).fillMaxSize().then(
+                        if (isDragOver) {
+                            Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    RoundedCornerShape(8.dp),
+                                ).border(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.primary,
+                                    RoundedCornerShape(8.dp),
+                                ).padding(8.dp)
+                        } else {
+                            Modifier
+                        },
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 if (isDragOver) {
@@ -703,14 +811,6 @@ object TasksScreenRouterRegistrar : ScreenRouterRegistrar<TasksScreen> {
 }
 
 object TasksScreenRegistrar : ScreenRegistrar<TasksScreen> by createRegistrar()
-
-@Preview
-@Composable
-private fun TasksScreenPreview() {
-    DefaultPreview {
-        TasksScreenComposable(it)
-    }
-}
 
 @Composable
 fun OutlinedContentContainer(
@@ -775,44 +875,44 @@ fun RefreshButton(
         }
     }
 
-
     val iconSize = 28.dp
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
     val animatedTint by animateColorAsState(
-        targetValue = if (isHovered) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-        } else {
-            MaterialTheme.colorScheme.primary
-        },
-        label = "back_icon_tint"
+        targetValue =
+            if (isHovered) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+            } else {
+                MaterialTheme.colorScheme.primary
+            },
+        label = "back_icon_tint",
     )
 
-
     Box(
-        modifier = Modifier
-            .padding(16.dp)
-            .background(Color.Transparent, CircleShape)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = !isRefreshing
-            ) {
-                onClick()
-            }
+        modifier =
+            Modifier
+                .padding(16.dp)
+                .background(Color.Transparent, CircleShape)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    enabled = !isRefreshing,
+                ) {
+                    onClick()
+                },
     ) {
         Icon(
             imageVector = Icons.Default.Refresh,
             contentDescription = "Refresh",
-            modifier = Modifier
-                .size(iconSize)
-                .graphicsLayer {
-                    rotationZ = rotation
-                },
+            modifier =
+                Modifier
+                    .size(iconSize)
+                    .graphicsLayer {
+                        rotationZ = rotation
+                    },
             tint = animatedTint,
         )
     }
-
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -826,12 +926,13 @@ private fun ActionIconButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
     val animatedTint by animateColorAsState(
-        targetValue = if (isHovered) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-        } else {
-            MaterialTheme.colorScheme.primary
-        },
-        label = "action_icon_tint"
+        targetValue =
+            if (isHovered) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+            } else {
+                MaterialTheme.colorScheme.primary
+            },
+        label = "action_icon_tint",
     )
     val alpha by animateFloatAsState(
         targetValue = if (enabled) 1f else 0.5f,
@@ -847,103 +948,116 @@ private fun ActionIconButton(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier
-            .graphicsLayer { this.alpha = alpha; this.scaleX = scale; this.scaleY = scale }
-            .background(Color.Transparent, CircleShape)
-            .clickable(
-                enabled = enabled,
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(vertical = 8.dp, horizontal = 12.dp)
+        modifier =
+            Modifier
+                .graphicsLayer {
+                    this.alpha = alpha
+                    this.scaleX = scale
+                    this.scaleY = scale
+                }.background(Color.Transparent, CircleShape)
+                .clickable(
+                    enabled = enabled,
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick,
+                ).padding(vertical = 8.dp, horizontal = 12.dp),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = label,
             tint = animatedTint,
-            modifier = Modifier.size(22.dp)
+            modifier = Modifier.size(22.dp),
         )
         Text(
             text = label,
             color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.labelLarge
+            style = MaterialTheme.typography.labelLarge,
         )
     }
 }
 
-
 @Composable
 private fun TaskNotificationOverlay(
     notification: TaskNotification,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = notification.isVisible,
-        enter = slideInVertically(
-            initialOffsetY = { -it },
-            animationSpec = tween(300)
-        ) + fadeIn(animationSpec = tween(300)),
-        exit = slideOutVertically(
-            targetOffsetY = { -it },
-            animationSpec = tween(300)
-        ) + fadeOut(animationSpec = tween(300))
+        enter =
+            slideInVertically(
+                initialOffsetY = { -it },
+                animationSpec = tween(300),
+            ) + fadeIn(animationSpec = tween(300)),
+        exit =
+            slideOutVertically(
+                targetOffsetY = { -it },
+                animationSpec = tween(300),
+            ) + fadeOut(animationSpec = tween(300)),
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
+            contentAlignment = Alignment.TopCenter,
         ) {
             Card(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(0.9f)
-                    .clickable { onDismiss() },
+                modifier =
+                    Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(0.9f)
+                        .clickable { onDismiss() },
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = when (notification.type) {
-                        NotificationType.SUCCESS -> MaterialTheme.colorScheme.primaryContainer
-                        NotificationType.ERROR -> MaterialTheme.colorScheme.errorContainer
-                    }
-                ),
-                shape = RoundedCornerShape(12.dp)
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor =
+                            when (notification.type) {
+                                NotificationType.SUCCESS -> MaterialTheme.colorScheme.primaryContainer
+                                NotificationType.ERROR -> MaterialTheme.colorScheme.errorContainer
+                            },
+                    ),
+                shape = RoundedCornerShape(12.dp),
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    val iconFont = rememberStaticIconFont(
-                        fontResource = Res.font.`MaterialSymbolsOutlined_VariableFont_FILL,GRAD,opsz,wght`
-                    )
+                    val iconFont =
+                        rememberStaticIconFont(
+                            fontResource = Res.font.MaterialSymbolsOutlined_VariableFont,
+                        )
 
                     // Icon based on notification type
                     FontIcon(
                         iconFont = iconFont,
-                        icon = when (notification.type) {
-                            NotificationType.SUCCESS -> '\ue876' // check_circle
-                            NotificationType.ERROR -> '\ue000' // error
-                        },
-                        contentDescription = when (notification.type) {
-                            NotificationType.SUCCESS -> "Success"
-                            NotificationType.ERROR -> "Error"
-                        },
-                        tint = when (notification.type) {
-                            NotificationType.SUCCESS -> MaterialTheme.colorScheme.primary
-                            NotificationType.ERROR -> MaterialTheme.colorScheme.error
-                        },
-                        modifier = Modifier.size(24.dp)
+                        icon =
+                            when (notification.type) {
+                                NotificationType.SUCCESS -> '\ue876' // check_circle
+                                NotificationType.ERROR -> '\ue000' // error
+                            },
+                        contentDescription =
+                            when (notification.type) {
+                                NotificationType.SUCCESS -> "Success"
+                                NotificationType.ERROR -> "Error"
+                            },
+                        tint =
+                            when (notification.type) {
+                                NotificationType.SUCCESS -> MaterialTheme.colorScheme.primary
+                                NotificationType.ERROR -> MaterialTheme.colorScheme.error
+                            },
+                        modifier = Modifier.size(24.dp),
                     )
 
                     Text(
                         text = notification.message,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = when (notification.type) {
-                            NotificationType.SUCCESS -> MaterialTheme.colorScheme.onPrimaryContainer
-                            NotificationType.ERROR -> MaterialTheme.colorScheme.onErrorContainer
-                        },
-                        modifier = Modifier.weight(1f)
+                        color =
+                            when (notification.type) {
+                                NotificationType.SUCCESS -> MaterialTheme.colorScheme.onPrimaryContainer
+                                NotificationType.ERROR -> MaterialTheme.colorScheme.onErrorContainer
+                            },
+                        modifier = Modifier.weight(1f),
                     )
 
                     // Close button
@@ -952,9 +1066,10 @@ private fun TaskNotificationOverlay(
                         icon = '\ue5cd', // close
                         contentDescription = "Dismiss",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clickable { onDismiss() }
+                        modifier =
+                            Modifier
+                                .size(20.dp)
+                                .clickable { onDismiss() },
                     )
                 }
             }

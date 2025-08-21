@@ -6,7 +6,10 @@ data class PickedFile(
     val mimeType: String? = null,
 )
 
-expect suspend fun saveBytesAsFile(defaultFileName: String, bytes: ByteArray): Boolean
+expect suspend fun saveBytesAsFile(
+    defaultFileName: String,
+    bytes: ByteArray,
+): Boolean
 
 expect suspend fun pickFileForUpload(): PickedFile?
 
@@ -14,7 +17,7 @@ expect fun setupDragAndDropHandlers(
     onDragEnter: () -> Unit = {},
     onDragLeave: () -> Unit = {},
     onDragOver: () -> Unit = {},
-    onFileDrop: (List<PickedFile>) -> Unit = {}
+    onFileDrop: (List<PickedFile>) -> Unit = {},
 ): DragDropHandler?
 
 interface DragDropHandler {

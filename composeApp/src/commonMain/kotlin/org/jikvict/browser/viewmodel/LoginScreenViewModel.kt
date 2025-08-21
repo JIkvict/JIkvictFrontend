@@ -39,7 +39,7 @@ class LoginScreenViewModel(
 
     suspend fun login() {
         _loginResult.value = OperationResult.Loading()
-        
+
         val request = LoginRequest(aisId.value.lowercase(), password.value)
         try {
             val response = loginApi.login(request)

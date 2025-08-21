@@ -14,13 +14,15 @@ fun clientConfig(client: HttpClientConfig<*>) {
             json()
         }
 
-        install(createClientPlugin("FixMultipartContentType") {
-            onRequest { request, _ ->
-                val body = request.body
-                if (body is MultiPartFormDataContent) {
-                    request.headers.remove(HttpHeaders.ContentType)
+        install(
+            createClientPlugin("FixMultipartContentType") {
+                onRequest { request, _ ->
+                    val body = request.body
+                    if (body is MultiPartFormDataContent) {
+                        request.headers.remove(HttpHeaders.ContentType)
+                    }
                 }
-            }
-        })
+            },
+        )
     }
 }

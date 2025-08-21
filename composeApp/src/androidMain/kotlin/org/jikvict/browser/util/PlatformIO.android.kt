@@ -1,6 +1,9 @@
 package org.jikvict.browser.util
 
-actual suspend fun saveBytesAsFile(defaultFileName: String, bytes: ByteArray): Boolean {
+actual suspend fun saveBytesAsFile(
+    defaultFileName: String,
+    bytes: ByteArray,
+): Boolean {
     // TODO: Implement using SAF or MediaStore as needed
     return false
 }
@@ -14,7 +17,5 @@ actual fun setupDragAndDropHandlers(
     onDragEnter: () -> Unit,
     onDragLeave: () -> Unit,
     onDragOver: () -> Unit,
-    onFileDrop: (List<PickedFile>) -> Unit
-): DragDropHandler? {
-    return null
-}
+    onFileDrop: (List<PickedFile>) -> Unit,
+): DragDropHandler? = null

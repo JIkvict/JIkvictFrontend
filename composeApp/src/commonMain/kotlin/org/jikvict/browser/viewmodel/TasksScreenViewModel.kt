@@ -40,7 +40,6 @@ class TasksScreenViewModel(
 ) : ExtendedViewModel(savedStateHandle) {
     private val _assignmentsState = MutableStateFlow<AssignmentsUiState>(AssignmentsUiState.Loading)
 
-
     val assignmentsState: StateFlow<AssignmentsUiState> = _assignmentsState.asStateFlow()
 
     val assignments: StateFlow<List<Assignment>> =
@@ -56,19 +55,22 @@ class TasksScreenViewModel(
                 initialValue = emptyList(),
             )
 
-
     init {
         loadAssignments()
     }
 
-    fun downloadZipAndSave(assignmentId: Int, onResult: (Boolean) -> Unit) {
+    fun downloadZipAndSave(
+        assignmentId: Int,
+        onResult: (Boolean) -> Unit,
+    ) {
         viewModelScope.launch {
             try {
                 val client = HttpClient { clientConfig(this) }
                 val url = ApiClient.BASE_URL + "/api/assignment/zip/" + assignmentId
-                val response = client.get(url) {
-                    header(HttpHeaders.Accept, Application.OctetStream.toString())
-                }
+                val response =
+                    client.get(url) {
+                        header(HttpHeaders.Accept, Application.OctetStream.toString())
+                    }
                 if (!response.status.isSuccess()) {
                     onResult(false)
                     return@launch
@@ -82,14 +84,17 @@ class TasksScreenViewModel(
             }
         }
     }
+
     fun submitSolutionWithPicker(
         assignmentId: Int,
         onStatus: (PendingStatusResponseLong) -> Unit,
-        onFinished: (Boolean) -> Unit = {}
+        onFinished: (Boolean) -> Unit = {},
     ) {
         viewModelScope.launch {
             try {
-                val picked = org.jikvict.browser.util.pickFileForUpload()
+                val picked =
+                    org.jikvict.browser.util
+                        .pickFileForUpload()
                 if (picked == null) {
                     onFinished(false)
                     return@launch
@@ -107,7 +112,7 @@ class TasksScreenViewModel(
         assignmentId: Int,
         file: PickedFile,
         onStatus: (PendingStatusResponseLong) -> Unit,
-        onFinished: (Boolean) -> Unit = {}
+        onFinished: (Boolean) -> Unit = {},
     ) {
         viewModelScope.launch {
             submitSolution(file, assignmentId, onStatus, onFinished)
@@ -118,20 +123,26 @@ class TasksScreenViewModel(
         file: PickedFile,
         assignmentId: Int,
         onStatus: (PendingStatusResponseLong) -> Unit,
-        onFinished: (Boolean) -> Unit
+        onFinished: (Boolean) -> Unit,
     ) {
         try {
-            val client = HttpClient {
-                clientConfig(this)
-            }
-            val resp = client.post(ApiClient.BASE_URL + "/api/v1/solution-checker/submit") {
-                setBody(MultiPartFormDataContent(formData {
-                    append("file", file.name, Application.OctetStream) {
-                        writeFully(file.bytes)
-                    }
-                    append("assignmentId", assignmentId.toString())
-                }))
-            }
+            val client =
+                HttpClient {
+                    clientConfig(this)
+                }
+            val resp =
+                client.post(ApiClient.BASE_URL + "/api/v1/solution-checker/submit") {
+                    setBody(
+                        MultiPartFormDataContent(
+                            formData {
+                                append("file", file.name, Application.OctetStream) {
+                                    writeFully(file.bytes)
+                                }
+                                append("assignmentId", assignmentId.toString())
+                            },
+                        ),
+                    )
+                }
 
             if (resp.status.isSuccess()) {
                 val body = resp.body<PendingStatusResponseLong>()
@@ -200,14 +211,15 @@ class TasksScreenViewModel(
                 return AssignmentsUiState.Success(emptyList())
             }
 
-            val assignmentList = assignments.map { dto ->
-                Assignment(
-                    id = dto.id.toInt(),
-                    title = dto.title,
-                    description = dto.description ?: "No description",
-                    taskNumber = dto.taskId,
-                )
-            }
+            val assignmentList =
+                assignments.map { dto ->
+                    Assignment(
+                        id = dto.id.toInt(),
+                        title = dto.title,
+                        description = dto.description ?: "No description",
+                        taskNumber = dto.taskId,
+                    )
+                }
 
             AssignmentsUiState.Success(
                 assignments = assignmentList,
@@ -218,5 +230,4 @@ class TasksScreenViewModel(
             AssignmentsUiState.Error("Error: ${e.message}")
         }
     }
-
 }

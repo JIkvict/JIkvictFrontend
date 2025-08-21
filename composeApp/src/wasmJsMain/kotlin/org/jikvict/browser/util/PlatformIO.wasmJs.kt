@@ -15,25 +15,35 @@ import org.w3c.files.FileList
 import org.w3c.files.FileReader
 import kotlin.coroutines.resume
 
-
-actual suspend fun saveBytesAsFile(defaultFileName: String, bytes: ByteArray): Boolean {
+actual suspend fun saveBytesAsFile(
+    defaultFileName: String,
+    bytes: ByteArray,
+): Boolean {
     return try {
         if (bytes.isEmpty()) return false
 
-        val mimeType = when {
-            defaultFileName.endsWith(".zip") -> "application/zip"
-            defaultFileName.endsWith(".pdf") -> "application/pdf"
-            defaultFileName.endsWith(".txt") -> "text/plain"
-            defaultFileName.endsWith(".json") -> "application/json"
-            else -> "application/octet-stream"
-        }
+        val mimeType =
+            when {
+                defaultFileName.endsWith(".zip") -> "application/zip"
+                defaultFileName.endsWith(".pdf") -> "application/pdf"
+                defaultFileName.endsWith(".txt") -> "text/plain"
+                defaultFileName.endsWith(".json") -> "application/json"
+                else -> "application/octet-stream"
+            }
 
-        val numbersArray = bytes.map { it.toUByte().toUInt().toInt().toJsNumber() }.toJsArray()
+        val numbersArray =
+            bytes
+                .map {
+                    it
+                        .toUByte()
+                        .toUInt()
+                        .toInt()
+                        .toJsNumber()
+                }.toJsArray()
         val uint8Array = Uint8Array(numbersArray)
 
         val blobParts = JsArray<JsAny?>()
         blobParts[0] = uint8Array
-
 
         val blob = Blob(blobParts, BlobPropertyBag(type = mimeType))
 
@@ -54,74 +64,73 @@ actual suspend fun saveBytesAsFile(defaultFileName: String, bytes: ByteArray): B
     }
 }
 
-actual suspend fun pickFileForUpload(): PickedFile? = suspendCancellableCoroutine { cont ->
-    try {
-        val input = document.createElement("input") as HTMLInputElement
-        input.type = "file"
-        input.style.display = "none"
-        document.body?.appendChild(input)
+actual suspend fun pickFileForUpload(): PickedFile? =
+    suspendCancellableCoroutine { cont ->
+        try {
+            val input = document.createElement("input") as HTMLInputElement
+            input.type = "file"
+            input.style.display = "none"
+            document.body?.appendChild(input)
 
-        input.onchange = {
-            val file = input.files?.item(0)
-            if (file == null) {
-                document.body?.removeChild(input)
-                cont.resume(null)
-            } else {
-                val reader = FileReader()
-                reader.onload = {
-                    val maybe = reader.result
-                    if (maybe == null) {
-                        document.body?.removeChild(input)
-                        cont.resume(null)
-                    } else {
-                        val result = maybe.toString()
-                        try {
-                            val commaIndex = result.indexOf(",")
-                            val b64 = if (commaIndex != -1) result.substring(commaIndex + 1) else result
-                            val bytes = b64.decodeBase64Bytes()
-                            document.body?.removeChild(input)
-                            cont.resume(PickedFile(name = file.name, bytes = bytes, mimeType = file.type))
-                        } catch (_: Throwable) {
-                            document.body?.removeChild(input)
-                            cont.resume(null)
-                        }
-                    }
-                }
-                reader.onerror = {
+            input.onchange = {
+                val file = input.files?.item(0)
+                if (file == null) {
                     document.body?.removeChild(input)
                     cont.resume(null)
+                } else {
+                    val reader = FileReader()
+                    reader.onload = {
+                        val maybe = reader.result
+                        if (maybe == null) {
+                            document.body?.removeChild(input)
+                            cont.resume(null)
+                        } else {
+                            val result = maybe.toString()
+                            try {
+                                val commaIndex = result.indexOf(",")
+                                val b64 = if (commaIndex != -1) result.substring(commaIndex + 1) else result
+                                val bytes = b64.decodeBase64Bytes()
+                                document.body?.removeChild(input)
+                                cont.resume(PickedFile(name = file.name, bytes = bytes, mimeType = file.type))
+                            } catch (_: Throwable) {
+                                document.body?.removeChild(input)
+                                cont.resume(null)
+                            }
+                        }
+                    }
+                    reader.onerror = {
+                        document.body?.removeChild(input)
+                        cont.resume(null)
+                    }
+                    reader.readAsDataURL(file)
                 }
-                reader.readAsDataURL(file)
             }
-        }
 
-        input.click()
-    } catch (t: Throwable) {
-        cont.resume(null)
+            input.click()
+        } catch (t: Throwable) {
+            cont.resume(null)
+        }
     }
-}
 
 actual fun setupDragAndDropHandlers(
     onDragEnter: () -> Unit,
     onDragLeave: () -> Unit,
     onDragOver: () -> Unit,
-    onFileDrop: (List<PickedFile>) -> Unit
-): DragDropHandler? {
-    return try {
+    onFileDrop: (List<PickedFile>) -> Unit,
+): DragDropHandler? =
+    try {
         WebDragDropHandler(onDragEnter, onDragLeave, onDragOver, onFileDrop)
     } catch (e: Throwable) {
         println("Failed to setup drag and drop handlers: ${e.message}")
         null
     }
-}
 
 class WebDragDropHandler(
     private val onDragEnter: () -> Unit,
     private val onDragLeave: () -> Unit,
     private val onDragOver: () -> Unit,
-    private val onFileDrop: (List<PickedFile>) -> Unit
+    private val onFileDrop: (List<PickedFile>) -> Unit,
 ) : DragDropHandler {
-
     private var dragEnterHandler: ((Event) -> Unit)? = null
     private var dragOverHandler: ((Event) -> Unit)? = null
     private var dragLeaveHandler: ((Event) -> Unit)? = null

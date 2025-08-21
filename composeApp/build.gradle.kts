@@ -17,7 +17,6 @@ plugins {
             .get()
             .pluginId,
     ) // To delete
-    id("org.jlleitschuh.gradle.ktlint") version "13.0.0"
     id("jikvict-frontend-plugin")
 }
 
@@ -159,26 +158,4 @@ kotlin {
 
 dependencies {
     debugImplementation(compose.uiTooling)
-    ktlintRuleset(libs.ktlint)
-}
-
-ktlint {
-    version.set("1.7.1")
-    ktlint {
-        filter {
-            exclude { element ->
-                val path = element.file.path
-                path.contains("/generated/")
-            }
-        }
-    }
-}
-
-tasks.named("runKtlintFormatOverCommonMainSourceSet") {
-    dependsOn("openApiGenerate")
-    dependsOn("kspCommonMainKotlinMetadata")
-}
-tasks.named("runKtlintCheckOverCommonMainSourceSet") {
-    dependsOn("openApiGenerate")
-    dependsOn("kspCommonMainKotlinMetadata")
 }
