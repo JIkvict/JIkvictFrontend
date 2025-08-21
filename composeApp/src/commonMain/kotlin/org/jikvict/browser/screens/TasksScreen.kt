@@ -111,7 +111,6 @@ sealed class AssignmentsUiState {
     data class Success(
         val assignments: List<Assignment>,
         val currentPage: Int = 0,
-        val hasMorePages: Boolean = false,
         val isLoadingMore: Boolean = false,
     ) : AssignmentsUiState()
 
@@ -134,7 +133,6 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
 
         val uiState by viewModel.assignmentsState.collectAsState()
         val assignments by viewModel.assignments.collectAsState()
-        val isLoadingMore by viewModel.isLoadingMore.collectAsState()
 
         var selectedAssignmentId by remember { mutableIntStateOf(-1) }
         var notification by remember { mutableStateOf<TaskNotification?>(null) }
@@ -144,9 +142,6 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
             viewModel.refreshAssignments()
         }
 
-        fun loadMoreAssignments() {
-            viewModel.loadMoreAssignments()
-        }
 
         fun showNotification(message: String, type: NotificationType) {
             notification = TaskNotification(message, type, true)
@@ -274,10 +269,6 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                                                     )
                                                 }
                                             },
-                                            isLoadingMore = isLoadingMore,
-                                            hasMorePages = (uiState as? AssignmentsUiState.Success)?.hasMorePages
-                                                ?: false,
-                                            onLoadMore = { loadMoreAssignments() },
                                         )
                                     }
                                 }
@@ -311,9 +302,6 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
 private fun AssignmentListPane(
     assignments: List<Assignment>,
     onAssignmentClick: (Assignment) -> Unit,
-    isLoadingMore: Boolean = false,
-    hasMorePages: Boolean = false,
-    onLoadMore: () -> Unit = {},
 ) {
     Column(
         modifier =
@@ -331,26 +319,6 @@ private fun AssignmentListPane(
                     assignment = assignment,
                     onClick = { onAssignmentClick(assignment) },
                 )
-
-                if (assignment.id == assignments.lastOrNull()?.id && hasMorePages && !isLoadingMore) {
-                    LaunchedEffect(assignment.id) {
-                        onLoadMore()
-                    }
-                }
-            }
-
-            if (isLoadingMore) {
-                item {
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularWavyProgressIndicator()
-                    }
-                }
             }
 
             item {
@@ -599,7 +567,7 @@ private fun AssignmentDetailPane(
                     onClick = {
                         downloading = true
                         corScope.launch {
-                            vm.downloadZipAndSave(assignment.taskNumber) {
+                            vm.downloadZipAndSave(assignment.id) {
                                 println("Result is: $it")
                                 downloading = false
                             }

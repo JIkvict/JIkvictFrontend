@@ -56,45 +56,16 @@ class TasksScreenViewModel(
                 initialValue = emptyList(),
             )
 
-    val isLoading: StateFlow<Boolean> =
-        assignmentsState
-            .map { state ->
-                state is AssignmentsUiState.Loading
-            }.stateIn(
-                viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = true,
-            )
-
-    val isLoadingMore: StateFlow<Boolean> =
-        assignmentsState
-            .map { state ->
-                (state as? AssignmentsUiState.Success)?.isLoadingMore ?: false
-            }.stateIn(
-                viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = false,
-            )
-
-    val hasMorePages: StateFlow<Boolean> =
-        assignmentsState
-            .map { state ->
-                (state as? AssignmentsUiState.Success)?.hasMorePages ?: false
-            }.stateIn(
-                viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = false,
-            )
 
     init {
         loadAssignments()
     }
 
-    fun downloadZipAndSave(taskId: Int, onResult: (Boolean) -> Unit) {
+    fun downloadZipAndSave(assignmentId: Int, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
                 val client = HttpClient { clientConfig(this) }
-                val url = ApiClient.BASE_URL + "/api/assignment/zip/" + taskId
+                val url = ApiClient.BASE_URL + "/api/assignment/zip/" + assignmentId
                 val response = client.get(url) {
                     header(HttpHeaders.Accept, Application.OctetStream.toString())
                 }
@@ -103,7 +74,7 @@ class TasksScreenViewModel(
                     return@launch
                 }
                 val bytes: ByteArray = response.body()
-                val ok = saveBytesAsFile("task-" + taskId + ".zip", bytes)
+                val ok = saveBytesAsFile("assignment-$assignmentId.zip", bytes)
                 println("Result is: $ok")
                 onResult(ok)
             } catch (e: Exception) {
@@ -205,7 +176,7 @@ class TasksScreenViewModel(
 
     fun loadAssignments() {
         viewModelScope.launch {
-            val state = fetchAssignments(page = 0)
+            val state = fetchAssignments()
             _assignmentsState.value = state
         }
     }
@@ -215,63 +186,32 @@ class TasksScreenViewModel(
         loadAssignments()
     }
 
-    fun loadMoreAssignments() {
-        val currentState = _assignmentsState.value
-
-        if (currentState is AssignmentsUiState.Success &&
-            currentState.hasMorePages &&
-            !currentState.isLoadingMore
-        ) {
-            _assignmentsState.value = currentState.copy(isLoadingMore = true)
-
-            viewModelScope.launch {
-                val newState = loadMoreAssignments(currentState)
-                _assignmentsState.value = newState
-            }
-        }
-    }
-
-    private suspend fun fetchAssignments(
-        page: Int = 0,
-        pageSize: Int = 20,
-    ): AssignmentsUiState {
+    private suspend fun fetchAssignments(): AssignmentsUiState {
         return try {
-            val response = assignmentControllerApi.getAll(page = page, size = pageSize)
+            val response = assignmentControllerApi.getAll()
 
             if (!response.success) {
                 return AssignmentsUiState.Error("Server error: ${response.status}")
             }
 
-            val body = response.body()
-            val content = body.content
-            val pageMetadata = body.page
+            val assignments = response.body()
 
-            if (content == null) {
+            if (assignments.isEmpty()) {
                 return AssignmentsUiState.Success(emptyList())
             }
 
-            if (content.isEmpty()) {
-                return AssignmentsUiState.Success(emptyList())
+            val assignmentList = assignments.map { dto ->
+                Assignment(
+                    id = dto.id.toInt(),
+                    title = dto.title,
+                    description = dto.description ?: "No description",
+                    taskNumber = dto.taskId,
+                )
             }
-
-            val totalPages = pageMetadata?.totalPages?.toInt() ?: 0
-            val currentPage = pageMetadata?.number?.toInt() ?: 0
-            val hasMorePages = currentPage < totalPages - 1
-
-            val assignments =
-                content.mapIndexed { index, dto ->
-                    Assignment(
-                        id = dto.id.toInt(),
-                        title = dto.title,
-                        description = dto.description ?: "No description",
-                        taskNumber = dto.taskId,
-                    )
-                }
 
             AssignmentsUiState.Success(
-                assignments = assignments,
-                currentPage = currentPage,
-                hasMorePages = hasMorePages,
+                assignments = assignmentList,
+                currentPage = 0,
                 isLoadingMore = false,
             )
         } catch (e: Exception) {
@@ -279,52 +219,4 @@ class TasksScreenViewModel(
         }
     }
 
-    private suspend fun loadMoreAssignments(currentState: AssignmentsUiState.Success): AssignmentsUiState {
-        if (!currentState.hasMorePages || currentState.isLoadingMore) {
-            return currentState
-        }
-
-        val nextPage = currentState.currentPage + 1
-
-        return try {
-            val response = assignmentControllerApi.getAll(page = nextPage, size = 20)
-
-            if (!response.success) {
-                return AssignmentsUiState.Error("Server error: ${response.status}")
-            }
-
-            val body = response.body()
-            val content = body.content
-            val pageMetadata = body.page
-
-            if (content == null || content.isEmpty()) {
-                return currentState.copy(hasMorePages = false, isLoadingMore = false)
-            }
-
-            val totalPages = pageMetadata?.totalPages?.toInt() ?: 0
-            val currentPageFromResponse = pageMetadata?.number?.toInt() ?: 0
-            val hasMorePages = currentPageFromResponse < totalPages - 1
-
-            val newAssignments =
-                content.mapIndexed { index, dto ->
-                    Assignment(
-                        id = (nextPage * 20) + index,
-                        title = dto.title,
-                        description = dto.description ?: "No description",
-                        taskNumber = dto.taskId,
-                    )
-                }
-
-            val combinedAssignments = currentState.assignments + newAssignments
-
-            AssignmentsUiState.Success(
-                assignments = combinedAssignments,
-                currentPage = nextPage,
-                hasMorePages = hasMorePages,
-                isLoadingMore = false,
-            )
-        } catch (_: Exception) {
-            currentState.copy(isLoadingMore = false)
-        }
-    }
 }
