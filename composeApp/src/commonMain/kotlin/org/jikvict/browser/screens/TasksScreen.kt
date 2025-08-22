@@ -44,6 +44,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
@@ -83,6 +84,8 @@ import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.PendingStatusResponseLong
 import org.jikvict.browser.components.DefaultScreenScope
+import org.jikvict.browser.constant.DarkColors
+import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.icons.MyIconPack
 import org.jikvict.browser.icons.myiconpack.Lockeddark
 import org.jikvict.browser.icons.myiconpack.Lockedlight
@@ -96,6 +99,7 @@ import org.jikvict.browser.util.DragDropHandler
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
 import org.jikvict.browser.util.SimplePreview
 import org.jikvict.browser.util.setupDragAndDropHandlers
+import org.jikvict.browser.viewmodel.SubmissionStatus
 import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
@@ -151,6 +155,7 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
             message: String,
             type: NotificationType,
         ) {
+            println("Showing notification: $message, $type")
             notification = TaskNotification(message, type, true)
             // Auto-hide after 5 seconds
             scope.launch {
@@ -290,6 +295,7 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                             assignment = assignment,
                             navigator = navigator,
                             showNotification = ::showNotification,
+                            assignmentInfo = assignmentInfos[assignment.id.toInt()]
                         )
                     } ?: EmptyDetailPane()
                 },
@@ -413,36 +419,12 @@ private fun AssignmentListItem(
 
 @Composable
 fun TaskStatusIcon(assignmentInfo: AssignmentInfo, assignment: AssignmentDto) {
-    if (assignment.isClosed) {
-        when {
-            assignmentInfo.attemptsUsed < 1 -> {
-                TaskIsFailed(Modifier.fillMaxSize())
-            }
-
-            (assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == 0 -> {
-                TaskIsFailed(Modifier.fillMaxSize())
-            }
-
-            (assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == assignment.maxPoints -> {
-                TaskPassed(Modifier.fillMaxSize())
-            }
-
-            else -> {
-                TaskIsClosed(Modifier.fillMaxSize())
-            }
-        }
-    } else {
-        if (assignmentInfo.attemptsUsed < assignment.maximumAttempts) {
-            TaskIsOpen(Modifier.fillMaxSize())
-        } else {
-            if ((assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == assignment.maxPoints) {
-                TaskPassed(Modifier.fillMaxSize())
-            } else if ((assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == 0) {
-                TaskIsFailed(Modifier.fillMaxSize())
-            } else {
-                TaskIsClosed(Modifier.fillMaxSize())
-            }
-        }
+    val modifier = Modifier.fillMaxSize()
+    when (SubmissionStatus.from(assignmentInfo, assignment)) {
+        SubmissionStatus.PASSED -> TaskPassed(modifier)
+        SubmissionStatus.FAILED -> TaskIsFailed(modifier)
+        SubmissionStatus.CLOSED -> TaskIsClosed(modifier)
+        SubmissionStatus.OPEN -> TaskIsOpen(modifier)
     }
 }
 
@@ -552,8 +534,11 @@ private fun AssignmentDetailPane(
     assignment: AssignmentDto,
     navigator: ThreePaneScaffoldNavigator<Int>,
     showNotification: (String, NotificationType) -> Unit = { _, _ -> },
+    assignmentInfo: AssignmentInfo? = null,
 ) {
     val scrollState = rememberScrollState()
+    val theme = LocalThemeSwitcherProvider.current
+    val isDark by theme.isDark
     with(scope) {
         Column(
             modifier =
@@ -643,6 +628,60 @@ private fun AssignmentDetailPane(
                 }
             }
 
+            val greenColor = if (isDark) {
+                DarkColors.Green6
+            } else {
+                LightColors.Green4
+            }
+
+            println("Assignment info: $assignment")
+            if (assignment.isClosed) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    OutlinedButton(onClick = {
+
+                    }) {
+                        Text(
+                            text = "See logs",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+
+                        val imageVector =
+                            if (isDark) {
+                                MyIconPack.Lockeddark
+                            } else {
+                                MyIconPack.Lockedlight
+                            }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = imageVector,
+                            contentDescription = "Locked",
+                            modifier = Modifier.size(24.dp),
+                        )
+
+                    }
+                }
+            }
+
+            val points = assignmentInfo?.results?.maxOfOrNull { it.points } ?: 0
+            Text(
+                text = "$points/${assignment.maxPoints} points ~ ${
+                    (points * 100 / assignment.maxPoints.toDouble().coerceAtLeast(1.0)).toInt()
+                }%",
+                style = MaterialTheme.typography.labelLarge,
+                color = greenColor
+            )
+
+            Text(
+                text = "${assignmentInfo?.attemptsUsed ?: 0}/${assignment.maximumAttempts} attempts",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+
             Text(
                 text = "Task #${assignment.taskId}",
                 style = MaterialTheme.typography.labelMedium,
@@ -660,161 +699,184 @@ private fun AssignmentDetailPane(
             var isDragOver by remember { mutableStateOf(false) }
             var dragHandler by remember { mutableStateOf<DragDropHandler?>(null) }
 
-            DisposableEffect(Unit) {
-                dragHandler =
-                    setupDragAndDropHandlers(
-                        onDragEnter = { isDragOver = true },
-                        onDragLeave = { isDragOver = false },
-                        onDragOver = { /* keep drag state */ },
-                        onFileDrop = { files ->
-                            isDragOver = false
-                            if (files.isNotEmpty() && !uploading) {
-                                uploading = true
-                                uploadStatus = "Processing dropped file..."
-                                corScope.launch {
-                                    vm.submitSolutionWithFile(
-                                        assignmentId = assignment.id.toInt(),
-                                        file = files.first(),
-                                        onStatus = { response ->
-                                            uploadStatus =
-                                                when (response.status) {
-                                                    PendingStatusResponseLong.Status.PENDING -> "Processing..."
-                                                    PendingStatusResponseLong.Status.DONE -> "Done"
-                                                    PendingStatusResponseLong.Status.FAILED -> "Failed"
-                                                    PendingStatusResponseLong.Status.REJECTED -> "Rejected"
+            if ((assignmentInfo == null || SubmissionStatus.from(
+                    assignmentInfo,
+                    assignment
+                ) == SubmissionStatus.OPEN)
+            ) {
+
+                DisposableEffect(Unit) {
+                    dragHandler =
+                        setupDragAndDropHandlers(
+                            onDragEnter = { isDragOver = true },
+                            onDragLeave = { isDragOver = false },
+                            onDragOver = { /* keep drag state */ },
+                            onFileDrop = { files ->
+                                isDragOver = false
+                                if (files.isNotEmpty() && !uploading) {
+                                    uploading = true
+                                    uploadStatus = "Processing dropped file..."
+                                    corScope.launch {
+                                        vm.submitSolutionWithFile(
+                                            assignmentId = assignment.id.toInt(),
+                                            file = files.first(),
+                                            onStatus = { response ->
+                                                uploadStatus =
+                                                    when (response.status) {
+                                                        PendingStatusResponseLong.Status.PENDING -> "Processing..."
+                                                        PendingStatusResponseLong.Status.DONE -> "Done"
+                                                        PendingStatusResponseLong.Status.FAILED -> "Failed"
+                                                        PendingStatusResponseLong.Status.REJECTED -> "Rejected"
+                                                    }
+
+                                                if (response.status != PendingStatusResponseLong.Status.PENDING) {
+                                                    when (response.status) {
+                                                        PendingStatusResponseLong.Status.DONE -> {
+                                                            showNotification(
+                                                                "Task completed successfully!",
+                                                                NotificationType.SUCCESS,
+                                                            )
+                                                        }
+
+                                                        PendingStatusResponseLong.Status.FAILED -> {
+                                                            val message = response.message ?: "Task failed"
+                                                            showNotification(
+                                                                "Task failed: $message",
+                                                                NotificationType.ERROR
+                                                            )
+                                                        }
+
+                                                        PendingStatusResponseLong.Status.REJECTED -> {
+                                                            val message = response.message ?: "Task was rejected"
+                                                            showNotification(
+                                                                "Task rejected: $message",
+                                                                NotificationType.ERROR
+                                                            )
+                                                        }
+
+                                                        else -> {}
+                                                    }
+                                                    uploading = false
                                                 }
-
-                                            if (response.status != PendingStatusResponseLong.Status.PENDING) {
-                                                when (response.status) {
-                                                    PendingStatusResponseLong.Status.DONE -> {
-                                                        showNotification(
-                                                            "Task completed successfully!",
-                                                            NotificationType.SUCCESS,
-                                                        )
-                                                    }
-
-                                                    PendingStatusResponseLong.Status.FAILED -> {
-                                                        val message = response.message ?: "Task failed"
-                                                        showNotification(
-                                                            "Task failed: $message",
-                                                            NotificationType.ERROR
-                                                        )
-                                                    }
-
-                                                    PendingStatusResponseLong.Status.REJECTED -> {
-                                                        val message = response.message ?: "Task was rejected"
-                                                        showNotification(
-                                                            "Task rejected: $message",
-                                                            NotificationType.ERROR
-                                                        )
-                                                    }
-
-                                                    else -> {}
+                                            },
+                                            onFinished = { ok ->
+                                                if (!ok) {
+                                                    uploadStatus = "Upload failed"
+                                                    uploading = false
                                                 }
+                                            },
+                                            onError = { error ->
+                                                uploadStatus = error
+                                                showNotification(error, NotificationType.ERROR)
                                                 uploading = false
                                             }
-                                        },
-                                        onFinished = { ok ->
-                                            if (!ok) {
-                                                uploadStatus = "Upload failed"
-                                                uploading = false
-                                            }
-                                        },
-                                    )
+                                        )
+                                    }
+                                }
+                            },
+                        )
+
+                    onDispose {
+                        dragHandler?.cleanup()
+                        dragHandler = null
+                    }
+                }
+            }
+
+
+            if ((assignmentInfo == null || SubmissionStatus.from(
+                    assignmentInfo,
+                    assignment
+                ) == SubmissionStatus.OPEN)
+            ) {
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Download button
+                    ActionIconButton(
+                        icon = Icons.Default.Download,
+                        label = if (downloading) "Downloading..." else "Download",
+                        enabled = !downloading,
+                        onClick = {
+                            downloading = true
+                            corScope.launch {
+                                vm.downloadZipAndSave(assignment.id.toInt()) {
+                                    println("Result is: $it")
+                                    downloading = false
                                 }
                             }
                         },
                     )
 
-                onDispose {
-                    dragHandler?.cleanup()
-                    dragHandler = null
+                    // Upload button (submits solution and polls status)
+                    ActionIconButton(
+                        icon = Icons.Default.Upload,
+                        label = if (uploading) uploadStatus.ifEmpty { "Uploading..." } else "Upload",
+                        enabled = !uploading,
+                        onClick = {
+                            uploading = true
+                            uploadStatus = "Picking file..."
+                            corScope.launch {
+                                vm.submitSolutionWithPicker(
+                                    assignmentId = assignment.id.toInt(),
+                                    onStatus = { response ->
+                                        uploadStatus =
+                                            when (response.status) {
+                                                PendingStatusResponseLong.Status.PENDING -> "Processing..."
+                                                PendingStatusResponseLong.Status.DONE -> "Done"
+                                                PendingStatusResponseLong.Status.FAILED -> "Failed"
+                                                PendingStatusResponseLong.Status.REJECTED -> "Rejected"
+                                            }
+
+                                        // Show notifications for completed tasks
+                                        if (response.status != PendingStatusResponseLong.Status.PENDING) {
+                                            when (response.status) {
+                                                PendingStatusResponseLong.Status.DONE -> {
+                                                    showNotification(
+                                                        "Task completed successfully!",
+                                                        NotificationType.SUCCESS,
+                                                    )
+                                                }
+
+                                                PendingStatusResponseLong.Status.FAILED -> {
+                                                    val message = response.message ?: "Task failed"
+                                                    showNotification("Task failed: $message", NotificationType.ERROR)
+                                                }
+
+                                                PendingStatusResponseLong.Status.REJECTED -> {
+                                                    val message = response.message ?: "Task was rejected"
+                                                    showNotification("Task rejected: $message", NotificationType.ERROR)
+                                                }
+
+                                                else -> {}
+                                            }
+                                            // allow user to re-upload after completion
+                                            uploading = false
+                                        }
+                                    },
+                                    onFinished = { ok ->
+                                        if (!ok) {
+                                            uploadStatus = "Upload canceled or failed"
+                                            uploading = false
+                                        } else if (uploadStatus.isEmpty()) {
+                                            uploadStatus = "Processing..."
+                                        }
+                                    },
+                                    onError = { error ->
+                                        uploadStatus = error
+                                        showNotification(error, NotificationType.ERROR)
+                                        uploading = false
+                                    }
+                                )
+                            }
+                        },
+                    )
                 }
             }
-
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // Download button
-                ActionIconButton(
-                    icon = Icons.Default.Download,
-                    label = if (downloading) "Downloading..." else "Download",
-                    enabled = !downloading,
-                    onClick = {
-                        downloading = true
-                        corScope.launch {
-                            vm.downloadZipAndSave(assignment.id.toInt()) {
-                                println("Result is: $it")
-                                downloading = false
-                            }
-                        }
-                    },
-                )
-
-                // Upload button (submits solution and polls status)
-                ActionIconButton(
-                    icon = Icons.Default.Upload,
-                    label = if (uploading) uploadStatus.ifEmpty { "Uploading..." } else "Upload",
-                    enabled = !uploading,
-                    onClick = {
-                        uploading = true
-                        uploadStatus = "Picking file..."
-                        corScope.launch {
-                            vm.submitSolutionWithPicker(
-                                assignmentId = assignment.id.toInt(),
-                                onStatus = { response ->
-                                    uploadStatus =
-                                        when (response.status) {
-                                            PendingStatusResponseLong.Status.PENDING -> "Processing..."
-                                            PendingStatusResponseLong.Status.DONE -> "Done"
-                                            PendingStatusResponseLong.Status.FAILED -> "Failed"
-                                            PendingStatusResponseLong.Status.REJECTED -> "Rejected"
-                                        }
-
-                                    // Show notifications for completed tasks
-                                    if (response.status != PendingStatusResponseLong.Status.PENDING) {
-                                        when (response.status) {
-                                            PendingStatusResponseLong.Status.DONE -> {
-                                                showNotification(
-                                                    "Task completed successfully!",
-                                                    NotificationType.SUCCESS,
-                                                )
-                                            }
-
-                                            PendingStatusResponseLong.Status.FAILED -> {
-                                                val message = response.message ?: "Task failed"
-                                                showNotification("Task failed: $message", NotificationType.ERROR)
-                                            }
-
-                                            PendingStatusResponseLong.Status.REJECTED -> {
-                                                val message = response.message ?: "Task was rejected"
-                                                showNotification("Task rejected: $message", NotificationType.ERROR)
-                                            }
-
-                                            else -> {}
-                                        }
-                                        // allow user to re-upload after completion
-                                        uploading = false
-                                    }
-                                },
-                                onFinished = { ok ->
-                                    if (!ok) {
-                                        uploadStatus = "Upload canceled or failed"
-                                        uploading = false
-                                    } else if (uploadStatus.isEmpty()) {
-                                        uploadStatus = "Processing..."
-                                    }
-                                },
-                            )
-                        }
-                    },
-                )
-            }
-
             Box(
                 modifier =
                     Modifier.weight(1f).fillMaxSize().then(
@@ -843,6 +905,8 @@ private fun AssignmentDetailPane(
                     )
                 }
             }
+
+
 
             Text(
                 text = "ID: ${assignment.id}",

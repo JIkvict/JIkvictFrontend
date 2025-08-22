@@ -3,6 +3,8 @@ package org.jikvict.browser.viewmodel
 import androidx.lifecycle.viewModelScope
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.append
 import io.ktor.client.request.forms.formData
@@ -29,11 +31,56 @@ import org.jikvict.api.infrastructure.ApiClient
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.PendingStatusResponseLong
+import org.jikvict.api.models.ProblemDetail
 import org.jikvict.browser.screens.AssignmentsUiState
 import org.jikvict.browser.util.PickedFile
 import org.jikvict.browser.util.StateSaver
 import org.jikvict.browser.util.clientConfig
 import org.jikvict.browser.util.saveBytesAsFile
+
+
+enum class SubmissionStatus {
+    PASSED,
+    FAILED,
+    CLOSED,
+    OPEN;
+
+    companion object {
+        fun from(assignmentInfo: AssignmentInfo, assignment: AssignmentDto): SubmissionStatus {
+            return if (assignment.isClosed) {
+                when {
+                    assignmentInfo.attemptsUsed < 1 -> {
+                        FAILED
+                    }
+
+                    (assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == 0 -> {
+                        FAILED
+                    }
+
+                    (assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == assignment.maxPoints -> {
+                        PASSED
+                    }
+
+                    else -> {
+                        CLOSED
+                    }
+                }
+            } else {
+                if (assignmentInfo.attemptsUsed < assignment.maximumAttempts) {
+                    OPEN
+                } else {
+                    if ((assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == assignment.maxPoints) {
+                        PASSED
+                    } else if ((assignmentInfo.results.maxOfOrNull { it.points } ?: 0) == 0) {
+                        FAILED
+                    } else {
+                        CLOSED
+                    }
+                }
+            }
+        }
+    }
+}
 
 class TasksScreenViewModel(
     savedStateHandle: StateSaver,
@@ -103,6 +150,7 @@ class TasksScreenViewModel(
         assignmentId: Int,
         onStatus: (PendingStatusResponseLong) -> Unit,
         onFinished: (Boolean) -> Unit = {},
+        onError: (String) -> Unit = {},
     ) {
         viewModelScope.launch {
             try {
@@ -114,7 +162,7 @@ class TasksScreenViewModel(
                     return@launch
                 }
 
-                submitSolution(picked, assignmentId, onStatus, onFinished)
+                submitSolution(picked, assignmentId, onStatus, onFinished, onError)
             } catch (e: Exception) {
                 println("Error submitting solution: ${e.message}")
                 onFinished(false)
@@ -127,9 +175,10 @@ class TasksScreenViewModel(
         file: PickedFile,
         onStatus: (PendingStatusResponseLong) -> Unit,
         onFinished: (Boolean) -> Unit = {},
+        onError: (String) -> Unit = {},
     ) {
         viewModelScope.launch {
-            submitSolution(file, assignmentId, onStatus, onFinished)
+            submitSolution(file, assignmentId, onStatus, onFinished, onError)
         }
     }
 
@@ -138,6 +187,7 @@ class TasksScreenViewModel(
         assignmentId: Int,
         onStatus: (PendingStatusResponseLong) -> Unit,
         onFinished: (Boolean) -> Unit,
+        onError: (String) -> Unit = {},
     ) {
         try {
             val client =
@@ -172,6 +222,26 @@ class TasksScreenViewModel(
                 onFinished(false)
             }
         } catch (e: Exception) {
+            val message = try {
+                when (e) {
+                    is ClientRequestException -> {
+                        val problemDetail = e.response.body<ProblemDetail>()
+                        problemDetail.detail!!
+                    }
+
+                    is ServerResponseException -> {
+                        val problemDetail = e.response.body<ProblemDetail>()
+                        problemDetail.detail!!
+                    }
+
+                    else -> {
+                        "Unknown error"
+                    }
+                }
+            } catch (_: Exception) {
+                "Unknown error"
+            }
+            onError(message)
             println("Error submitting solution: ${e.message}")
             onFinished(false)
         }
