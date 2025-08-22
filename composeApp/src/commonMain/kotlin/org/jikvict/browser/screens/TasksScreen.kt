@@ -27,12 +27,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Upload
@@ -83,6 +86,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.PendingStatusResponseLong
+import org.jikvict.api.models.TestResult
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
@@ -95,6 +99,8 @@ import org.jikvict.browser.icons.myiconpack.Taskstatusdonelight
 import org.jikvict.browser.icons.myiconpack.Taskstatusfaileddark
 import org.jikvict.browser.icons.myiconpack.Taskstatusfailedlight
 import org.jikvict.browser.icons.myiconpack.Taskstatuslight
+import org.jikvict.browser.icons.myiconpack.Unlockeddark
+import org.jikvict.browser.icons.myiconpack.Unlockedlight
 import org.jikvict.browser.util.DragDropHandler
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
 import org.jikvict.browser.util.SimplePreview
@@ -103,6 +109,30 @@ import org.jikvict.browser.viewmodel.SubmissionStatus
 import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
+
+// Helper functions for formatting values in human-readable format
+@OptIn(kotlin.time.ExperimentalTime::class)
+private fun formatMemory(memoryB: Long): String {
+    return "" + (memoryB / 1024 / 1024)
+}
+
+
+private fun formatCpuLimit(cpuLimit: Long): String {
+    return "" + (cpuLimit.toDouble() / 1e9)
+}
+
+private fun formatDate(dateString: String): String {
+    return try {
+        val parts = dateString.replace("T", " ").replace("Z", "").split(":")
+        if (parts.size >= 2) {
+            "${parts[0]}:${parts[1]}"
+        } else {
+            dateString
+        }
+    } catch (e: Exception) {
+        dateString
+    }
+}
 
 
 data class TaskNotification(
@@ -274,6 +304,7 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                                             assignments = assignments,
                                             onAssignmentClick = { assignment ->
                                                 selectedAssignmentId = assignment.id
+                                                viewModel.resetLogsState()
                                                 scope.launch {
                                                     navigator.navigateTo(
                                                         ListDetailPaneScaffoldRole.Detail,
@@ -539,6 +570,12 @@ private fun AssignmentDetailPane(
     val scrollState = rememberScrollState()
     val theme = LocalThemeSwitcherProvider.current
     val isDark by theme.isDark
+
+    // Get ViewModel and state
+    val vm = koinViewModel<TasksScreenViewModel>()
+    val showLogs by vm.showLogs.collectAsState()
+    val selectedAttemptIndex by vm.selectedAttemptIndex.collectAsState()
+
     with(scope) {
         Column(
             modifier =
@@ -615,15 +652,25 @@ private fun AssignmentDetailPane(
                 )
             }
 
-            OutlinedContentContainer(label = "Description") {
-                LazyColumn(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = scope.screenHeight * 0.5f),
-                ) {
-                    item {
-                        Markdown(assignment.description!!)
+            if (showLogs && assignmentInfo != null && assignmentInfo.results.isNotEmpty()) {
+                LogsDisplayContainer(
+                    assignmentInfo = assignmentInfo,
+                    selectedAttemptIndex = selectedAttemptIndex,
+                    onAttemptChange = { vm.setSelectedAttemptIndex(it) },
+                    onBackClick = { vm.setShowLogs(false) },
+                    modifier = Modifier.fillMaxWidth().heightIn(max = scope.screenHeight * 0.7f)
+                )
+            } else {
+                OutlinedContentContainer(label = "Description") {
+                    LazyColumn(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = scope.screenHeight * 0.5f),
+                    ) {
+                        item {
+                            Markdown(assignment.description!!)
+                        }
                     }
                 }
             }
@@ -634,14 +681,15 @@ private fun AssignmentDetailPane(
                 LightColors.Green4
             }
 
-            println("Assignment info: $assignment")
-            if (assignment.isClosed) {
+
+            if (assignment.isClosed && !showLogs) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     OutlinedButton(onClick = {
-
+                        vm.setShowLogs(true)
+                        vm.setSelectedAttemptIndex(0)
                     }) {
                         Text(
                             text = "See logs",
@@ -651,14 +699,14 @@ private fun AssignmentDetailPane(
 
                         val imageVector =
                             if (isDark) {
-                                MyIconPack.Lockeddark
+                                MyIconPack.Unlockeddark
                             } else {
-                                MyIconPack.Lockedlight
+                                MyIconPack.Unlockedlight
                             }
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             imageVector = imageVector,
-                            contentDescription = "Locked",
+                            contentDescription = "Unlocked",
                             modifier = Modifier.size(24.dp),
                         )
 
@@ -682,10 +730,35 @@ private fun AssignmentDetailPane(
             )
 
 
+            // Start and End dates
+            Text(
+                text = "Start: ${formatDate(assignment.startDate)}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+
+            Text(
+                text = "End: ${formatDate(assignment.endDate)}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+
             Text(
                 text = "Task #${assignment.taskId}",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.outline,
+            )
+
+            Text(
+                text = "Timeout: ${assignment.timeOutSeconds} s | Memory (RAM): ${formatMemory(assignment.memoryLimit)} MB",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f),
+            )
+
+            Text(
+                text = "CPU Limit: ${formatCpuLimit(assignment.cpuLimit)} cores | PIDs: ${assignment.pidsLimit} processes",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f),
             )
 
             // Action buttons: Download and Upload with drag and drop support
@@ -913,6 +986,188 @@ private fun AssignmentDetailPane(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline,
             )
+        }
+    }
+}
+
+@Composable
+private fun LogsDisplayContainer(
+    assignmentInfo: AssignmentInfo,
+    selectedAttemptIndex: Int,
+    onAttemptChange: (Int) -> Unit,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val theme = LocalThemeSwitcherProvider.current
+    val isDark by theme.isDark
+
+    Column(modifier = modifier) {
+        // Header with back button and attempt navigation
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Back")
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            if (assignmentInfo.results.size > 1) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        itemsIndexed(assignmentInfo.results) { index, _ ->
+                            OutlinedButton(
+                                onClick = { onAttemptChange(index) },
+                                colors = if (index == selectedAttemptIndex) {
+                                    androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                                    )
+                                } else {
+                                    androidx.compose.material3.ButtonDefaults.outlinedButtonColors()
+                                }
+                            ) {
+                                Text("${index + 1}")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Display selected attempt details
+        val selectedResult = assignmentInfo.results.getOrNull(selectedAttemptIndex)
+        if (selectedResult != null) {
+            OutlinedContentContainer(
+                label = "Attempt ${selectedAttemptIndex + 1} - ${selectedResult.timeStamp} (${selectedResult.points} points)"
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    selectedResult.result?.testResults?.let { testResults ->
+                        items(testResults) { testResult ->
+                            var isExpanded by remember { mutableStateOf(false) }
+                            TestResultCard(
+                                testResult = testResult,
+                                isDark = isDark,
+                                isExpanded = isExpanded,
+                                onClick = { isExpanded = !isExpanded }
+                            )
+                        }
+                    } ?: run {
+                        item {
+                            Text(
+                                text = "No detailed test results available for this attempt.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TestResultCard(
+    testResult: TestResult,
+    isDark: Boolean,
+    isExpanded: Boolean = false,
+    onClick: () -> Unit = {}
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (testResult.passed) {
+                if (isDark) Color(0xFF1B5E20) else Color(0xFFE8F5E8)
+            } else {
+                if (isDark) Color(0xFF5F2120) else Color(0xFFFFEBEE)
+            }
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = testResult.displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = testResult.testName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "${testResult.earnedPoints}/${testResult.possiblePoints}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (testResult.passed) {
+                            if (isDark) Color(0xFF4CAF50) else Color(0xFF2E7D32)
+                        } else {
+                            if (isDark) Color(0xFFEF5350) else Color(0xFFC62828)
+                        }
+                    )
+                    Text(
+                        text = if (testResult.passed) "PASSED" else "FAILED",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (testResult.passed) {
+                            if (isDark) Color(0xFF4CAF50) else Color(0xFF2E7D32)
+                        } else {
+                            if (isDark) Color(0xFFEF5350) else Color(0xFFC62828)
+                        }
+                    )
+                }
+            }
+
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Logs:",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDark) Color(0xFF2C2C2C) else Color(0xFFF5F5F5)
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        if (testResult.logs.isNotEmpty()) {
+                            testResult.logs.forEach { log ->
+                                Text(
+                                    text = log,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "No logs found for this test",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

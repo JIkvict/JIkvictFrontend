@@ -91,6 +91,13 @@ class TasksScreenViewModel(
 
     val assignmentsState: StateFlow<AssignmentsUiState> = _assignmentsState.asStateFlow()
 
+    // Logs display state
+    private val _showLogs = MutableStateFlow(false)
+    val showLogs: StateFlow<Boolean> = _showLogs.asStateFlow()
+
+    private val _selectedAttemptIndex = MutableStateFlow(0)
+    val selectedAttemptIndex: StateFlow<Int> = _selectedAttemptIndex.asStateFlow()
+
     val assignments: StateFlow<List<AssignmentDto>> =
         assignmentsState
             .map { state ->
@@ -274,6 +281,20 @@ class TasksScreenViewModel(
             val state = fetchAssignments()
             _assignmentsState.value = state
         }
+    }
+
+    // Logs management functions
+    fun setShowLogs(show: Boolean) {
+        _showLogs.value = show
+    }
+
+    fun setSelectedAttemptIndex(index: Int) {
+        _selectedAttemptIndex.value = index
+    }
+
+    fun resetLogsState() {
+        _showLogs.value = false
+        _selectedAttemptIndex.value = 0
     }
 
     private val _assignmentInfoMap = MutableStateFlow<Map<Int, AssignmentInfo>>(emptyMap())
