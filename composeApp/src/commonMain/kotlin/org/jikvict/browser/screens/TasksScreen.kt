@@ -45,6 +45,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -231,6 +232,8 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                                 )
                             }
                         }
+
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp))
 
                         when (uiState) {
                             is AssignmentsUiState.Loading -> {
