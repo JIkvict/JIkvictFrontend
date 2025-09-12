@@ -2,7 +2,11 @@ package org.jikvict.browser.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.EaseInCubic
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -10,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -25,12 +30,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -44,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -122,7 +130,19 @@ fun LoginScreenComposable(
             val password by password.collectAsState()
             val loginResult by loginResult.collectAsState()
 
-            val isLoading = loginResult is OperationResult.Loading
+            val originalIsLoading = loginResult is OperationResult.Loading
+            var isLoading by remember { mutableStateOf(false) }
+
+            LaunchedEffect(originalIsLoading) {
+                if (originalIsLoading) {
+                    isLoading = true
+                } else if (isLoading) {
+                    delay(800)
+                    isLoading = false
+                }
+            }
+
+
 
             fun performLogin() {
                 if (!isLoading) {
@@ -208,26 +228,33 @@ fun LoginScreenComposable(
                 onClick = { performLogin() },
             )
 
-            when (val res = loginResult) {
-                is OperationResult.Error -> {
-                    Text(
-                        text = res.message,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-
-                is OperationResult.Success -> {
-                    resetLoginResult()
-                    context(navController) {
-                        TasksScreen().navigateTo()
+            Box(
+                modifier = Modifier.height(24.dp),
+            ) {
+                when (val res = loginResult) {
+                    is OperationResult.Error -> {
+                        if (!isLoading) {
+                            Text(
+                                text = res.message,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
                     }
-                }
 
-                else -> Unit
+                    is OperationResult.Success -> {
+                        resetLoginResult()
+                        context(navController) {
+                            TasksScreen().navigateTo()
+                        }
+                    }
+
+                    else -> Unit
+                }
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -235,37 +262,60 @@ private fun AnimatedLoginButton(
     isLoading: Boolean,
     onClick: () -> Unit,
 ) {
-    val slowSpecEffect = MaterialTheme.motionScheme.slowEffectsSpec<Float>()
 
-    AnimatedContent(
-        targetState = isLoading,
-        transitionSpec = {
-            fadeIn(slowSpecEffect) togetherWith
-                fadeOut(slowSpecEffect) using
-                SizeTransform { initialSize, _ ->
-                    keyframes {
-                        durationMillis = 800
-                        IntSize(
-                            width = if (targetState) (initialSize.width * 0.3f).toInt() else initialSize.width,
-                            height = initialSize.height,
-                        ) at 400
-                    }
-                }
-        },
+    var displayLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isLoading) {
+        if (isLoading) {
+            displayLoading = true
+        } else if (displayLoading) {
+            displayLoading = false
+        }
+    }
+
+    val slowSpecEffect = tween<Float>(
+        durationMillis = 600,
+        easing = FastOutSlowInEasing
+    )
+
+    Box(
+        modifier = Modifier.height(64.dp),
         contentAlignment = Alignment.Center,
-        label = "login_button_animation",
-    ) { loading ->
-        if (loading) {
-            LoadingIndicator(
-                modifier = Modifier.size(64.dp),
-                color = MaterialTheme.colorScheme.primary,
-            )
-        } else {
-            Button(
-                onClick = onClick,
-                modifier = Modifier.fillMaxWidth(0.5f),
-            ) {
-                Text("Let's go")
+    ) {
+        AnimatedContent(
+            targetState = displayLoading,
+            transitionSpec = {
+                fadeIn(slowSpecEffect) togetherWith
+                        fadeOut(slowSpecEffect) using
+                        SizeTransform { initialSize, _ ->
+                            keyframes {
+                                durationMillis = 600
+                                if (targetState) {
+                                    IntSize(32, initialSize.height) at 200 using EaseInCubic
+                                    IntSize(64, initialSize.height) at 400 using EaseOutCubic
+                                } else {
+                                    IntSize(32, initialSize.height) at 200 using EaseInCubic
+                                    IntSize(initialSize.width, initialSize.height) at 400 using EaseOutCubic
+                                }
+                            }
+                        }
+            },
+
+            contentAlignment = Alignment.Center,
+            label = "login_button_animation",
+        ) { loading ->
+            if (loading) {
+                LoadingIndicator(
+                    modifier = Modifier.size(64.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            } else {
+                Button(
+                    onClick = onClick,
+                    modifier = Modifier.fillMaxWidth(0.5f),
+                ) {
+                    Text("Let's go")
+                }
             }
         }
     }
