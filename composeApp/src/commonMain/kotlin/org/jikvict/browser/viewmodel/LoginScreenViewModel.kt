@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.jikvict.api.apis.AuthControllerApi
 import org.jikvict.api.models.LoginRequest
 import org.jikvict.api.models.ProblemDetail
+import org.jikvict.browser.auth.SessionManager
+import org.jikvict.browser.auth.token
 import org.jikvict.browser.delegates.stateHandle
 import org.jikvict.browser.model.OperationResult
 import org.jikvict.browser.util.StateSaver
@@ -16,6 +18,7 @@ import org.jikvict.browser.util.StateSaver
 class LoginScreenViewModel(
     stateSaver: StateSaver,
     private val loginApi: AuthControllerApi,
+    private val sessionManager: SessionManager,
 ) : ExtendedViewModel(stateSaver) {
     private val _aisId = stateHandle("aisId", "")
     val aisId = _aisId.asStateFlow()
@@ -39,7 +42,6 @@ class LoginScreenViewModel(
 
     suspend fun login() {
         _loginResult.value = OperationResult.Loading()
-
         val request = LoginRequest(aisId.value.lowercase(), password.value)
         try {
             val response = loginApi.login(request)
@@ -47,6 +49,8 @@ class LoginScreenViewModel(
                 _loginResult.value = OperationResult.Error("Server error: ${response.status}")
                 return
             }
+            token = response.body()
+            sessionManager.login()
             _loginResult.value = OperationResult.Success(Unit)
         } catch (e: CancellationException) {
             _loginResult.value = null
@@ -58,7 +62,9 @@ class LoginScreenViewModel(
             val problem = e.response.body<ProblemDetail>()
             _loginResult.value = OperationResult.Error(problem.detail ?: "Unknown error")
         } catch (e: Exception) {
-            _loginResult.value = OperationResult.Error(e.message ?: "Unknown error")
+            _loginResult.value = OperationResult.Error("Unknown error")
+            println("Exception occurred")
+            println(e.message)
         }
     }
 }

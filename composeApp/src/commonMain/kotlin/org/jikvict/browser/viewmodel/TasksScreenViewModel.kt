@@ -35,7 +35,6 @@ import org.jikvict.api.models.ProblemDetail
 import org.jikvict.browser.screens.AssignmentsUiState
 import org.jikvict.browser.util.PickedFile
 import org.jikvict.browser.util.StateSaver
-import org.jikvict.browser.util.clientConfig
 import org.jikvict.browser.util.saveBytesAsFile
 
 
@@ -86,6 +85,7 @@ class TasksScreenViewModel(
     savedStateHandle: StateSaver,
     private val assignmentControllerApi: AssignmentControllerApi,
     private val taskStatusControllerApi: TaskStatusControllerApi,
+    private val client: HttpClient,
 ) : ExtendedViewModel(savedStateHandle) {
     private val _assignmentsState = MutableStateFlow<AssignmentsUiState>(AssignmentsUiState.Loading)
 
@@ -133,7 +133,6 @@ class TasksScreenViewModel(
     ) {
         viewModelScope.launch {
             try {
-                val client = HttpClient { clientConfig(this) }
                 val url = ApiClient.BASE_URL + "/api/assignment/zip/" + assignmentId
                 val response =
                     client.get(url) {
@@ -197,10 +196,6 @@ class TasksScreenViewModel(
         onError: (String) -> Unit = {},
     ) {
         try {
-            val client =
-                HttpClient {
-                    clientConfig(this)
-                }
             val resp =
                 client.post(ApiClient.BASE_URL + "/api/v1/solution-checker/submit") {
                     setBody(

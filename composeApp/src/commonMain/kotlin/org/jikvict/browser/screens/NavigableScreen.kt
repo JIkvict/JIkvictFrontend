@@ -17,10 +17,12 @@ interface NavigableScreen {
 context(navController: NavHostController)
 fun NavigableScreen.navigateTo() {
     val router = routers.first { it.screen == this::class }
-    if (!router.matchRoute(
-            navController.currentBackStackEntry?.destination?.route ?: "",
-        )
-    ) {
+    if (!router.matchRoute(navController.currentBackStackEntry?.destination?.route ?: "")) {
         navController.navigate(this)
     }
+}
+
+context(navController: NavHostController)
+fun NavigableScreen.forceNavigateTo() {
+    navController.navigate(this)
 }

@@ -60,6 +60,7 @@ import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.LocalNavController
 import org.jikvict.browser.annotation.Register
+import org.jikvict.browser.auth.SessionManager
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.IlluminatingText
 import org.jikvict.browser.model.OperationResult
@@ -69,6 +70,7 @@ import org.jikvict.browser.util.responsive.Breakpoint
 import org.jikvict.browser.util.responsive.ResponsiveValueBuilder
 import org.jikvict.browser.util.responsive.responsive
 import org.jikvict.browser.viewmodel.LoginScreenViewModel
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
 
@@ -244,7 +246,7 @@ fun LoginScreenComposable(
                     is OperationResult.Success -> {
                         resetLoginResult()
                         context(navController) {
-                            TasksScreen().navigateTo()
+                            MakeJarScreen().navigateTo()
                         }
                     }
 
@@ -330,12 +332,44 @@ private fun LoginScreenComposablePreviewSM() {
     }
 }
 
+
+@Composable
+fun ProfileScreenComposable(defaultScreenScope: DefaultScreenScope) = with(defaultScreenScope) {
+    val sessionManager = koinInject<SessionManager>()
+    val navController = LocalNavController.current
+    Box(
+        modifier = Modifier.fitContentToScreen()
+    ) {
+        Button(
+            modifier = Modifier.fillMaxWidth(0.5f),
+            onClick = {
+                sessionManager.logout()
+                with(navController) {
+                    LoginScreen.forceNavigateTo()
+                }
+            },
+        ) {
+            Text("Log out")
+        }
+    }
+}
+
+
 @Register
 @Serializable
 @SerialName("login")
 data object LoginScreen : NavigableScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
-        get() = { LoginScreenComposable(it) }
+        get() = {
+            val sessionManager = koinInject<SessionManager>()
+            val isLoggedIn = sessionManager.isLoggedIn.value
+            println("I was called and login status is $isLoggedIn")
+            if (isLoggedIn) {
+                ProfileScreenComposable(it)
+            } else {
+                LoginScreenComposable(it)
+            }
+        }
 }
 
 object LoginScreenRouterRegistrar : ScreenRouterRegistrar<LoginScreen> {
