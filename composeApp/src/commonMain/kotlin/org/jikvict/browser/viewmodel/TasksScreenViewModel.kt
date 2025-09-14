@@ -345,8 +345,15 @@ class TasksScreenViewModel(
             AssignmentsUiState.Success(
                 assignments = assignments,
             )
-        } catch (e: Exception) {
-            AssignmentsUiState.Error("Error: ${e.message}")
+        } catch (e: ClientRequestException) {
+            val problemDetail = e.response.body<ProblemDetail>()
+            AssignmentsUiState.Error(problemDetail.detail!!)
+        }
+        catch (e: ServerResponseException) {
+            AssignmentsUiState.Error("Server error: ${e.response.status}")
+        }
+        catch (_: Exception) {
+            AssignmentsUiState.Error("Unknown error")
         }
     }
 }
