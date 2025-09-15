@@ -10,6 +10,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import org.jikvict.browser.LocalNavController
 import org.jikvict.browser.auth.SessionManager
 import org.jikvict.browser.components.DefaultScreenScope
 import org.koin.compose.koinInject
@@ -31,11 +32,14 @@ interface ScreenRegistrar<T : NavigableScreen> {
     fun provideRegisterFunction(): @Composable (AnimatedContentScope.(NavBackStackEntry, DefaultScreenScope) -> Unit) =
         { entry, scope ->
             val sessionManager = koinInject<SessionManager>()
-            if (sessionManager.isLoggedIn.value) {
+            if (sessionManager.isLoggedIn.value || getType() == LoginScreen::class) {
                 val route = entry.toRoute<T>(getType())
                 route.compose(scope)
             } else {
-                LoginScreenComposable(scope)
+                val navHostController = LocalNavController.current
+                with(navHostController) {
+                    LoginScreen.forceNavigateTo()
+                }
             }
         }
 }

@@ -95,6 +95,10 @@ class TasksScreenViewModel(
     private val _showLogs = MutableStateFlow(false)
     val showLogs: StateFlow<Boolean> = _showLogs.asStateFlow()
 
+    // Unaccepted submissions panel state (always accessible)
+    private val _showUnaccepted = MutableStateFlow(false)
+    val showUnaccepted: StateFlow<Boolean> = _showUnaccepted.asStateFlow()
+
     private val _selectedAttemptIndex = MutableStateFlow(0)
     val selectedAttemptIndex: StateFlow<Int> = _selectedAttemptIndex.asStateFlow()
 
@@ -281,6 +285,12 @@ class TasksScreenViewModel(
     // Logs management functions
     fun setShowLogs(show: Boolean) {
         _showLogs.value = show
+        if (show) _showUnaccepted.value = false
+    }
+
+    fun setShowUnaccepted(show: Boolean) {
+        _showUnaccepted.value = show
+        if (show) _showLogs.value = false
     }
 
     fun setSelectedAttemptIndex(index: Int) {

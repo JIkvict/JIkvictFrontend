@@ -15,6 +15,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +34,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -89,6 +91,7 @@ import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.PendingStatusResponseLong
 import org.jikvict.api.models.TestResult
 import org.jikvict.browser.components.DefaultScreenScope
+import org.jikvict.browser.components.TextWithOverflowHiding
 import org.jikvict.browser.constant.DarkColors
 import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.icons.MyIconPack
@@ -135,6 +138,21 @@ private fun formatDate(dateString: String): String {
     }
 }
 
+
+private fun parseInstantSafe(time: String): Long {
+    val digits = buildString(time.length) {
+        for (ch in time) if (ch.isDigit()) append(ch)
+    }
+    if (digits.isEmpty()) return 0L
+    val key = if (digits.length >= 17) digits.take(17)
+    else if (digits.length >= 14) digits.take(14)
+    else digits.padEnd(14, '0')
+    return try {
+        key.toLong()
+    } catch (_: Exception) {
+        0L
+    }
+}
 
 data class TaskNotification(
     val message: String,
@@ -577,6 +595,7 @@ private fun AssignmentDetailPane(
     // Get ViewModel and state
     val vm = koinViewModel<TasksScreenViewModel>()
     val showLogs by vm.showLogs.collectAsState()
+    val showUnaccepted by vm.showUnaccepted.collectAsState()
     val selectedAttemptIndex by vm.selectedAttemptIndex.collectAsState()
 
     with(scope) {
@@ -663,6 +682,12 @@ private fun AssignmentDetailPane(
                     onBackClick = { vm.setShowLogs(false) },
                     modifier = Modifier.fillMaxWidth().heightIn(max = scope.screenHeight * 0.7f)
                 )
+            } else if (showUnaccepted) {
+                UnacceptedSubmissionsContainer(
+                    submissions = assignmentInfo?.unacceptedSubmissions ?: emptyList(),
+                    onBackClick = { vm.setShowUnaccepted(false) },
+                    modifier = Modifier.fillMaxWidth().heightIn(max = scope.screenHeight * 0.7f)
+                )
             } else {
                 OutlinedContentContainer(label = "Description") {
                     LazyColumn(
@@ -672,7 +697,9 @@ private fun AssignmentDetailPane(
                                 .heightIn(max = scope.screenHeight * 0.5f),
                     ) {
                         item {
-                            Markdown(assignment.description!!)
+                            SelectionContainer {
+                                Markdown(assignment.description!!)
+                            }
                         }
                     }
                 }
@@ -685,7 +712,7 @@ private fun AssignmentDetailPane(
             }
 
 
-            if (assignment.isClosed && !showLogs) {
+            if (assignment.isClosed && !showLogs && !showUnaccepted) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
@@ -713,6 +740,23 @@ private fun AssignmentDetailPane(
                             modifier = Modifier.size(24.dp),
                         )
 
+                    }
+                }
+            }
+
+            if (!showLogs && !showUnaccepted) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    OutlinedButton(onClick = {
+                        vm.setShowUnaccepted(true)
+                    }) {
+                        Text(
+                            text = "Unaccepted attempts",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 }
             }
@@ -1082,6 +1126,69 @@ private fun LogsDisplayContainer(
 }
 
 @Composable
+private fun UnacceptedSubmissionsContainer(
+    submissions: List<org.jikvict.api.models.UnacceptedSubmission>,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Back")
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+        }
+
+        OutlinedContentContainer(label = "Unaccepted submissions") {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (submissions.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No unaccepted submissions",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                } else {
+                    val sorted =
+                        submissions.sortedWith(compareByDescending<org.jikvict.api.models.UnacceptedSubmission> {
+                            parseInstantSafe(it.time)
+                        })
+                    items(items = sorted) { item: org.jikvict.api.models.UnacceptedSubmission ->
+                        Card(colors = CardDefaults.cardColors()) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = formatDate(item.time),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                SelectionContainer {
+                                    Text(
+                                        text = item.message,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun TestResultCard(
     testResult: TestResult,
     isDark: Boolean,
@@ -1089,7 +1196,7 @@ private fun TestResultCard(
     onClick: () -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = if (testResult.passed) {
                 if (isDark) Color(0xFF1B5E20) else Color(0xFFE8F5E8)
@@ -1098,75 +1205,88 @@ private fun TestResultCard(
             }
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = testResult.displayName,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = testResult.testName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "${testResult.earnedPoints}/${testResult.possiblePoints}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = if (testResult.passed) {
-                            if (isDark) Color(0xFF4CAF50) else Color(0xFF2E7D32)
-                        } else {
-                            if (isDark) Color(0xFFEF5350) else Color(0xFFC62828)
-                        }
-                    )
-                    Text(
+        BoxWithConstraints {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onClick() },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = testResult.displayName,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = testResult.testName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    TextWithOverflowHiding(
                         text = if (testResult.passed) "PASSED" else "FAILED",
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (testResult.passed) {
-                            if (isDark) Color(0xFF4CAF50) else Color(0xFF2E7D32)
-                        } else {
-                            if (isDark) Color(0xFFEF5350) else Color(0xFFC62828)
-                        }
-                    )
-                }
-            }
-
-            if (isExpanded) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "Logs:",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDark) Color(0xFF2C2C2C) else Color(0xFFF5F5F5)
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        if (testResult.logs.isNotEmpty()) {
-                            testResult.logs.forEach { log ->
-                                Text(
-                                    text = log,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        } else {
+                        maxLines = 1
+                    ) {
+                        Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "No logs found for this test",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                text = "${testResult.earnedPoints}/${testResult.possiblePoints}",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (testResult.passed) {
+                                    if (isDark) Color(0xFF4CAF50) else Color(0xFF2E7D32)
+                                } else {
+                                    if (isDark) Color(0xFFEF5350) else Color(0xFFC62828)
+                                }
                             )
+
+                            Text(
+                                text = if (testResult.passed) "PASSED" else "FAILED",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (testResult.passed) {
+                                    if (isDark) Color(0xFF4CAF50) else Color(0xFF2E7D32)
+                                } else {
+                                    if (isDark) Color(0xFFEF5350) else Color(0xFFC62828)
+                                },
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                }
+
+                if (isExpanded) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Logs:",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isDark) Color(0xFF2C2C2C) else Color(0xFFF5F5F5)
+                        )
+                    ) {
+                        SelectionContainer {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                if (testResult.logs.isNotEmpty()) {
+                                    testResult.logs.forEach { log ->
+                                        Text(
+                                            text = log,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                } else {
+                                    Text(
+                                        text = "No logs found for this test",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -1174,6 +1294,8 @@ private fun TestResultCard(
         }
     }
 }
+
+
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
