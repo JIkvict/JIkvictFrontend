@@ -9,4 +9,10 @@
 </head>
 <body>
 </body>
+<script>
+    window.originalFetch = window.fetch;
+    window.fetch = function (resource, init) {
+        return window.originalFetch(resource, Object.assign({ credentials: 'include' }, init || {}));
+    };
+</script>
 </html>
