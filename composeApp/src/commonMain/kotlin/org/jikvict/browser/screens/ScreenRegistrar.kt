@@ -6,6 +6,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -32,7 +34,8 @@ interface ScreenRegistrar<T : NavigableScreen> {
     fun provideRegisterFunction(): @Composable (AnimatedContentScope.(NavBackStackEntry, DefaultScreenScope) -> Unit) =
         { entry, scope ->
             val sessionManager = koinInject<SessionManager>()
-            if (sessionManager.isLoggedIn.value || getType() == LoginScreen::class) {
+            val isLoggedIn by sessionManager.isLoggedIn.collectAsState()
+            if (isLoggedIn || getType() == LoginScreen::class) {
                 val route = entry.toRoute<T>(getType())
                 route.compose(scope)
             } else {

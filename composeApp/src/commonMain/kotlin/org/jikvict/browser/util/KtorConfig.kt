@@ -6,6 +6,8 @@ import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
+import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
@@ -28,22 +30,31 @@ class ClientConfigProvider(
             install(ContentNegotiation) {
                 json()
             }
+            install(HttpCookies)
+
             install(Auth) {
                 bearer {
                     loadTokens {
                         token?.let { BearerTokens(it.accessToken, null) }
                     }
                     refreshTokens {
-                        val refreshed = authControllerApi.refresh()
-                        if (refreshed.success) {
-                            val newToken = refreshed.body()
-                            token = newToken
-                            sessionManager.login()
-                            BearerTokens(newToken.accessToken, null)
-                        } else {
+                        println("refreshing")
+                        runCatching {
+                            val refreshed = authControllerApi.refresh()
+                            println("refreshed: $refreshed")
+                            if (refreshed.success) {
+                                val newToken = refreshed.body()
+                                token = newToken
+                                sessionManager.login()
+                                BearerTokens(newToken.accessToken, null)
+                            } else {
+                                sessionManager.logout()
+                                null
+                            }
+                        }.onFailure {
+                            println("failed to refresh: $it")
                             sessionManager.logout()
-                            null
-                        }
+                        }.getOrNull()
                     }
                 }
             }
@@ -69,6 +80,9 @@ fun simpleClientConfig(client: HttpClientConfig<*>) {
         expectSuccess = true
         install(ContentNegotiation) {
             json()
+        }
+        install(HttpCookies) {
+            storage = AcceptAllCookiesStorage()
         }
     }
 }

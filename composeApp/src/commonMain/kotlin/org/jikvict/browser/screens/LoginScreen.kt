@@ -362,7 +362,7 @@ data object LoginScreen : NavigableScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = {
             val sessionManager = koinInject<SessionManager>()
-            val isLoggedIn = sessionManager.isLoggedIn.value
+            val isLoggedIn by sessionManager.isLoggedIn.collectAsState()
             println("I was called and login status is $isLoggedIn")
             if (isLoggedIn) {
                 ProfileScreenComposable(it)

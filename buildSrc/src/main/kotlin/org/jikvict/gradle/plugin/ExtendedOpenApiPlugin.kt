@@ -8,6 +8,7 @@ import org.jikvict.gradle.tasks.GetOpenApiTask
 import org.openapitools.generator.gradle.plugin.extensions.OpenApiGeneratorGenerateExtension
 
 abstract class ExtendedOpenApiPlugin : Plugin<Project> {
+
     override fun apply(target: Project) {
         target.plugins.apply("org.openapi.generator")
 
