@@ -6,13 +6,15 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class SessionManager {
     private val _isLoggedIn = MutableStateFlow(
-        token?.let { true } ?: false
+        TokenHolder.token()?.let {
+            true
+        } ?: false
     )
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
     fun logout() {
         _isLoggedIn.value = false
-        token = null
+        TokenHolder.setToken(null)
         println("logged out")
     }
 

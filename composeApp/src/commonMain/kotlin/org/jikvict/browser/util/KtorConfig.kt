@@ -13,7 +13,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import org.jikvict.api.apis.AuthControllerApi
 import org.jikvict.browser.auth.SessionManager
-import org.jikvict.browser.auth.token
+import org.jikvict.browser.auth.TokenHolder
 
 class ClientConfigProvider(
     val sessionManager: SessionManager,
@@ -35,7 +35,7 @@ class ClientConfigProvider(
             install(Auth) {
                 bearer {
                     loadTokens {
-                        token?.let { BearerTokens(it.accessToken, null) }
+                        TokenHolder.token()?.let { BearerTokens(it.accessToken, null) }
                     }
                     refreshTokens {
                         println("refreshing")
@@ -44,7 +44,7 @@ class ClientConfigProvider(
                             println("refreshed: $refreshed")
                             if (refreshed.success) {
                                 val newToken = refreshed.body()
-                                token = newToken
+                                TokenHolder.setToken(newToken)
                                 sessionManager.login()
                                 BearerTokens(newToken.accessToken, null)
                             } else {

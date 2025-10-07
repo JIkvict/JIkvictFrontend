@@ -10,7 +10,7 @@ import org.jikvict.api.apis.AuthControllerApi
 import org.jikvict.api.models.LoginRequest
 import org.jikvict.api.models.ProblemDetail
 import org.jikvict.browser.auth.SessionManager
-import org.jikvict.browser.auth.token
+import org.jikvict.browser.auth.TokenHolder
 import org.jikvict.browser.delegates.stateHandle
 import org.jikvict.browser.model.OperationResult
 import org.jikvict.browser.util.StateSaver
@@ -49,7 +49,7 @@ class LoginScreenViewModel(
                 _loginResult.value = OperationResult.Error("Server error: ${response.status}")
                 return
             }
-            token = response.body()
+            TokenHolder.setToken(response.body())
             sessionManager.login()
             _loginResult.value = OperationResult.Success(Unit)
         } catch (e: CancellationException) {

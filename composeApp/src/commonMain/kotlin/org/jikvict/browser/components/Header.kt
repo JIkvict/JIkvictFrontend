@@ -13,15 +13,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.LocalNavController
+import org.jikvict.browser.auth.TokenHolder
+import org.jikvict.browser.auth.toJwt
 import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.icons.myiconpack.Ijlogo
+import org.jikvict.browser.icons.myiconpack.User
+import org.jikvict.browser.screens.AdminScreen
 import org.jikvict.browser.screens.LoginScreen
 import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.TasksScreen
@@ -34,7 +38,6 @@ import org.jikvict.browser.util.LocalThemeSwitcherProvider
 fun Header(modifier: Modifier = Modifier) {
     val navController = LocalNavController.current
     val themeSwitcher = LocalThemeSwitcherProvider.current
-    val coroutineScope = rememberCoroutineScope()
 
     val darkPurple = LocalAppColors.current.Purple6
     val lightPurple = LocalAppColors.current.Purple3
@@ -42,77 +45,88 @@ fun Header(modifier: Modifier = Modifier) {
     val purple = if (theme) darkPurple else lightPurple
 
     val moonTint = if (!theme) Color.Black else Color.Unspecified
-
-    Surface(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-        color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
-        tonalElevation = 2.dp,
-        shadowElevation = 2.dp,
-    ) {
-        Row(
+    val roles = TokenHolder.token()?.toJwt()?.roles.orEmpty()
+    val version by TokenHolder.tokenVersion
+    key(version) {
+        Surface(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp)
-                    .then(modifier),
-            verticalAlignment = Alignment.CenterVertically,
+                    .height(48.dp),
+            color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+            tonalElevation = 2.dp,
+            shadowElevation = 2.dp,
         ) {
             Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 8.dp)
+                        .then(modifier),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(35.dp),
             ) {
-                IconComponent(Ijlogo, hoverable = true, tint = purple, onClick = {
-                    context(navController) {
-                        MakeJarScreen().navigateTo()
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(35.dp),
+                ) {
+                    IconComponent(Ijlogo, hoverable = true, tint = purple, onClick = {
+                        context(navController) {
+                            MakeJarScreen().navigateTo()
+                        }
+                    })
+
+                    AnimatedIconComponent(
+                        animationPath = "files/code-animation.json",
+                        hoverable = true,
+                        onClick = {
+                            context(navController) {
+                                TasksScreen().navigateTo()
+                            }
+                        },
+                        animationType = AnimationType.TOGGLE,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        speed = 2f,
+                    )
+                    println("Roles: $roles")
+                    if (roles.contains("ADMIN") || roles.contains("TEACHER")) {
+                        IconComponent(User, hoverable = true, onClick = {
+                            context(navController) {
+                                AdminScreen().navigateTo()
+                            }
+                        })
                     }
-                })
+                }
 
-                AnimatedIconComponent(
-                    animationPath = "files/code-animation.json",
-                    hoverable = true,
-                    onClick = {
-                        context(navController) {
-                            TasksScreen().navigateTo()
-                        }
-                    },
-                    animationType = AnimationType.TOGGLE,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    speed = 2f,
-                )
-            }
+                Spacer(modifier = Modifier.weight(1f))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(35.dp),
+                ) {
+                    AnimatedIconComponent(
+                        animationPath = "files/sun-moon.json",
+                        hoverable = true,
+                        tint = moonTint,
+                        initialProgress = if (theme) 0f else 1f,
+                        onEnd = {
+                            themeSwitcher.switchTheme()
+                        },
+                        animationType = AnimationType.TOGGLE,
+                        speed = 1f,
+                    )
 
-            Spacer(modifier = Modifier.weight(1f))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(35.dp),
-            ) {
-                AnimatedIconComponent(
-                    animationPath = "files/sun-moon.json",
-                    hoverable = true,
-                    tint = moonTint,
-                    initialProgress = if (theme) 0f else 1f,
-                    onEnd = {
-                        themeSwitcher.switchTheme()
-                    },
-                    animationType = AnimationType.TOGGLE,
-                    speed = 1f,
-                )
-
-                AnimatedIconComponent(
-                    animationPath = "files/user-animation.json",
-                    hoverable = true,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    animationType = AnimationType.ONCE_FORWARD,
-                    speed = 1f,
-                    onClick = {
-                        context(navController) {
-                            LoginScreen.navigateTo()
-                        }
-                    },
-                )
+                    AnimatedIconComponent(
+                        animationPath = "files/user-animation.json",
+                        hoverable = true,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        animationType = AnimationType.ONCE_FORWARD,
+                        speed = 1f,
+                        onClick = {
+                            context(navController) {
+                                LoginScreen.navigateTo()
+                            }
+                        },
+                    )
+                }
             }
         }
     }
