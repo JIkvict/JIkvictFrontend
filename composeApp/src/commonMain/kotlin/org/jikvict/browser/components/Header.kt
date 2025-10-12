@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.LocalNavController
+import org.jikvict.browser.auth.SessionManager
 import org.jikvict.browser.auth.TokenHolder
 import org.jikvict.browser.auth.toJwt
 import org.jikvict.browser.constant.LocalAppColors
@@ -28,10 +30,12 @@ import org.jikvict.browser.icons.myiconpack.User
 import org.jikvict.browser.screens.AdminScreen
 import org.jikvict.browser.screens.LoginScreen
 import org.jikvict.browser.screens.MakeJarScreen
+import org.jikvict.browser.screens.ProfileScreen
 import org.jikvict.browser.screens.TasksScreen
 import org.jikvict.browser.screens.navigateTo
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -47,6 +51,9 @@ fun Header(modifier: Modifier = Modifier) {
     val moonTint = if (!theme) Color.Black else Color.Unspecified
     val roles = TokenHolder.token()?.toJwt()?.roles.orEmpty()
     val version by TokenHolder.tokenVersion
+
+    val sessionManager = koinInject<SessionManager>()
+    val isLoggedIn by sessionManager.isLoggedIn.collectAsState()
     key(version) {
         Surface(
             modifier =
@@ -71,7 +78,7 @@ fun Header(modifier: Modifier = Modifier) {
                 ) {
                     IconComponent(Ijlogo, hoverable = true, tint = purple, onClick = {
                         context(navController) {
-                            MakeJarScreen().navigateTo()
+                            MakeJarScreen.navigateTo()
                         }
                     })
 
@@ -87,7 +94,6 @@ fun Header(modifier: Modifier = Modifier) {
                         tint = MaterialTheme.colorScheme.onSurface,
                         speed = 2f,
                     )
-                    println("Roles: $roles")
                     if (roles.contains("ADMIN") || roles.contains("TEACHER")) {
                         IconComponent(User, hoverable = true, onClick = {
                             context(navController) {
@@ -122,7 +128,11 @@ fun Header(modifier: Modifier = Modifier) {
                         speed = 1f,
                         onClick = {
                             context(navController) {
-                                LoginScreen.navigateTo()
+                                if (isLoggedIn) {
+                                    ProfileScreen.navigateTo()
+                                } else {
+                                    LoginScreen.navigateTo()
+                                }
                             }
                         },
                     )

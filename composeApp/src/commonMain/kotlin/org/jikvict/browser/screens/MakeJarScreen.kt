@@ -372,7 +372,7 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
 
 @Serializable
 @SerialName("home")
-class MakeJarScreen : NavigableScreen {
+object MakeJarScreen : NavigableScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = { MakeJarScreenComposable(it) }
 }
@@ -381,7 +381,7 @@ object MakeJarScreenRouterRegistrar : ScreenRouterRegistrar<MakeJarScreen> {
     override val screen: KClass<MakeJarScreen>
         get() = MakeJarScreen::class
 
-    override fun constructScreen(params: Map<String, String?>): NavigableScreen = MakeJarScreen()
+    override fun constructScreen(params: Map<String, String?>): NavigableScreen = MakeJarScreen
 }
 
 object MakeJarScreenRegistrar : ScreenRegistrar<MakeJarScreen> by createRegistrar()

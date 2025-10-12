@@ -14,7 +14,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import org.jikvict.browser.LocalNavController
 import org.jikvict.browser.auth.SessionManager
+import org.jikvict.browser.auth.TokenHolder
+import org.jikvict.browser.auth.toJwt
 import org.jikvict.browser.components.DefaultScreenScope
+import org.jikvict.browser.screens.LoginScreen.requiredRoles
 import org.koin.compose.koinInject
 import kotlin.reflect.KClass
 
@@ -37,7 +40,19 @@ interface ScreenRegistrar<T : NavigableScreen> {
             val isLoggedIn by sessionManager.isLoggedIn.collectAsState()
             if (isLoggedIn || getType() == LoginScreen::class) {
                 val route = entry.toRoute<T>(getType())
-                route.compose(scope)
+                if (route.requiredRoles.isEmpty()) {
+                    route.compose(scope)
+                } else {
+                    val userRoles = TokenHolder.token().toJwt()?.roles ?: emptyList()
+                    if (route.requiredRoles.all { it in userRoles }) {
+                        route.compose(scope)
+                    } else {
+                        val navHostController = LocalNavController.current
+                        with(navHostController) {
+                            MakeJarScreen.forceNavigateTo()
+                        }
+                    }
+                }
             } else {
                 val navHostController = LocalNavController.current
                 with(navHostController) {

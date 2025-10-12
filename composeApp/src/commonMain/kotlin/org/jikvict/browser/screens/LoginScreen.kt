@@ -245,9 +245,6 @@ fun LoginScreenComposable(
 
                     is OperationResult.Success -> {
                         resetLoginResult()
-                        context(navController) {
-                            MakeJarScreen().navigateTo()
-                        }
                     }
 
                     else -> Unit
@@ -354,6 +351,32 @@ fun ProfileScreenComposable(defaultScreenScope: DefaultScreenScope) = with(defau
     }
 }
 
+@Serializable
+@SerialName("profile")
+data object ProfileScreen : NavigableScreen {
+    override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
+        get() = {
+            val sessionManager = koinInject<SessionManager>()
+            val isLoggedIn by sessionManager.isLoggedIn.collectAsState()
+            val navController = LocalNavController.current
+            if (isLoggedIn) {
+                with(navController) {
+                    ProfileScreenComposable(it)
+                }
+            }
+        }
+}
+
+object ProfileScreenRegistrar : ScreenRegistrar<ProfileScreen> by createRegistrar()
+object ProfileScreenRouterRegistrar : ScreenRouterRegistrar<ProfileScreen> {
+    override val screen: KClass<ProfileScreen>
+        get() = ProfileScreen::class
+
+    override fun constructScreen(params: Map<String, String?>): NavigableScreen {
+        return ProfileScreen
+    }
+}
+
 
 @Register
 @Serializable
@@ -363,9 +386,11 @@ data object LoginScreen : NavigableScreen {
         get() = {
             val sessionManager = koinInject<SessionManager>()
             val isLoggedIn by sessionManager.isLoggedIn.collectAsState()
-            println("I was called and login status is $isLoggedIn")
+            val navController = LocalNavController.current
             if (isLoggedIn) {
-                ProfileScreenComposable(it)
+                with(navController) {
+                    MakeJarScreen.forceNavigateTo()
+                }
             } else {
                 LoginScreenComposable(it)
             }

@@ -1317,6 +1317,9 @@ private fun EmptyDetailPane() {
 class TasksScreen : NavigableScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = { TasksScreenComposable(it) }
+
+    override val requiredRoles: List<String>
+        get() = listOf("UNEXISTEND")
 }
 
 object TasksScreenRouterRegistrar : ScreenRouterRegistrar<TasksScreen> {

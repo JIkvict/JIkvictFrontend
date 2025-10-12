@@ -74,7 +74,7 @@ fun App(
                 LaunchedEffect(navController.currentBackStackEntry?.destination?.route) {
                     scope.verticalScroll.scrollTo(0)
                 }
-                NavHost(navController, startDestination = MakeJarScreen()) {
+                NavHost(navController, startDestination = MakeJarScreen) {
                     registeredScreens.forEach { screen ->
                         registerNavForScreen(screen, scope, motionScheme)
                     }

@@ -12,6 +12,9 @@ interface NavigableScreen {
         get() = largeScreen
     val mediumScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = largeScreen
+
+    val requiredRoles: List<String>
+        get() = emptyList()
 }
 
 context(navController: NavHostController)
