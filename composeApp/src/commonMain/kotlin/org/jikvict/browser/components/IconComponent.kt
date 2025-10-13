@@ -73,6 +73,53 @@ fun IconComponent(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun IconComponentUnsized(
+    iconVector: ImageVector,
+    hoverable: Boolean = false,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    tint: Color = Color.Unspecified,
+    enabled: Boolean = true,
+    iconSize: Dp = 24.dp,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val theme = LocalThemeSwitcherProvider.current.isDark
+    val bgColor = if (theme.value) MaterialTheme.colorScheme.surfaceVariant else LightColors.Blue11
+
+    Box(
+        modifier =
+            Modifier
+                .hoverable(interactionSource, hoverable)
+                .then(
+                    if (onClick != null && enabled) {
+                        Modifier.clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            onClick = onClick,
+                        )
+                    } else {
+                        Modifier
+                    },
+                ).background(
+                    if (isHovered && hoverable) bgColor else Color.Transparent,
+                    RoundedCornerShape(8.dp),
+                ).then(modifier),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            iconVector,
+            contentDescription = null,
+            tint = tint,
+            modifier =
+                Modifier
+                    .size(iconSize),
+        )
+    }
+}
+
 @Composable
 fun IconComponent(
     iconPainter: Painter,

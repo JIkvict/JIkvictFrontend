@@ -102,7 +102,6 @@ fun LoginScreenComposable(
     login: suspend () -> Unit = {},
     resetLoginResult: () -> Unit = {},
 ) = with(defaultScreenScope) {
-    val navController = LocalNavController.current
     val loginTextSize =
         ResponsiveValueBuilder {
             Breakpoint.SM { 30.sp }

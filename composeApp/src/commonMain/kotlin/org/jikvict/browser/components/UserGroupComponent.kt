@@ -5,27 +5,30 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -37,7 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,8 +53,9 @@ import org.jikvict.browser.util.DefaultPreview
 fun UserGroupComponent(
     assignmentGroups: List<AssignmentGroup>,
     onNavigateBack: () -> Unit = {},
-    onGroupClick: (AssignmentGroup) -> Unit = {}
-) {
+    onGroupClick: (AssignmentGroup) -> Unit = {},
+    scope: DefaultScreenScope
+) = with(scope) {
     var groupSearch by remember { mutableStateOf("") }
 
     val filteredGroups = remember(assignmentGroups, groupSearch) {
@@ -65,7 +69,7 @@ fun UserGroupComponent(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fitContentToScreen(),
         contentAlignment = Alignment.TopCenter
     ) {
         Column(
@@ -73,36 +77,35 @@ fun UserGroupComponent(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shadowElevation = 4.dp,
-                color = MaterialTheme.colorScheme.surface
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = Color.Transparent,
             ) {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
                         onClick = onNavigateBack,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer)
+                        modifier = Modifier.size(48.dp),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            contentDescription = "Back"
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(32.dp))
 
                     Text(
                         text = "Assignment Groups",
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -112,8 +115,10 @@ fun UserGroupComponent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(16.dp)
+                    .height(IntrinsicSize.Min),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 OutlinedTextField(
                     value = groupSearch,
@@ -125,12 +130,20 @@ fun UserGroupComponent(
                             contentDescription = "Search"
                         )
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true
                 )
-            }
 
+                IconComponentUnsized(
+                    iconSize = 24.dp,
+                    iconVector = Icons.Default.Add,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
 
             if (filteredGroups.isEmpty()) {
@@ -149,7 +162,7 @@ fun UserGroupComponent(
                     columns = GridCells.Adaptive(250.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp).heightIn(max = scope.screenHeight),
                 ) {
                     items(filteredGroups) {
                         GroupCard(
@@ -238,7 +251,8 @@ fun UserGroupComponentPreview() {
         UserGroupComponent(
             assignmentGroups = generateRandomGroups(15),
             onNavigateBack = {},
-            onGroupClick = {}
+            onGroupClick = {},
+            it
         )
     }
 }
@@ -246,7 +260,7 @@ fun UserGroupComponentPreview() {
 fun generateRandomGroups(num: Int): List<AssignmentGroup> {
     return (1..num).map { index ->
         AssignmentGroup(
-            name = "Group ${index}",
+            name = "Group $index",
             id = index.toLong(),
             users = (1..(3..15).random()).map {
                 User(
