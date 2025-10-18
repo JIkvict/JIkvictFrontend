@@ -61,10 +61,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.LocalNavController
 import org.jikvict.browser.annotation.Register
 import org.jikvict.browser.auth.SessionManager
-import org.jikvict.browser.components.CreateAssignmentGroupComponent
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.IlluminatingText
-import org.jikvict.browser.components.User
 import org.jikvict.browser.model.OperationResult
 import org.jikvict.browser.theme.mainColumnModifier
 import org.jikvict.browser.util.DefaultPreview
@@ -385,18 +383,16 @@ object ProfileScreenRouterRegistrar : ScreenRouterRegistrar<ProfileScreen> {
 data object LoginScreen : NavigableScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = {
-            CreateAssignmentGroupComponent(
-                scope = it,
-                onNavigateBack = {},
-                onCreate = {
-                    delay(2000)
-                    return@CreateAssignmentGroupComponent OperationResult.Error("Network error")
-                },
-                allUsers = listOf(
-                    User(1, "Anton", "Email"),
-                ),
-                onNavigateToCreated = {}
-            )
+            val sessionManager = koinInject<SessionManager>()
+            val isLoggedIn by sessionManager.isLoggedIn.collectAsState()
+            val navController = LocalNavController.current
+            if (isLoggedIn) {
+                with(navController) {
+                    MakeJarScreen.forceNavigateTo()
+                }
+            } else {
+                LoginScreenComposable(it)
+            }
         }
 }
 
