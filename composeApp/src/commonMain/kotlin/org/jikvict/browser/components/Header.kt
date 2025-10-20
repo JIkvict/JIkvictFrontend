@@ -94,10 +94,10 @@ fun Header(modifier: Modifier = Modifier) {
                         tint = MaterialTheme.colorScheme.onSurface,
                         speed = 2f,
                     )
-                    if (roles.contains("ADMIN") || roles.contains("TEACHER")) {
+                    if (AdminScreen.requiredRoles.any { it in roles }) {
                         IconComponent(User, hoverable = true, onClick = {
                             context(navController) {
-                                AdminScreen().navigateTo()
+                                AdminScreen.navigateTo()
                             }
                         })
                     }

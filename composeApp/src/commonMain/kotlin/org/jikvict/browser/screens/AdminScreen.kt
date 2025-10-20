@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jikvict.browser.LocalNavController
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.IlluminatingText
 import org.jikvict.browser.util.DefaultPreview
@@ -39,6 +40,7 @@ import kotlin.reflect.KClass
 @Composable
 fun AdminScreenComposable(scope: DefaultScreenScope) = with(scope) {
     val isBig = adaptiveValue(small = false, medium = false, large = true)
+    val navHostController = LocalNavController.current
     if (!isBig) {
         val textSize = adaptiveValue(small = 20.sp, medium = 35.sp, large = 0.sp)
         Box(
@@ -61,7 +63,11 @@ fun AdminScreenComposable(scope: DefaultScreenScope) = with(scope) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            PanelSelector(icon = Icons.Default.Group, modifier = Modifier.width(400.dp), name = "Assignment Groups")
+            PanelSelector(icon = Icons.Default.Group, modifier = Modifier.width(400.dp), name = "Assignment Groups") {
+                with(navHostController) {
+                    UserGroupScreen.navigateTo()
+                }
+            }
             PanelSelector(icon = Icons.Default.Task, modifier = Modifier.width(400.dp), name = "Assignments")
             PanelSelector(icon = Icons.Default.Person, modifier = Modifier.width(400.dp), name = "Students")
         }
@@ -115,16 +121,18 @@ fun PanelSelector(
 
 @Serializable
 @SerialName("admin")
-class AdminScreen : NavigableScreen {
+object AdminScreen : NavigableScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = { AdminScreenComposable(it) }
+    override val requiredRoles: List<String>
+        get() = listOf("TEACHER")
 }
 
 object AdminScreenRouterRegistrar : ScreenRouterRegistrar<AdminScreen> {
     override val screen: KClass<AdminScreen>
         get() = AdminScreen::class
 
-    override fun constructScreen(params: Map<String, String?>): NavigableScreen = AdminScreen()
+    override fun constructScreen(params: Map<String, String?>): NavigableScreen = AdminScreen
 }
 
 object AdminScreenRegistrar : ScreenRegistrar<AdminScreen> by createRegistrar()

@@ -14,12 +14,14 @@ import org.koin.dsl.module
 actual val platformModule = module {
     singleOf(::StateSaver)
 
-    single { AuthControllerApi(httpClientConfig = ::simpleClientConfig) }
-    single { AssignmentControllerApi(httpClientConfig = get()) }
-    single { SolutionCheckerControllerApi(httpClientConfig = get()) }
-    single { TaskStatusControllerApi(httpClientConfig = get()) }
-    single { TeacherStudentControllerApi(httpClientConfig = get()) }
-    single { AssignmentGroupControllerApi(httpClientConfig = get()) }
+    val baseUrl = "http://147.175.151.161"
+
+    single { AuthControllerApi(baseUrl= baseUrl,httpClientConfig = ::simpleClientConfig) }
+    single { AssignmentControllerApi(baseUrl= baseUrl,httpClientConfig = get()) }
+    single { SolutionCheckerControllerApi(baseUrl= baseUrl,httpClientConfig = get()) }
+    single { TaskStatusControllerApi(baseUrl= baseUrl,httpClientConfig = get()) }
+    single { TeacherStudentControllerApi(baseUrl= baseUrl,httpClientConfig = get()) }
+    single { AssignmentGroupControllerApi(baseUrl= baseUrl,httpClientConfig = get()) }
 
 
 }

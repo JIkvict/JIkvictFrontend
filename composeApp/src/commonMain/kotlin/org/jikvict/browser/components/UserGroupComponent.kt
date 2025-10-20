@@ -40,16 +40,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jikvict.api.models.AssignmentGroup
-import org.jikvict.api.models.User
+import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.browser.util.DefaultPreview
 
 @Composable
 fun UserGroupComponent(
-    assignmentGroups: List<AssignmentGroup>,
+    assignmentGroups: List<AssignmentGroupDto>,
     onNavigateBack: () -> Unit = {},
-    onGroupClick: (AssignmentGroup) -> Unit = {},
-    scope: DefaultScreenScope
+    onGroupClick: (AssignmentGroupDto) -> Unit = {},
+    scope: DefaultScreenScope,
+    onAddGroupClick: () -> Unit = {},
 ) = with(scope) {
     var groupSearch by remember { mutableStateOf("") }
 
@@ -107,7 +107,8 @@ fun UserGroupComponent(
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier
                         .size(48.dp)
-                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)),
+                    onClick = onAddGroupClick
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -147,7 +148,7 @@ fun UserGroupComponent(
 
 @Composable
 private fun GroupCard(
-    group: AssignmentGroup,
+    group: AssignmentGroupDto,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -188,16 +189,16 @@ private fun GroupCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "${group.users.size} students",
+                text = "${group.userIds.size} students",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp
             )
 
-            if (group.assignments.isNotEmpty()) {
+            if (group.assignmentIds.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${group.assignments.size} tasks",
+                    text = "${group.assignmentIds.size} tasks",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary,
                     fontSize = 12.sp
@@ -223,24 +224,13 @@ fun UserGroupComponentPreview() {
     }
 }
 
-fun generateRandomGroups(num: Int): List<AssignmentGroup> {
+fun generateRandomGroups(num: Int): List<AssignmentGroupDto> {
     return (1..num).map { index ->
-        AssignmentGroup(
+        AssignmentGroupDto(
             name = "Group $index",
             id = index.toLong(),
-            users = (1..(3..15).random()).map {
-                User(
-                    id = it.toLong(),
-                    roles = emptySet(),
-                    assignmentGroups = emptySet(),
-                    isEnabled = true,
-                    authorities = emptyList(),
-                    isAccountNonExpired = true,
-                    isAccountNonLocked = true,
-                    isCredentialsNonExpired = true
-                )
-            }.toSet(),
-            assignments = emptySet()
+            userIds = (1L..(3L..15L).random()).toList(),
+            assignmentIds = (1L..(3L..15L).random()).toList()
         )
     }
 }

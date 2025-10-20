@@ -8,6 +8,7 @@ import org.jikvict.browser.viewmodel.MakeJarScreenViewModel
 import org.jikvict.browser.viewmodel.NotFoundScreenViewModel
 import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.jikvict.browser.viewmodel.AdminScreenViewModel
+import org.jikvict.browser.viewmodel.UserGroupScreenViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
@@ -37,4 +38,5 @@ val appModule =
         singleOf(::TasksScreenViewModel)
         singleOf(::LoginScreenViewModel)
         singleOf(::AdminScreenViewModel)
+        singleOf(::UserGroupScreenViewModel)
     }
