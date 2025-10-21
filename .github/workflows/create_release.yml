@@ -40,7 +40,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Show current version (pre-release)
-        run: ./gradlew -q :composeApp:currentVersion
+        run: ./gradlew -q printVersion
 
       - name: Run release with Axion (auto-increment or specific version)
         env:
@@ -54,7 +54,7 @@ jobs:
 
       - name: Resolve released version
         id: version
-        run: echo "VERSION=$(./gradlew -q :composeApp:currentVersion)" >> $GITHUB_ENV
+        run: echo "VERSION=$(./gradlew -q printVersion)" >> $GITHUB_ENV
 
       - name: Build wasmJs browser distribution
         run: ./gradlew :composeApp:wasmJsBrowserDistribution
