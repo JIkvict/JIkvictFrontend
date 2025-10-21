@@ -18,7 +18,9 @@ plugins {
             .pluginId,
     ) // To delete
     id("jikvict-frontend-plugin")
+    id("pl.allegro.tech.build.axion-release") version "1.20.1"
 }
+version = scmVersion.version
 
 android {
     compileSdk = 36
@@ -157,3 +159,10 @@ kotlin {
 dependencies {
     debugImplementation(compose.uiTooling)
 }
+
+tasks.register("printVersion") {
+    doLast {
+        println(project.version)
+    }
+}
+

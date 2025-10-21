@@ -14,7 +14,7 @@ import org.koin.dsl.module
 actual val platformModule = module {
     singleOf(::StateSaver)
 
-    val baseUrl = "http://147.175.151.161"
+    val baseUrl = BACKEND_URL
 
     single { AuthControllerApi(baseUrl= baseUrl,httpClientConfig = ::simpleClientConfig) }
     single { AssignmentControllerApi(baseUrl= baseUrl,httpClientConfig = get()) }

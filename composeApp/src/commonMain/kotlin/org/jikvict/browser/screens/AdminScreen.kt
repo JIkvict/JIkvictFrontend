@@ -1,6 +1,5 @@
 package org.jikvict.browser.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -82,13 +81,13 @@ fun PanelSelector(
     onNavigate: () -> Unit = {}
 ) {
     Card(
-        modifier = modifier
-            .clickable { onNavigate() },
+        modifier = modifier,
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
-        )
+        ),
+        onClick = onNavigate,
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

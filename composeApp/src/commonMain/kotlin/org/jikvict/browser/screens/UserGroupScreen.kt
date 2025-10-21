@@ -30,7 +30,11 @@ fun UserGroupScreen(scope: DefaultScreenScope) = with(scope) {
             }
         },
         onGroupClick = {},
-        onAddGroupClick = {},
+        onAddGroupClick = {
+            with(navHostController) {
+                CreateUserGroupScreen.navigateTo()
+            }
+        },
         scope = scope
     )
 

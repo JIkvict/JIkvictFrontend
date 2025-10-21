@@ -15,17 +15,16 @@ import org.koin.dsl.module
 actual val platformModule = module {
     singleOf(::StateSaver)
 
-    val baseUrl = "http://147.175.151.161"
     single {
         AuthControllerApi(
-            baseUrl = baseUrl,
+            baseUrl = BACKEND_URL,
             httpClientConfig = ::simpleClientConfig,
             httpClientEngine = Js.create()
         )
     }
-    single { AssignmentControllerApi(baseUrl = baseUrl, httpClientConfig = get(), httpClientEngine = Js.create()) }
-    single { SolutionCheckerControllerApi(baseUrl = baseUrl, httpClientConfig = get(), httpClientEngine = Js.create()) }
-    single { TaskStatusControllerApi(baseUrl = baseUrl, httpClientConfig = get(), httpClientEngine = Js.create()) }
-    single { TeacherStudentControllerApi(baseUrl = baseUrl, httpClientConfig = get(), httpClientEngine = Js.create()) }
-    single { AssignmentGroupControllerApi(baseUrl = baseUrl, httpClientConfig = get(), httpClientEngine = Js.create()) }
+    single { AssignmentControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
+    single { SolutionCheckerControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
+    single { TaskStatusControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
+    single { TeacherStudentControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
+    single { AssignmentGroupControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
 }

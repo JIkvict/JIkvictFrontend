@@ -1,0 +1,83 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (optional). If not provided, patch will be auto-incremented by Axion."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Node (for Kotlin/JS toolchain)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Show current version (pre-release)
+        run: ./gradlew -q :composeApp:currentVersion
+
+      - name: Run release with Axion (auto-increment or specific version)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            ./gradlew :composeApp:release -Prelease.version=${{ inputs.version }}
+          else
+            ./gradlew :composeApp:release
+          fi
+
+      - name: Resolve released version
+        id: version
+        run: echo "VERSION=$(./gradlew -q :composeApp:currentVersion)" >> $GITHUB_ENV
+
+      - name: Build wasmJs browser distribution
+        run: ./gradlew :composeApp:wasmJsBrowserDistribution
+
+      - name: Package distribution
+        run: |
+          DIST_DIR="composeApp/build/dist/wasmJs/productionExecutable"
+          if [ ! -d "$DIST_DIR" ]; then
+            echo "Distribution directory not found: $DIST_DIR" >&2
+            exit 1
+          fi
+          ARCHIVE_NAME="dist-wasmJs-${VERSION}.zip"
+          (cd "$DIST_DIR" && zip -r "${GITHUB_WORKSPACE}/${ARCHIVE_NAME}" .)
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
+
+      - name: Create GitHub Release and upload asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          files: |
+            ${{ env.ARCHIVE_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

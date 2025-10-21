@@ -32,6 +32,7 @@ import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.PendingStatusResponseLong
 import org.jikvict.api.models.ProblemDetail
+import org.jikvict.browser.di.BACKEND_URL
 import org.jikvict.browser.screens.AssignmentsUiState
 import org.jikvict.browser.util.PickedFile
 import org.jikvict.browser.util.StateSaver
@@ -137,7 +138,7 @@ class TasksScreenViewModel(
     ) {
         viewModelScope.launch {
             try {
-                val url = ApiClient.BASE_URL + "/api/assignment/zip/" + assignmentId
+                val url = "$BACKEND_URL/api/assignment/zip/$assignmentId"
                 val response =
                     client.get(url) {
                         header(HttpHeaders.Accept, Application.OctetStream.toString())
@@ -201,7 +202,7 @@ class TasksScreenViewModel(
     ) {
         try {
             val resp =
-                client.post(ApiClient.BASE_URL + "/api/v1/solution-checker/submit") {
+                client.post("$BACKEND_URL/api/v1/solution-checker/submit") {
                     setBody(
                         MultiPartFormDataContent(
                             formData {

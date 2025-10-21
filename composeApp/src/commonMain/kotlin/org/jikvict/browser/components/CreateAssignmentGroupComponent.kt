@@ -61,17 +61,17 @@ data class User(
 sealed class CreateGroupState {
     object Idle : CreateGroupState()
     object Loading : CreateGroupState()
-    data class Success(val group: AssignmentGroup) : CreateGroupState()
+    data class Success(val group: AssignmentGroupDto) : CreateGroupState()
     data class Error(val message: String) : CreateGroupState()
 }
 
 @Composable
 fun CreateAssignmentGroupComponent(
     onNavigateBack: () -> Unit = {},
-    onCreate: suspend (AssignmentGroupDto) -> OperationResult<AssignmentGroup>,
+    onCreate: suspend (AssignmentGroupDto) -> OperationResult<AssignmentGroupDto>,
     allUsers: List<User> = emptyList(),
     scope: DefaultScreenScope,
-    onNavigateToCreated: (AssignmentGroup) -> Unit = {},
+    onNavigateToCreated: (AssignmentGroupDto) -> Unit = {},
 ) = with(scope) {
     var groupName by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }

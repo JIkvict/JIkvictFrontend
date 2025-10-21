@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.composeCompiler) apply false
     kotlin("jvm")
 }
+
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
 }
