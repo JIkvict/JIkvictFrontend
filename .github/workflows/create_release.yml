@@ -47,12 +47,10 @@ jobs:
         run: |
           if [ -n "${{ inputs.version }}" ]; then
             RAW_VERSION="${{ inputs.version }}"
-            # Remove 'v' prefix if it exists
+            # Remove 'v' prefix if it exists (Axion adds it automatically)
             NORMALIZED_VERSION="${RAW_VERSION#v}"
-            # Add 'v' prefix
-            NORMALIZED_VERSION="v${NORMALIZED_VERSION}"
             echo "INPUT_VERSION=${NORMALIZED_VERSION}" >> $GITHUB_ENV
-            echo "Normalized input version: ${NORMALIZED_VERSION}"
+            echo "Normalized input version (without v prefix): ${NORMALIZED_VERSION}"
           else
             echo "No input version provided, will use Axion auto-increment"
           fi
