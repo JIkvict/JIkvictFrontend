@@ -11,6 +11,7 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.zip.ZipInputStream
+import kotlin.io.path.Path
 
 /**
  * Downloads the wasmJs distribution zip from GitHub Releases by tag and deploys it to a remote server via scp.
@@ -48,7 +49,7 @@ abstract class DeployWasmReleaseTask : DefaultTask() {
     @get:Optional
     abstract val remoteDir: Property<String> // default: ~/jikvict/frontend/
 
-    private fun normalizeTag(ver: String): String = if (ver.startsWith("v")) ver else "v$ver"
+    private fun normalizeTag(ver: String): String = if (ver.startsWith("v")) ver.removePrefix("v") else ver
 
     private fun buildAssetUrl(tag: String, owner: String, repo: String): String {
         val assetName = "dist-wasmJs-$tag.zip"

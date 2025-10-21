@@ -22,7 +22,10 @@ abstract class JikvictFrontend : Plugin<Project> {
                 }
                 owner.set(project.findProperty("deploy.owner")?.toString() ?: "JIkvict")
                 repo.set(project.findProperty("deploy.repo")?.toString() ?: "JIkvictFrontend")
-                sshKeyPath.set(project.findProperty("deploy.sshKey")?.toString() ?: "/.ssh/id_rsa-fiit")
+                sshKeyPath.set(
+                    project.findProperty("deploy.sshKey")?.toString()
+                        ?: (System.getProperty("user.home") + "/.ssh/id_rsa-fiit")
+                )
                 remoteUser.set(project.findProperty("deploy.remoteUser")?.toString() ?: "ubuntu")
                 remoteHost.set(project.findProperty("deploy.remoteHost")?.toString() ?: "147.175.151.161")
                 remoteDir.set(project.findProperty("deploy.remoteDir")?.toString() ?: "~/jikvict/frontend/")
