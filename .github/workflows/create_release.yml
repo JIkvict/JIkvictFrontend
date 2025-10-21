@@ -27,7 +27,7 @@ jobs:
           java-version: '22'
 
       - name: Set up Node (for Kotlin/JS toolchain)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -37,17 +37,32 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Show current version (pre-release)
         run: ./gradlew -q printVersion
+
+      - name: Normalize input version
+        id: normalize_version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            RAW_VERSION="${{ inputs.version }}"
+            # Remove 'v' prefix if it exists
+            NORMALIZED_VERSION="${RAW_VERSION#v}"
+            # Add 'v' prefix
+            NORMALIZED_VERSION="v${NORMALIZED_VERSION}"
+            echo "INPUT_VERSION=${NORMALIZED_VERSION}" >> $GITHUB_ENV
+            echo "Normalized input version: ${NORMALIZED_VERSION}"
+          else
+            echo "No input version provided, will use Axion auto-increment"
+          fi
 
       - name: Run release with Axion (auto-increment or specific version)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -n "${{ inputs.version }}" ]; then
-            ./gradlew :composeApp:release -Prelease.version=${{ inputs.version }}
+            ./gradlew :composeApp:release -Prelease.version=${{ env.INPUT_VERSION }}
           else
             ./gradlew :composeApp:release
           fi
