@@ -45,7 +45,6 @@ import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jikvict.api.models.AssignmentGroup
 import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.browser.model.OperationResult
 import org.jikvict.browser.theme.mainColumnModifier
@@ -72,10 +71,11 @@ fun CreateAssignmentGroupComponent(
     allUsers: List<User> = emptyList(),
     scope: DefaultScreenScope,
     onNavigateToCreated: (AssignmentGroupDto) -> Unit = {},
+    preSelectedUsers: List<User> = emptyList(),
 ) = with(scope) {
     var groupName by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }
-    var selectedUsers by remember { mutableStateOf(listOf<User>()) }
+    var selectedUsers by remember { mutableStateOf(preSelectedUsers) }
     var createState by remember { mutableStateOf<CreateGroupState>(CreateGroupState.Idle) }
 
     val coroutineScope = rememberCoroutineScope()
