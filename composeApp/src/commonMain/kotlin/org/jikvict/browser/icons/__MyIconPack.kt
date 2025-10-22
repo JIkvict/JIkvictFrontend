@@ -5,15 +5,15 @@ import org.jikvict.browser.icons.myiconpack.Unlockeddark
 import org.jikvict.browser.icons.myiconpack.Unlockedlight
 import kotlin.collections.List as ____KtList
 
-object MyIconPack
+public object MyIconPack
 
 private var __AllIcons: ____KtList<ImageVector>? = null
 
 val MyIconPack.AllIcons: ____KtList<ImageVector>
-  get() {
-    if (__AllIcons != null) {
-      return __AllIcons!!
+    get() {
+        if (__AllIcons != null) {
+            return __AllIcons!!
+        }
+        __AllIcons = listOf(Unlockeddark, Unlockedlight)
+        return __AllIcons!!
     }
-    __AllIcons= listOf(Unlockeddark, Unlockedlight)
-    return __AllIcons!!
-  }

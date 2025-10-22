@@ -62,13 +62,13 @@ fun AdminScreenComposable(scope: DefaultScreenScope) = with(scope) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            PanelSelector(icon = Icons.Default.Group, modifier = Modifier.width(400.dp), name = "Assignment Groups") {
+            PanelSelector(icon = Icons.Default.Group, name = "Assignment Groups") {
                 with(navHostController) {
                     UserGroupScreen.navigateTo()
                 }
             }
-            PanelSelector(icon = Icons.Default.Task, modifier = Modifier.width(400.dp), name = "Assignments")
-            PanelSelector(icon = Icons.Default.Person, modifier = Modifier.width(400.dp), name = "Students")
+            PanelSelector(icon = Icons.Default.Task, name = "Assignments")
+            PanelSelector(icon = Icons.Default.Person, name = "Students")
         }
     }
 }
@@ -76,12 +76,11 @@ fun AdminScreenComposable(scope: DefaultScreenScope) = with(scope) {
 @Composable
 fun PanelSelector(
     icon: ImageVector,
-    modifier: Modifier = Modifier,
     name: String,
     onNavigate: () -> Unit = {}
 ) {
     Card(
-        modifier = modifier,
+        modifier = Modifier.width(400.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
@@ -142,7 +141,7 @@ object AdminScreenRegistrar : ScreenRegistrar<AdminScreen> by createRegistrar()
 @Preview(widthDp = 1920, heightDp = 1080)
 @Preview(widthDp = 1000, heightDp = 1080)
 fun AdminScreenPreview() {
-    DefaultPreview {
+    DefaultPreview(false) {
         AdminScreenComposable(it)
     }
 }

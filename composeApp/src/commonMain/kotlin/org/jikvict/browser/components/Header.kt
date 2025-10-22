@@ -25,8 +25,8 @@ import org.jikvict.browser.auth.SessionManager
 import org.jikvict.browser.auth.TokenHolder
 import org.jikvict.browser.auth.toJwt
 import org.jikvict.browser.constant.LocalAppColors
+import org.jikvict.browser.icons.myiconpack.AdminIcon
 import org.jikvict.browser.icons.myiconpack.Ijlogo
-import org.jikvict.browser.icons.myiconpack.User
 import org.jikvict.browser.screens.AdminScreen
 import org.jikvict.browser.screens.LoginScreen
 import org.jikvict.browser.screens.MakeJarScreen
@@ -95,7 +95,7 @@ fun Header(modifier: Modifier = Modifier) {
                         speed = 2f,
                     )
                     if (AdminScreen.requiredRoles.any { it in roles }) {
-                        IconComponent(User, hoverable = true, onClick = {
+                        IconComponent(AdminIcon(), hoverable = true, onClick = {
                             context(navController) {
                                 AdminScreen.navigateTo()
                             }

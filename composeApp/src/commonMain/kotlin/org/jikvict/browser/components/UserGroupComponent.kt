@@ -1,11 +1,11 @@
 package org.jikvict.browser.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -129,7 +129,8 @@ fun UserGroupComponent(
                     columns = GridCells.Adaptive(250.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(horizontal = 16.dp).heightIn(max = scope.screenHeight),
+                    contentPadding = PaddingValues(vertical = 16.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).heightIn(max = scope.screenHeight),
                 ) {
                     items(filteredGroups) {
                         GroupCard(
@@ -153,14 +154,13 @@ private fun GroupCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .width(200.dp)
-            .clickable { onClick() },
+        modifier = modifier.width(200.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
-        )
+        ),
+        onClick = onClick,
     ) {
         Column(
             modifier = Modifier.padding(16.dp)

@@ -7,6 +7,7 @@ import org.jikvict.api.apis.AuthControllerApi
 import org.jikvict.api.apis.SolutionCheckerControllerApi
 import org.jikvict.api.apis.TaskStatusControllerApi
 import org.jikvict.api.apis.TeacherStudentControllerApi
+import org.jikvict.api.apis.UsersControllerApi
 import org.jikvict.browser.util.StateSaver
 import org.jikvict.browser.util.simpleClientConfig
 import org.koin.core.module.dsl.singleOf
@@ -27,4 +28,5 @@ actual val platformModule = module {
     single { TaskStatusControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
     single { TeacherStudentControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
     single { AssignmentGroupControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
+    single { UsersControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
 }
