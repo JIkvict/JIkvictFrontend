@@ -23,6 +23,7 @@ import org.jikvict.browser.util.responsive.adaptiveValue
 fun CustomCard(
     imageVector: ImageVector,
     text: String,
+    onClick: () -> Unit = {},
 ) {
     val iconSize = adaptiveValue(128.dp, 256.dp)
     val minTextSize = 8.sp

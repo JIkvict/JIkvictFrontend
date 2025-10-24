@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Task
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -68,11 +67,13 @@ import org.jikvict.browser.components.CustomCard
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.IconComponent
 import org.jikvict.browser.constant.LocalAppColors
+import org.jikvict.browser.icons.myiconpack.GitHubIcon
 import org.jikvict.browser.theme.mainColumnModifier
 import org.jikvict.browser.theme.maxTextSize
 import org.jikvict.browser.theme.minTextSize
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
+import org.jikvict.browser.util.openExternalUrl
 import org.jikvict.browser.util.responsive.adaptiveValue
 import org.jikvict.browser.util.responsive.responsive
 import org.jikvict.browser.viewmodel.MakeJarScreenViewModel
@@ -161,20 +162,20 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                             val inlineContent =
                                 mapOf(
                                     iconId to
-                                        InlineTextContent(
-                                            Placeholder(
-                                                width = 1.em,
-                                                height = 1.em,
-                                                placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
-                                            ),
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(Res.drawable.kotlink),
-                                                contentDescription = null,
-                                                tint = purple,
-                                                modifier = Modifier.fillMaxSize(),
-                                            )
-                                        },
+                                            InlineTextContent(
+                                                Placeholder(
+                                                    width = 1.em,
+                                                    height = 1.em,
+                                                    placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+                                                ),
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(Res.drawable.kotlink),
+                                                    contentDescription = null,
+                                                    tint = purple,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                )
+                                            },
                                 )
 
                             Row(
@@ -362,9 +363,11 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            CustomCard(GitHubIcon(), "Follow me on GitHub") {
+                openExternalUrl("https://github.com/ikvict07", true)
+            }
             CustomCard(Icons.Default.Download, "Download the plugin in IntelliJ IDEA Marketplace")
             CustomCard(Icons.Default.Task, "Solve tasks and test your knowledge")
-            CustomCard(Icons.Default.Create, "Create elegant solutions")
         }
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -397,7 +400,7 @@ private fun MakeJarScreenPreview() {
 @Preview
 @Composable
 private fun MakeJarScreenPreviewLight() {
-    DefaultPreview(false) {
+    DefaultPreview() {
         MakeJarScreenComposable(it)
     }
 }
