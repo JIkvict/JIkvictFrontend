@@ -1,6 +1,7 @@
 package org.jikvict.browser.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -30,6 +31,7 @@ fun CustomCard(
     val maxTextSize = 24.sp
     val lineHeight = adaptiveValue(24.sp, maxTextSize * 1.5)
     FeedCard(
+        modifier = Modifier.clickable(onClick = onClick),
         primaryContent = {
             Box(
                 modifier = Modifier.size(iconSize).padding(16.dp),
