@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.rounded.FileUpload
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -49,6 +50,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -74,6 +76,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.m3.Markdown
@@ -89,6 +92,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.PendingStatusResponseLong
+import org.jikvict.api.models.PendingSubmissionDto
 import org.jikvict.api.models.TestResult
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.TextWithOverflowHiding
@@ -105,6 +109,7 @@ import org.jikvict.browser.icons.myiconpack.Taskstatusfailedlight
 import org.jikvict.browser.icons.myiconpack.Taskstatuslight
 import org.jikvict.browser.icons.myiconpack.Unlockeddark
 import org.jikvict.browser.icons.myiconpack.Unlockedlight
+import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.DragDropHandler
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
 import org.jikvict.browser.util.SimplePreview
@@ -113,9 +118,11 @@ import org.jikvict.browser.viewmodel.SubmissionStatus
 import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 // Helper functions for formatting values in human-readable format
-@OptIn(kotlin.time.ExperimentalTime::class)
+@OptIn(ExperimentalTime::class)
 private fun formatMemory(memoryB: Long): String {
     return "" + (memoryB / 1024 / 1024)
 }
@@ -195,6 +202,8 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
 
         var selectedAssignmentId by remember { mutableLongStateOf(-1L) }
         var notification by remember { mutableStateOf<TaskNotification?>(null) }
+
+        val taskStatusApi = viewModel.taskStatusControllerApi
 
         fun refreshAssignments() {
             viewModel.refreshAssignments()
@@ -579,7 +588,7 @@ private fun PreviewIcons() {
 }
 
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 context(scope: DefaultScreenScope)
 private fun AssignmentDetailPane(
@@ -597,6 +606,31 @@ private fun AssignmentDetailPane(
     val showLogs by vm.showLogs.collectAsState()
     val showUnaccepted by vm.showUnaccepted.collectAsState()
     val selectedAttemptIndex by vm.selectedAttemptIndex.collectAsState()
+
+    val taskStatusApi = vm.taskStatusControllerApi
+
+    var pendingTask by remember { mutableStateOf<PendingSubmissionDto?>(null) }
+    println("Pending task: $pendingTask")
+    LaunchedEffect(Unit) {
+        runCatching {
+            val response = taskStatusApi.getPendingTask()
+            response.body().let { pendingTask = it }
+        }
+    }
+
+    val isCurrentTaskPending = pendingTask?.assignmentId == assignment.id
+    LaunchedEffect(assignment.id) {
+        while (true) {
+            runCatching {
+                val response = taskStatusApi.getPendingTask()
+                pendingTask = response.body()
+            }.onFailure {
+                pendingTask = null
+            }
+            delay(10.seconds)
+        }
+    }
+
 
     with(scope) {
         Column(
@@ -683,8 +717,25 @@ private fun AssignmentDetailPane(
                     modifier = Modifier.fillMaxWidth().heightIn(max = scope.screenHeight * 0.7f)
                 )
             } else if (showUnaccepted) {
-                UnacceptedSubmissionsContainer(
-                    submissions = assignmentInfo?.unacceptedSubmissions ?: emptyList(),
+                val unacceptedSubmission = assignmentInfo?.unacceptedSubmissions ?: emptyList()
+                val acceptedSubmissions = assignmentInfo?.results ?: emptyList()
+                val submission = unacceptedSubmission.map {
+                    SubmissionInfo(
+                        time = it.time,
+                        message = it.message,
+                        points = null,
+                        isAccepted = false
+                    )
+                } + acceptedSubmissions.map {
+                    SubmissionInfo(
+                        time = it.timeStamp,
+                        message = null,
+                        points = it.points,
+                        isAccepted = true
+                    )
+                }
+                SubmissionsContainer(
+                    submissions = submission,
                     onBackClick = { vm.setShowUnaccepted(false) },
                     modifier = Modifier.fillMaxWidth().heightIn(max = scope.screenHeight * 0.7f)
                 )
@@ -753,7 +804,7 @@ private fun AssignmentDetailPane(
                         vm.setShowUnaccepted(true)
                     }) {
                         Text(
-                            text = "Unaccepted attempts",
+                            text = "All submissions",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -847,6 +898,7 @@ private fun AssignmentDetailPane(
                                                         PendingStatusResponseLong.Status.DONE -> "Done"
                                                         PendingStatusResponseLong.Status.FAILED -> "Failed"
                                                         PendingStatusResponseLong.Status.REJECTED -> "Rejected"
+                                                        PendingStatusResponseLong.Status.CANCELLED -> "Cancelled"
                                                     }
 
                                                 if (response.status != PendingStatusResponseLong.Status.PENDING) {
@@ -907,7 +959,7 @@ private fun AssignmentDetailPane(
             if ((assignmentInfo == null || SubmissionStatus.from(
                     assignmentInfo,
                     assignment
-                ) == SubmissionStatus.OPEN)
+                ) == SubmissionStatus.OPEN) && !(isCurrentTaskPending)
             ) {
                 Row(
                     modifier =
@@ -936,7 +988,7 @@ private fun AssignmentDetailPane(
                     ActionIconButton(
                         icon = Icons.Default.Upload,
                         label = if (uploading) uploadStatus.ifEmpty { "Uploading..." } else "Upload",
-                        enabled = !uploading,
+                        enabled = !uploading && (pendingTask == null),
                         onClick = {
                             uploading = true
                             uploadStatus = "Picking file..."
@@ -950,6 +1002,7 @@ private fun AssignmentDetailPane(
                                                 PendingStatusResponseLong.Status.DONE -> "Done"
                                                 PendingStatusResponseLong.Status.FAILED -> "Failed"
                                                 PendingStatusResponseLong.Status.REJECTED -> "Rejected"
+                                                PendingStatusResponseLong.Status.CANCELLED -> "Cancelled"
                                             }
 
                                         // Show notifications for completed tasks
@@ -995,6 +1048,16 @@ private fun AssignmentDetailPane(
                             }
                         },
                     )
+                }
+            } else {
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    LinearWavyProgressIndicator()
                 }
             }
             Box(
@@ -1075,11 +1138,11 @@ private fun LogsDisplayContainer(
                             OutlinedButton(
                                 onClick = { onAttemptChange(index) },
                                 colors = if (index == selectedAttemptIndex) {
-                                    androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                                    ButtonDefaults.outlinedButtonColors(
                                         containerColor = MaterialTheme.colorScheme.primaryContainer
                                     )
                                 } else {
-                                    androidx.compose.material3.ButtonDefaults.outlinedButtonColors()
+                                    ButtonDefaults.outlinedButtonColors()
                                 }
                             ) {
                                 Text("${index + 1}")
@@ -1125,12 +1188,26 @@ private fun LogsDisplayContainer(
     }
 }
 
+
+data class SubmissionInfo(
+    val time: String,
+    val points: Int?,
+    val isAccepted: Boolean,
+    val message: String?
+)
+
 @Composable
-private fun UnacceptedSubmissionsContainer(
-    submissions: List<org.jikvict.api.models.UnacceptedSubmission>,
+private fun SubmissionsContainer(
+    submissions: List<SubmissionInfo>,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalThemeSwitcherProvider.current
+    val isDark by theme.isDark
+    val greenColor = if (isDark) Color(0xFF1B5E20) else Color(0xFFE8F5E8)
+
+
+
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -1145,7 +1222,7 @@ private fun UnacceptedSubmissionsContainer(
             Spacer(modifier = Modifier.width(16.dp))
         }
 
-        OutlinedContentContainer(label = "Unaccepted submissions") {
+        OutlinedContentContainer(label = "All submissions") {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -1153,31 +1230,55 @@ private fun UnacceptedSubmissionsContainer(
                 if (submissions.isEmpty()) {
                     item {
                         Text(
-                            text = "No unaccepted submissions",
+                            text = "No submissions",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 } else {
                     val sorted =
-                        submissions.sortedWith(compareByDescending<org.jikvict.api.models.UnacceptedSubmission> {
+                        submissions.sortedWith(compareByDescending {
                             parseInstantSafe(it.time)
                         })
-                    items(items = sorted) { item: org.jikvict.api.models.UnacceptedSubmission ->
-                        Card(colors = CardDefaults.cardColors()) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = formatDate(item.time),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    items(items = sorted) { item ->
+                        if (item.isAccepted) {
+                            Card(
+                                colors = CardDefaults.cardColors().copy(
+                                    containerColor = greenColor
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                SelectionContainer {
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
-                                        text = item.message,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        text = formatDate(item.time),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    SelectionContainer {
+                                        Text(
+                                            text = "Accepted: received ${item.points ?: 0} points",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            Card(colors = CardDefaults.cardColors()) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        text = formatDate(item.time),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    SelectionContainer {
+                                        Text(
+                                            text = item.message ?: "No message",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -1187,6 +1288,36 @@ private fun UnacceptedSubmissionsContainer(
         }
     }
 }
+
+
+@Preview
+@Composable
+fun UnacceptedSubmissionsContainerPreview() {
+    DefaultPreview {
+        with(it) {
+            Box(modifier = Modifier.fitContentToScreen()) {
+                SubmissionsContainer(
+                    submissions = listOf(
+                        SubmissionInfo(
+                            time = "2023-01-01T00:00:00Z",
+                            points = 100,
+                            isAccepted = false,
+                            message = "This submission was not accepted. Please check the logs for more information."
+                        ),
+                        SubmissionInfo(
+                            time = "2023-01-01T00:00:00Z",
+                            points = 100,
+                            isAccepted = true,
+                            message = ""
+                        ),
+                    ),
+                    onBackClick = {}
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun TestResultCard(
@@ -1208,7 +1339,9 @@ private fun TestResultCard(
         BoxWithConstraints {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onClick() },
+                    modifier = Modifier.fillMaxWidth().clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }) { onClick() },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -1275,7 +1408,7 @@ private fun TestResultCard(
                                         Text(
                                             text = log,
                                             style = MaterialTheme.typography.bodySmall,
-                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            fontFamily = FontFamily.Monospace,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
@@ -1294,8 +1427,6 @@ private fun TestResultCard(
         }
     }
 }
-
-
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

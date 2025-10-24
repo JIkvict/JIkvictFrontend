@@ -27,7 +27,6 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import org.jikvict.api.apis.AssignmentControllerApi
 import org.jikvict.api.apis.TaskStatusControllerApi
-import org.jikvict.api.infrastructure.ApiClient
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.PendingStatusResponseLong
@@ -85,7 +84,7 @@ enum class SubmissionStatus {
 class TasksScreenViewModel(
     savedStateHandle: StateSaver,
     private val assignmentControllerApi: AssignmentControllerApi,
-    private val taskStatusControllerApi: TaskStatusControllerApi,
+    val taskStatusControllerApi: TaskStatusControllerApi,
     private val client: HttpClient,
 ) : ExtendedViewModel(savedStateHandle) {
     private val _assignmentsState = MutableStateFlow<AssignmentsUiState>(AssignmentsUiState.Loading)
@@ -359,11 +358,9 @@ class TasksScreenViewModel(
         } catch (e: ClientRequestException) {
             val problemDetail = e.response.body<ProblemDetail>()
             AssignmentsUiState.Error(problemDetail.detail!!)
-        }
-        catch (e: ServerResponseException) {
+        } catch (e: ServerResponseException) {
             AssignmentsUiState.Error("Server error: ${e.response.status}")
-        }
-        catch (_: Exception) {
+        } catch (_: Exception) {
             AssignmentsUiState.Error("Unknown error")
         }
     }

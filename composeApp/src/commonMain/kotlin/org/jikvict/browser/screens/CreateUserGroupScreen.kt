@@ -33,6 +33,7 @@ import io.ktor.client.plugins.ServerResponseException
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import okio.ByteString.Companion.toByteString
 import org.jikvict.api.apis.AssignmentGroupControllerApi
 import org.jikvict.api.apis.UsersControllerApi
 import org.jikvict.api.models.ProblemDetail
@@ -138,9 +139,19 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
                                 uploadStatus = OperationResult.Loading()
                                 corScope.launch {
                                     val file = files.first()
-                                    val aisIds =
-                                        file.bytes.contentToString().split("\n").mapNotNull { it.toLongOrNull() }
-                                            .map { it.toString() }
+                                    val text = file.bytes.toByteString().utf8()
+
+                                    println("Text: $text")
+
+                                    val aisIds = text
+                                        .replace("\r\n", "\n")
+                                        .lines()
+                                        .map { it.trim() }
+                                        .filter { it.isNotEmpty() }
+                                        .mapNotNull { it.toLongOrNull() }
+                                        .map { it.toString() }
+
+                                    println("AIS ids: $aisIds")
                                     runCatching {
                                         val result = usersApi.registerUsers(aisIds)
                                         uploadStatus = if (result.status in 200 until 300) {
@@ -154,6 +165,7 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
                                                 val problem = it.response.body<ProblemDetail>()
                                                 uploadStatus = OperationResult.Error(problem.detail ?: "Unknown error")
                                             }
+
                                             is ServerResponseException -> {
                                                 val problem = it.response.body<ProblemDetail>()
                                                 uploadStatus =
@@ -167,6 +179,8 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
                                             }
                                         }
                                     }
+                                    println("Result: $uploadStatus")
+                                    uploading = false
                                 }
                             }
                         },
@@ -178,6 +192,7 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
                 }
             }
 
+
             if (isDragOver) {
                 Box(
                     modifier = Modifier.fitContentToScreen(),
@@ -186,6 +201,7 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Icon(
                             Icons.Rounded.FileUpload,
@@ -195,7 +211,19 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
                         )
                     }
                 }
-
+            } else if (uploading) {
+                Box(
+                    modifier = Modifier.fitContentToScreen(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        CircularWavyProgressIndicator()
+                    }
+                }
             } else {
                 CreateAssignmentGroupComponent(
                     preSelectedUsers = (uploadStatus as? OperationResult.Success)?.result?.map {
