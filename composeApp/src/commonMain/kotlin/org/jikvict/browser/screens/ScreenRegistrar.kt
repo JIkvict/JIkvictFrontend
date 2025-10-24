@@ -38,7 +38,7 @@ interface ScreenRegistrar<T : NavigableScreen> {
         { entry, scope ->
             val sessionManager = koinInject<SessionManager>()
             val isLoggedIn by sessionManager.isLoggedIn.collectAsState()
-            if (isLoggedIn || getType() == LoginScreen::class) {
+            if (isLoggedIn || getType() == LoginScreen::class || getType() == NotFoundScreen::class) {
                 val route = entry.toRoute<T>(getType())
                 if (route.requiredRoles.isEmpty()) {
                     route.compose(scope)
