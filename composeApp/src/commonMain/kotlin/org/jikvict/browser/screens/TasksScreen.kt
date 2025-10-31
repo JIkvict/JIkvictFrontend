@@ -203,7 +203,6 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
         var selectedAssignmentId by remember { mutableLongStateOf(-1L) }
         var notification by remember { mutableStateOf<TaskNotification?>(null) }
 
-        val taskStatusApi = viewModel.taskStatusControllerApi
 
         fun refreshAssignments() {
             viewModel.refreshAssignments()
@@ -618,7 +617,7 @@ private fun AssignmentDetailPane(
         }
     }
 
-    val isCurrentTaskPending = pendingTask?.assignmentId == assignment.id
+    val isCurrentTaskPending = (pendingTask?.assignmentId == assignment.id)
     LaunchedEffect(assignment.id) {
         while (true) {
             runCatching {
@@ -630,9 +629,26 @@ private fun AssignmentDetailPane(
             delay(10.seconds)
         }
     }
+    var isCancelling by remember { mutableStateOf(false) }
+    var isCancelled by remember { mutableStateOf(false) }
+    var previousPendingTask by remember { mutableStateOf<PendingSubmissionDto?>(null) }
+
+    LaunchedEffect(pendingTask) {
+        if (previousPendingTask != null && pendingTask == null) {
+            vm.refreshAssignments()
+            if (isCancelled) {
+                showNotification("Task processing cancelled", NotificationType.ERROR)
+            } else {
+                showNotification("Task processing finished", NotificationType.SUCCESS)
+            }
+            isCancelled = false
+            isCancelling = false
+        }
+        previousPendingTask = pendingTask
+    }
 
 
-    with(scope) {
+    val content = with(scope) {
         Column(
             modifier =
                 Modifier
@@ -903,13 +919,6 @@ private fun AssignmentDetailPane(
 
                                                 if (response.status != PendingStatusResponseLong.Status.PENDING) {
                                                     when (response.status) {
-                                                        PendingStatusResponseLong.Status.DONE -> {
-                                                            showNotification(
-                                                                "Task completed successfully!",
-                                                                NotificationType.SUCCESS,
-                                                            )
-                                                        }
-
                                                         PendingStatusResponseLong.Status.FAILED -> {
                                                             val message = response.message ?: "Task failed"
                                                             showNotification(
@@ -1049,7 +1058,7 @@ private fun AssignmentDetailPane(
                         },
                     )
                 }
-            } else {
+            } else if (isCurrentTaskPending) {
                 Row(
                     modifier =
                         Modifier
@@ -1058,6 +1067,20 @@ private fun AssignmentDetailPane(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     LinearWavyProgressIndicator()
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    val redColor = MaterialTheme.colorScheme.error
+                    OutlinedButton(
+                        colors = ButtonDefaults.outlinedButtonColors().copy(contentColor = redColor),
+                        enabled = !isCancelling,
+                        onClick = {
+                            isCancelling = true
+                            isCancelled = true
+                            pendingTask?.let { vm.cancelSubmission(it.taskId) }
+                        }
+                    ) {
+                        Text(if (isCancelling) "Cancelling..." else "Cancel", color = redColor)
+                    }
                 }
             }
             Box(
@@ -1097,6 +1120,9 @@ private fun AssignmentDetailPane(
                 color = MaterialTheme.colorScheme.outline,
             )
         }
+    }
+    key(pendingTask) {
+        content
     }
 }
 

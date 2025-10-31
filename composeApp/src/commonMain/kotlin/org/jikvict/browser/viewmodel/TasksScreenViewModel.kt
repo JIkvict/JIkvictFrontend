@@ -271,6 +271,8 @@ class TasksScreenViewModel(
                 } while (current.status == PendingStatusResponseLong.Status.PENDING)
             } catch (e: Exception) {
                 println("Error polling status: ${e.message}")
+            } finally {
+
             }
         }
     }
@@ -362,6 +364,12 @@ class TasksScreenViewModel(
             AssignmentsUiState.Error("Server error: ${e.response.status}")
         } catch (_: Exception) {
             AssignmentsUiState.Error("Unknown error")
+        }
+    }
+
+    fun cancelSubmission(taskId: Long) {
+        viewModelScope.launch {
+            taskStatusControllerApi.cancelPendingSubmission(taskId)
         }
     }
 }

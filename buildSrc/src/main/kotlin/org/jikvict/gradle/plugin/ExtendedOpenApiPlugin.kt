@@ -3,6 +3,8 @@ package org.jikvict.gradle.plugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jikvict.gradle.tasks.CleanUpSerializableTask
 import org.jikvict.gradle.tasks.GetOpenApiTask
 import org.openapitools.generator.gradle.plugin.extensions.OpenApiGeneratorGenerateExtension
@@ -33,7 +35,7 @@ abstract class ExtendedOpenApiPlugin : Plugin<Project> {
 
 
         with(target) {
-            tasks.register<CleanUpSerializableTask>("cleanUpSerializable") {
+            val cleanUp = tasks.register<CleanUpSerializableTask>("cleanUpSerializable") {
                 group = "build"
                 description = "Clean up generated Kotlin files to remove unnecessary annotations and imports"
                 inputDir.set(layout.buildDirectory.dir("generated/openapi/src"))
@@ -53,6 +55,10 @@ abstract class ExtendedOpenApiPlugin : Plugin<Project> {
             tasks.named("openApiGenerate") {
                 dependsOn("getOpenApiJson")
                 finalizedBy("cleanUpSerializable")
+            }
+
+            tasks.withType<KotlinCompile>().configureEach {
+                dependsOn(cleanUp)
             }
         }
     }

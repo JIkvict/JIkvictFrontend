@@ -161,11 +161,11 @@ fun LoginScreenComposable(
                 value = aisId,
                 onValueChange = { raw ->
                     val filtered = raw.replace(Regex("[\r\n]"), "")
-                    val fixed = filtered.uppercase()
+                    val fixed = filtered.lowercase()
                     if (fixed.length > 20) return@OutlinedTextField
                     setAisId(fixed)
                 },
-                label = { Text("Ais ID") },
+                label = { Text("Ais xUser") },
                 singleLine = true,
                 enabled = !isLoading,
                 keyboardOptions =
