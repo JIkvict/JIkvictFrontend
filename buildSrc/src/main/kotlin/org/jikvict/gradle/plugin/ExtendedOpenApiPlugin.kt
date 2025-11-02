@@ -4,7 +4,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jikvict.gradle.tasks.CleanUpSerializableTask
 import org.jikvict.gradle.tasks.GetOpenApiTask
 import org.openapitools.generator.gradle.plugin.extensions.OpenApiGeneratorGenerateExtension
@@ -57,7 +57,7 @@ abstract class ExtendedOpenApiPlugin : Plugin<Project> {
                 finalizedBy("cleanUpSerializable")
             }
 
-            tasks.withType<KotlinCompile>().configureEach {
+            tasks.withType<KotlinCompilationTask<*>>().configureEach {
                 dependsOn(cleanUp)
             }
         }

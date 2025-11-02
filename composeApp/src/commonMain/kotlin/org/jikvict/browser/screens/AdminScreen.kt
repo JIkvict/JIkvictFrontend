@@ -67,7 +67,11 @@ fun AdminScreenComposable(scope: DefaultScreenScope) = with(scope) {
                     UserGroupScreen.navigateTo()
                 }
             }
-            PanelSelector(icon = Icons.Default.Task, name = "Assignments")
+            PanelSelector(icon = Icons.Default.Task, name = "Assignments") {
+                with(navHostController) {
+                    AssignmentsAdminScreen.navigateTo()
+                }
+            }
             PanelSelector(icon = Icons.Default.Person, name = "Students")
         }
     }

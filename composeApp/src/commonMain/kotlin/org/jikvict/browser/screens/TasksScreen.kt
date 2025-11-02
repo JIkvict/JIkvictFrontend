@@ -418,7 +418,8 @@ private fun AssignmentListItem(
         cpuLimit = 500,
         pidsLimit = 500,
         isClosed = false,
-        maximumAttempts = 3
+        maximumAttempts = 3,
+        assignmentGroupsIds = listOf()
     ),
     onClick: () -> Unit = {},
     assignmentInfo: AssignmentInfo? = null,

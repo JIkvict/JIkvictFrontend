@@ -44,6 +44,8 @@ fun UserGroupScreen(scope: DefaultScreenScope) = with(scope) {
 object UserGroupScreen : NavigableScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = { UserGroupScreen(it) }
+    override val requiredRoles: List<String>
+        get() = listOf("TEACHER")
 }
 
 object UserGroupScreenRegistrar : ScreenRegistrar<UserGroupScreen> by createRegistrar()

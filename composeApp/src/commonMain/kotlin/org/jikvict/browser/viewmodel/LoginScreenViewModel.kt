@@ -56,11 +56,15 @@ class LoginScreenViewModel(
             _loginResult.value = null
             throw e
         } catch (e: ClientRequestException) {
-            val problem = e.response.body<ProblemDetail>()
-            _loginResult.value = OperationResult.Error(problem.detail ?: "Unknown error")
+            runCatching {
+                val problem = e.response.body<ProblemDetail>()
+                _loginResult.value = OperationResult.Error(problem.detail ?: "Unknown error")
+            }
         } catch (e: ServerResponseException) {
-            val problem = e.response.body<ProblemDetail>()
-            _loginResult.value = OperationResult.Error(problem.detail ?: "Unknown error")
+            runCatching {
+                val problem = e.response.body<ProblemDetail>()
+                _loginResult.value = OperationResult.Error(problem.detail ?: "Unknown error")
+            }
         } catch (e: Exception) {
             _loginResult.value = OperationResult.Error("Unknown error")
             println("Exception occurred")

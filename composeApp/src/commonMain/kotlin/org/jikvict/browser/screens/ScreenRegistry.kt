@@ -10,6 +10,8 @@ val registeredScreens =
         ProfileScreenRegistrar,
         UserGroupScreenRegistrar,
         CreateUserGroupScreenRegistrar,
+        AssignmentsAdminScreenRegistrar,
+        CreateAssignmentScreenRegistrar
     )
 val routers =
     listOf<ScreenRouterRegistrar<out NavigableScreen>>(
@@ -21,4 +23,6 @@ val routers =
         ProfileScreenRouterRegistrar,
         UserGroupScreenRouterRegistrar,
         CreateUserGroupScreenRouterRegistrar,
+        AssignmentsAdminScreenRouterRegistrar,
+        CreateAssignmentScreenRouterRegistrar
     )
