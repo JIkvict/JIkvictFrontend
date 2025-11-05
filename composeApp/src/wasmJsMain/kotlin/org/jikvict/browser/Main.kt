@@ -12,11 +12,9 @@ import androidx.navigation.bindToBrowserNavigation
 import androidx.navigation.compose.rememberNavController
 import androidx.savedstate.read
 import kotlinx.browser.document
-import kotlinx.browser.window
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
-import org.jikvict.browser.screens.NotFoundScreen
-import org.jikvict.browser.screens.routers
+import org.jikvict.browser.util.getInitScreen
 
 @OptIn(
     ExperimentalComposeUiApi::class,
@@ -41,28 +39,10 @@ fun main() {
             if (!isNavHostReady) {
                 return@LaunchedEffect
             }
-            val initRoute =
-                window.location.hash
-                    .substringAfter('#', "")
-                    .substringBefore("/?")
-            val paramsRaw = window.location.hash.substringAfter('?', "")
-            val splitParams = paramsRaw.split("&").filter { it.isNotBlank() }
-            val params =
-                if (splitParams.isEmpty()) {
-                    emptyMap()
-                } else {
-                    paramsRaw.split("&").associate {
-                        val (key, value) = it.split("=", limit = 2)
-                        key to value.ifEmpty { null }
-                    }
-                }
-            val router = routers.firstOrNull { it.matchRoute(initRoute) }
-            if (router != null) {
-                val screen = router.constructScreen(params)
-                navController.navigate(screen)
-            } else {
-                navController.navigate(NotFoundScreen())
-            }
+            val initRoute = getInitScreen()
+
+            navController.navigate(initRoute)
+
             navController.bindToBrowserNavigation { entry ->
                 println("Binding to navigation: ${entry.destination.route}")
                 var mapping = mapOf<String, Any?>()

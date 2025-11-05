@@ -19,7 +19,6 @@ import org.jikvict.browser.constant.LightColors
 import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.di.appModule
 import org.jikvict.browser.di.platformModule
-import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.registerNavForScreen
 import org.jikvict.browser.screens.registeredScreens
 import org.jikvict.browser.theme.DarkTheme
@@ -29,6 +28,7 @@ import org.jikvict.browser.theme.rememberInterFontFamily
 import org.jikvict.browser.theme.rememberJetBrainsMonoFontFamily
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
 import org.jikvict.browser.util.ThemeSwitcher
+import org.jikvict.browser.util.getInitScreen
 import org.jikvict.browser.util.getTheme
 import org.koin.core.context.startKoin
 
@@ -74,7 +74,7 @@ fun App(
                 LaunchedEffect(navController.currentBackStackEntry?.destination?.route) {
                     scope.verticalScroll.scrollTo(0)
                 }
-                NavHost(navController, startDestination = MakeJarScreen) {
+                NavHost(navController, startDestination = getInitScreen()) {
                     registeredScreens.forEach { screen ->
                         registerNavForScreen(screen, scope, motionScheme)
                     }
