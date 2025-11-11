@@ -35,6 +35,7 @@ import org.jikvict.browser.di.BACKEND_URL
 import org.jikvict.browser.screens.AssignmentsUiState
 import org.jikvict.browser.util.PickedFile
 import org.jikvict.browser.util.StateSaver
+import org.jikvict.browser.util.pickFileForUpload
 import org.jikvict.browser.util.saveBytesAsFile
 
 
@@ -161,21 +162,22 @@ class TasksScreenViewModel(
         onStatus: (PendingStatusResponseLong) -> Unit,
         onFinished: (Boolean) -> Unit = {},
         onError: (String) -> Unit = {},
+        onCancel: () -> Unit = {},
     ) {
         viewModelScope.launch {
             try {
-                val picked =
-                    org.jikvict.browser.util
-                        .pickFileForUpload()
+                val picked = pickFileForUpload()
                 if (picked == null) {
-                    onFinished(false)
+                    println("No file picked")
+                    onCancel()
                     return@launch
                 }
+                println("Picked file: $picked")
 
                 submitSolution(picked, assignmentId, onStatus, onFinished, onError)
             } catch (e: Exception) {
                 println("Error submitting solution: ${e.message}")
-                onFinished(false)
+                onCancel()
             }
         }
     }

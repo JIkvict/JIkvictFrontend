@@ -20,6 +20,6 @@ expect fun setupDragAndDropHandlers(
     onFileDrop: (List<PickedFile>) -> Unit = {},
 ): DragDropHandler?
 
-interface DragDropHandler {
+fun interface DragDropHandler {
     fun cleanup()
 }

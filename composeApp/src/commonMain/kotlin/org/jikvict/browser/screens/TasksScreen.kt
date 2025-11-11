@@ -84,6 +84,7 @@ import dev.tclement.fonticons.FontIcon
 import dev.tclement.fonticons.rememberStaticIconFont
 import jikvictfrontend.composeapp.generated.resources.MaterialSymbolsOutlined_VariableFont
 import jikvictfrontend.composeapp.generated.resources.Res
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
@@ -994,7 +995,6 @@ private fun AssignmentDetailPane(
                         },
                     )
 
-                    // Upload button (submits solution and polls status)
                     ActionIconButton(
                         icon = Icons.Default.Upload,
                         label = if (uploading) uploadStatus.ifEmpty { "Uploading..." } else "Upload",
@@ -1015,7 +1015,6 @@ private fun AssignmentDetailPane(
                                                 PendingStatusResponseLong.Status.CANCELLED -> "Cancelled"
                                             }
 
-                                        // Show notifications for completed tasks
                                         if (response.status != PendingStatusResponseLong.Status.PENDING) {
                                             when (response.status) {
                                                 PendingStatusResponseLong.Status.DONE -> {
@@ -1037,22 +1036,27 @@ private fun AssignmentDetailPane(
 
                                                 else -> {}
                                             }
-                                            // allow user to re-upload after completion
                                             uploading = false
                                         }
                                     },
                                     onFinished = { ok ->
+                                        println("Upload finished with status: $ok")
                                         if (!ok) {
-                                            uploadStatus = "Upload canceled or failed"
+                                            uploadStatus = ""
                                             uploading = false
                                         } else if (uploadStatus.isEmpty()) {
                                             uploadStatus = "Processing..."
                                         }
                                     },
                                     onError = { error ->
-                                        uploadStatus = error
+                                        uploadStatus = ""
                                         showNotification(error, NotificationType.ERROR)
                                         uploading = false
+                                    },
+                                    onCancel = {
+                                        uploadStatus = ""
+                                        uploading = false
+                                        this.cancel()
                                     }
                                 )
                             }

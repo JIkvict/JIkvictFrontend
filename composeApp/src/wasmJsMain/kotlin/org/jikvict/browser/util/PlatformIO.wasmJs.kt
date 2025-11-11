@@ -1,19 +1,26 @@
 package org.jikvict.browser.util
 
 import kotlinx.browser.document
+import kotlinx.browser.window
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.jikvict.api.infrastructure.decodeBase64Bytes
+import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Uint8Array
+import org.khronos.webgl.get
+import org.w3c.dom.Document
 import org.w3c.dom.DragEvent
 import org.w3c.dom.HTMLAnchorElement
 import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.asList
 import org.w3c.dom.events.Event
 import org.w3c.dom.url.URL
 import org.w3c.files.Blob
 import org.w3c.files.BlobPropertyBag
+import org.w3c.files.File
 import org.w3c.files.FileList
 import org.w3c.files.FileReader
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 actual suspend fun saveBytesAsFile(
     defaultFileName: String,
@@ -64,53 +71,108 @@ actual suspend fun saveBytesAsFile(
     }
 }
 
-actual suspend fun pickFileForUpload(): PickedFile? =
-    suspendCancellableCoroutine { cont ->
-        try {
-            val input = document.createElement("input") as HTMLInputElement
-            input.type = "file"
-            input.style.display = "none"
-            document.body?.appendChild(input)
-
-            input.onchange = {
-                val file = input.files?.item(0)
-                if (file == null) {
-                    document.body?.removeChild(input)
-                    cont.resume(null)
-                } else {
-                    val reader = FileReader()
-                    reader.onload = {
-                        val maybe = reader.result
-                        if (maybe == null) {
-                            document.body?.removeChild(input)
-                            cont.resume(null)
-                        } else {
-                            val result = maybe.toString()
-                            try {
-                                val commaIndex = result.indexOf(",")
-                                val b64 = if (commaIndex != -1) result.substring(commaIndex + 1) else result
-                                val bytes = b64.decodeBase64Bytes()
-                                document.body?.removeChild(input)
-                                cont.resume(PickedFile(name = file.name, bytes = bytes, mimeType = file.type))
-                            } catch (_: Throwable) {
-                                document.body?.removeChild(input)
-                                cont.resume(null)
-                            }
-                        }
-                    }
-                    reader.onerror = {
-                        document.body?.removeChild(input)
-                        cont.resume(null)
-                    }
-                    reader.readAsDataURL(file)
-                }
+actual suspend fun pickFileForUpload(): PickedFile? {
+    return try {
+        val files = document.selectFilesFromDisk("", false)
+        println("Selected files: ${files.joinToString { it.name }}")
+        println(files)
+        if (files.isEmpty()) {
+            null
+        } else {
+            val file = files.first()
+            val bytes = readFileAsByteArray(file)
+            PickedFile(name = file.name, bytes = bytes, mimeType = file.type).also {
+                println("Picked file: $it")
             }
+        }
+    } catch (e: Throwable) {
+        println("Error picking file: ${e.message}")
+        null
+    }
+}
 
-            input.click()
-        } catch (t: Throwable) {
-            cont.resume(null)
+private suspend fun Document.selectFilesFromDisk(
+    accept: String,
+    isMultiple: Boolean
+): List<File> = suspendCancellableCoroutine { cont ->
+    val tempInput = (createElement("input") as HTMLInputElement).apply {
+        type = "file"
+        style.display = "none"
+        this.accept = accept
+        multiple = isMultiple
+    }
+
+    var focusHandler: ((Event) -> Unit)? = null
+
+    fun cleanup() {
+        tempInput.onchange = null
+        focusHandler?.let { window.removeEventListener("focus", it) }
+        focusHandler = null
+        try {
+            body?.removeChild(tempInput)
+        } catch (_: Throwable) {
         }
     }
+
+    var completed = false
+
+    tempInput.onchange = onchange@{ changeEvt ->
+        if (completed) return@onchange
+        completed = true
+        try {
+            val inputElement = changeEvt.target as HTMLInputElement
+            val files = inputElement.files?.asList() ?: emptyList()
+            cleanup()
+            if (cont.isActive) cont.resume(files)
+        } catch (e: Throwable) {
+            cleanup()
+            if (cont.isActive) cont.resumeWithException(e)
+        }
+    }
+
+    focusHandler = { _: Event ->
+        window.setTimeout({
+            if (!completed) {
+                completed = true
+                cleanup()
+                if (cont.isActive) cont.resume(emptyList())
+            }
+            return@setTimeout null
+        }, 300)
+    }
+
+    window.addEventListener("focus", focusHandler)
+
+    body!!.appendChild(tempInput)
+    tempInput.click()
+
+    cont.invokeOnCancellation {
+        if (!completed) {
+            completed = true
+            cleanup()
+        }
+    }
+}
+
+suspend fun readFileAsByteArray(file: File): ByteArray = suspendCancellableCoroutine {
+    val reader = FileReader()
+    reader.onload = { loadEvt ->
+        try {
+            val eventFileReader = loadEvt.target?.let { it as FileReader }!!
+            val content = eventFileReader.result as ArrayBuffer
+            val array = Uint8Array(content)
+
+            val fileByteArray = ByteArray(array.length)
+            for (i in 0 until array.length) {
+                fileByteArray[i] = array[i]
+            }
+            it.resumeWith(Result.success(fileByteArray))
+        } catch (e: Throwable) {
+            it.resumeWithException(e)
+        }
+    }
+    reader.readAsArrayBuffer(file)
+}
 
 actual fun setupDragAndDropHandlers(
     onDragEnter: () -> Unit,
