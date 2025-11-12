@@ -32,6 +32,9 @@ fun AssignmentsAdminScreenComposable(scope: DefaultScreenScope) {
             }
         },
         onAssignmentClick = {
+            with(navHostController) {
+                EditAssignmentScreen(it.id).navigateTo()
+            }
         },
         scope = scope,
         onAddAssignmentClick = {

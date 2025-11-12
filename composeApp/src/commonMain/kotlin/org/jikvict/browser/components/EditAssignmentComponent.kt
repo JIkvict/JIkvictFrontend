@@ -19,8 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.LocalDateTime
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentGroupDto
@@ -30,7 +29,6 @@ import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.responsive.responsive
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 sealed class EditAssignmentState {
     object Idle : EditAssignmentState()
@@ -56,12 +54,12 @@ fun EditAssignmentComponent(
 
     var startDate by remember {
         mutableStateOf(
-            Instant.parse(assignment.startDate).toLocalDateTime(TimeZone.currentSystemDefault())
+            LocalDateTime.parse(assignment.startDate)
         )
     }
     var endDate by remember {
         mutableStateOf(
-            Instant.parse(assignment.endDate).toLocalDateTime(TimeZone.currentSystemDefault())
+            LocalDateTime.parse(assignment.endDate)
         )
     }
     // Calculate initial units and values

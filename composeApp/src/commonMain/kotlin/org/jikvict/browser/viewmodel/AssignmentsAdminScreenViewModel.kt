@@ -25,7 +25,7 @@ class AssignmentsAdminScreenViewModel(
             _loading.value = true
             _error.value = null
             try {
-                val resp = assignmentApi.getAll()
+                val resp = assignmentApi.getAllAdmin()
                 if (resp.success) {
                     _assignments.value = resp.body()
                 } else {
