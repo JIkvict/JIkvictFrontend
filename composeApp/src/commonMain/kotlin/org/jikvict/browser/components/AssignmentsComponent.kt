@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -43,11 +42,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jikvict.browser.util.DefaultPreview
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentDto
+import org.jikvict.browser.util.DefaultPreview
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -153,17 +152,18 @@ fun AssignmentsComponent(
 }
 
 @Composable
-private fun AssignmentCard(
+fun AssignmentCard(
     assignment: AssignmentDto,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surface,
 ) {
     Card(
         modifier = modifier.width(280.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = containerColor
         ),
         onClick = onClick,
     ) {
@@ -263,7 +263,18 @@ fun AssignmentsComponentPreview() {
 @OptIn(ExperimentalTime::class)
 fun generateRandomAssignments(num: Int): List<AssignmentDto> {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-    val titles = listOf("Alfred Singh", "Sara Cui", "Sharon Chandra", "Francisca Abbas", "Igor Sanchez", "Xiaodong Yu", "Pablo Ullah", "Ha Jimenez", "Mariya Hasan", "Asma Prakash")
+    val titles = listOf(
+        "Alfred Singh",
+        "Sara Cui",
+        "Sharon Chandra",
+        "Francisca Abbas",
+        "Igor Sanchez",
+        "Xiaodong Yu",
+        "Pablo Ullah",
+        "Ha Jimenez",
+        "Mariya Hasan",
+        "Asma Prakash"
+    )
     return (1..num).map { _ ->
         AssignmentDto(
             id = 9175,

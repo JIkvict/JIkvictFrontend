@@ -17,6 +17,11 @@ interface NavigableScreen {
         get() = emptyList()
 }
 
+interface TeacherScreen : NavigableScreen {
+    override val requiredRoles: List<String>
+        get() = listOf("TEACHER")
+}
+
 context(navController: NavHostController)
 fun NavigableScreen.navigateTo() {
     val router = routers.first { it.screen == this::class }

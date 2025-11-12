@@ -9,6 +9,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +49,7 @@ import kotlin.time.ExperimentalTime
 sealed class EditAssignmentState {
     object Idle : EditAssignmentState()
     object Loading : EditAssignmentState()
-    object Success : EditAssignmentState()
+    data class Success(val assignment: AssignmentDto) : EditAssignmentState()
     data class Error(val message: String) : EditAssignmentState()
 }
 
@@ -45,7 +61,8 @@ fun EditAssignmentComponent(
     assignment: AssignmentDto,
     availableAssignmentGroups: List<AssignmentGroupDto>,
     availableTasks: List<Long>,
-    onUpdate: suspend (AssignmentDto) -> OperationResult<AssignmentDto>
+    onUpdate: suspend (AssignmentDto) -> OperationResult<AssignmentDto>,
+    onNavigateToUpdated: (AssignmentDto) -> Unit = {}
 ) {
     var editState by remember { mutableStateOf<EditAssignmentState>(EditAssignmentState.Idle) }
     var title by remember { mutableStateOf(assignment.title) }
@@ -110,6 +127,103 @@ fun EditAssignmentComponent(
 
     val coroutineScope = rememberCoroutineScope()
 
+    if (editState !is EditAssignmentState.Idle) {
+        Dialog(
+            onDismissRequest = {
+                if (editState !is EditAssignmentState.Loading) {
+                    editState = EditAssignmentState.Idle
+                }
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = editState !is EditAssignmentState.Loading,
+                dismissOnClickOutside = editState !is EditAssignmentState.Loading
+            )
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    when (val state = editState) {
+                        is EditAssignmentState.Loading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(48.dp),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Updating assignment...",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                        is EditAssignmentState.Success -> {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = Color(0xFF4CAF50)
+                            )
+                            Text(
+                                text = "Assignment updated successfully!",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        editState = EditAssignmentState.Idle
+                                        onNavigateBack()
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Back")
+                                }
+                                Button(
+                                    onClick = { onNavigateToUpdated(state.assignment) },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Go to Assignment")
+                                }
+                            }
+                        }
+                        is EditAssignmentState.Error -> {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = Color(0xFFF44336)
+                            )
+                            Text(
+                                text = "Error updating assignment",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = state.message,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Button(
+                                onClick = { editState = EditAssignmentState.Idle },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Try Again")
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
+
     if (showStartDatePicker) {
         DateTimePickerDialog(
             initialDateTime = startDate,
@@ -142,7 +256,7 @@ fun EditAssignmentComponent(
 
                 NavigateBackButton(
                     onNavigateBack = onNavigateBack,
-                    title = "Assignments"
+                    title = "Back"
                 )
 
                 Row(
@@ -221,7 +335,7 @@ fun EditAssignmentComponent(
                                             )
                                         )
                                         editState = when (result) {
-                                            is OperationResult.Success -> EditAssignmentState.Success
+                                            is OperationResult.Success -> EditAssignmentState.Success(result.result)
                                             is OperationResult.Error -> EditAssignmentState.Error(result.message)
                                             is OperationResult.Loading -> EditAssignmentState.Loading
                                         }

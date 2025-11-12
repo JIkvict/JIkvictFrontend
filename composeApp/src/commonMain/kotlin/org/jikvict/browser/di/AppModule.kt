@@ -10,6 +10,7 @@ import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.jikvict.browser.viewmodel.AdminScreenViewModel
 import org.jikvict.browser.viewmodel.AssignmentsAdminScreenViewModel
 import org.jikvict.browser.viewmodel.CreateAssignmentScreenViewModel
+import org.jikvict.browser.viewmodel.EditAssignmentGroupViewModel
 import org.jikvict.browser.viewmodel.EditAssignmentScreenViewModel
 import org.jikvict.browser.viewmodel.UserGroupScreenViewModel
 import org.koin.core.module.dsl.singleOf
@@ -45,4 +46,5 @@ val appModule =
         singleOf(::AssignmentsAdminScreenViewModel)
         singleOf(::CreateAssignmentScreenViewModel)
         singleOf(::EditAssignmentScreenViewModel)
+        singleOf(::EditAssignmentGroupViewModel)
     }

@@ -8,34 +8,35 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jikvict.api.apis.AssignmentControllerApi
 import org.jikvict.api.apis.AssignmentGroupControllerApi
+import org.jikvict.api.apis.UsersControllerApi
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentGroupDto
+import org.jikvict.api.models.UserDto
 import org.jikvict.browser.model.OperationResult
 import kotlin.coroutines.cancellation.CancellationException
 
-class EditAssignmentScreenViewModel(
-    private val assignmentControllerApi: AssignmentControllerApi,
+class EditAssignmentGroupViewModel(
     private val assignmentGroupControllerApi: AssignmentGroupControllerApi,
+    private val usersControllerApi: UsersControllerApi,
+    private val assignmentControllerApi: AssignmentControllerApi
 ) : ViewModel() {
 
-    private var _assignment = MutableStateFlow<AssignmentDto?>(null)
-    val assignment = _assignment.asStateFlow()
+    private var _group = MutableStateFlow<AssignmentGroupDto?>(null)
+    val group = _group.asStateFlow()
 
-    private var _assignmentGroups = MutableStateFlow<List<AssignmentGroupDto>>(emptyList())
-    val assignmentGroups = _assignmentGroups.asStateFlow()
+    private var _users = MutableStateFlow<List<UserDto>>(emptyList())
+    val users = _users.asStateFlow()
 
-    private var _tasks = MutableStateFlow<List<Long>>(emptyList())
-    val tasks = _tasks.asStateFlow()
+    private var _assignments = MutableStateFlow<List<AssignmentDto>>(emptyList())
+    val assignments = _assignments.asStateFlow()
 
-    fun clearAssignment() {
-        _assignment.value = null
-    }
-    fun loadAssignment(assignmentId: Long) {
+    fun loadAssignments() {
+        group.value?.id ?: return
         viewModelScope.launch {
             runCatching {
-                val result = assignmentControllerApi.getAssignment(assignmentId)
+                val result = assignmentControllerApi.getAllForAssignmentGroup(group.value!!.id.toString())
                 if (result.success) {
-                    _assignment.value = result.body()
+                    _assignments.value = result.body()
                 }
             }.onFailure {
                 ensureActive()
@@ -43,12 +44,13 @@ class EditAssignmentScreenViewModel(
         }
     }
 
-    fun loadGroups() {
+    fun loadGroup(assignmentId: Long) {
         viewModelScope.launch {
             runCatching {
-                val result = assignmentGroupControllerApi.getAllAssignmentGroups()
+                val result = assignmentGroupControllerApi.getAssignmentGroupById(assignmentId)
                 if (result.success) {
-                    _assignmentGroups.value = result.body()
+                    _group.value = result.body()
+                    loadAssignments()
                 }
             }.onFailure {
                 ensureActive()
@@ -56,12 +58,12 @@ class EditAssignmentScreenViewModel(
         }
     }
 
-    fun loadTasks() {
+    fun loadUsers() {
         viewModelScope.launch {
             runCatching {
-                val result = assignmentControllerApi.availableTasks()
+                val result = usersControllerApi.getAllUsers()
                 if (result.success) {
-                    _tasks.value = result.body()
+                    _users.value = result.body()
                 }
             }.onFailure {
                 ensureActive()
@@ -69,15 +71,20 @@ class EditAssignmentScreenViewModel(
         }
     }
 
-    suspend fun update(newAssignment: AssignmentDto): OperationResult<AssignmentDto> {
-        val current = assignment.value ?: return OperationResult.Error("No assignment to update")
-        if (current == newAssignment) return OperationResult.Success(newAssignment)
+    fun clearGroup() {
+        _group.value = null
+    }
+
+    suspend fun update(newGroup: AssignmentGroupDto): OperationResult<AssignmentGroupDto> {
+        val current = group.value ?: return OperationResult.Error("No assignment to update")
+        if (current == newGroup) return OperationResult.Success(newGroup)
+        if (current.id == null) return OperationResult.Error("No assignment group id")
 
         return try {
-            val response = assignmentControllerApi.updateAssignment(current.id, newAssignment)
+            val response = assignmentGroupControllerApi.updateAssignmentGroup(current.id, newGroup)
             if (response.success) {
                 val body = response.body()
-                _assignment.value = body
+                _group.value = body
                 OperationResult.Success(body)
             } else {
                 OperationResult.Error("Failed to update assignment")

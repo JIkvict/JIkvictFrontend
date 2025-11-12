@@ -29,7 +29,11 @@ fun UserGroupScreen(scope: DefaultScreenScope) = with(scope) {
                 AdminScreen.navigateTo()
             }
         },
-        onGroupClick = {},
+        onGroupClick = {
+            with(navHostController) {
+                EditAssignmentGroupScreen(it.id!!).navigateTo()
+            }
+        },
         onAddGroupClick = {
             with(navHostController) {
                 CreateUserGroupScreen.navigateTo()

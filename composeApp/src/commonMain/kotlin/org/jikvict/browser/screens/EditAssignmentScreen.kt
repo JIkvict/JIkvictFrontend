@@ -21,9 +21,10 @@ fun EditAssignmentScreenComposable(
     defaultScreenScope: DefaultScreenScope,
     assignmentId: Long,
 ) {
-    val vm = koinViewModel<EditAssignmentScreenViewModel>()
+    val vm = koinViewModel<EditAssignmentScreenViewModel>(key = assignmentId.toString())
     val assignment by vm.assignment.collectAsState()
-    LaunchedEffect(Unit) {
+    LaunchedEffect(assignmentId) {
+        vm.clearAssignment()
         vm.loadAssignment(assignmentId)
         vm.loadGroups()
         vm.loadTasks()
@@ -35,9 +36,7 @@ fun EditAssignmentScreenComposable(
         EditAssignmentComponent(
             defaultScreenScope,
             onNavigateBack = {
-                with(navHostController) {
-                    AssignmentsAdminScreen.navigateTo()
-                }
+                navHostController.popBackStack()
             },
             assignment = dto,
             availableAssignmentGroups = groups,

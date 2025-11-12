@@ -75,6 +75,7 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
         }
     }
 
+
     when (val result = usersResult) {
         is OperationResult.Error -> {
             Box(
@@ -257,7 +258,10 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
                     },
                     scope = scope,
                     onNavigateToCreated = {
-                        println("I created a group")
+                        with(navHostController) {
+                            EditAssignmentGroupScreen(it.id!!).navigateTo()
+                        }
+
                     }
                 )
             }
