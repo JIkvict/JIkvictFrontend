@@ -13,12 +13,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -49,8 +49,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.api.models.AssignmentDto
+import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.browser.model.OperationResult
 import org.jikvict.browser.theme.mainColumnModifier
 import org.jikvict.browser.util.DefaultPreview
@@ -224,7 +224,7 @@ fun InfoAssignmentGroupComponent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(
-                    modifier = Modifier.responsive(mainColumnModifier),
+                    modifier = Modifier.responsive(mainColumnModifier).verticalScroll(scope.verticalScroll),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
@@ -264,7 +264,8 @@ fun InfoAssignmentGroupComponent(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                     contentPadding = PaddingValues(vertical = 16.dp),
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).heightIn(max = scope.screenHeight),
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                                        .heightIn(max = scope.screenHeight),
                                 ) {
                                     items(assignments.filter { it.id in group.assignmentIds }) {
                                         AssignmentCard(

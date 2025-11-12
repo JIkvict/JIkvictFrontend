@@ -30,6 +30,14 @@ fun NavigableScreen.navigateTo() {
     }
 }
 
+fun NavHostController.navigateBackOr(screen: NavigableScreen) =
+    if (popBackStack()) {
+        true
+    } else {
+        screen.forceNavigateTo()
+        true
+    }
+
 context(navController: NavHostController)
 fun NavigableScreen.forceNavigateTo() {
     navController.navigate(this)

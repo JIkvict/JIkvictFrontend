@@ -27,17 +27,20 @@ class EditAssignmentScreenViewModel(
     private var _tasks = MutableStateFlow<List<Long>>(emptyList())
     val tasks = _tasks.asStateFlow()
 
-    fun clearAssignment() {
-        _assignment.value = null
-    }
     fun loadAssignment(assignmentId: Long) {
         viewModelScope.launch {
             runCatching {
-                val result = assignmentControllerApi.getAssignment(assignmentId)
+                val result = assignmentControllerApi.getAssignmentAdmin(assignmentId)
                 if (result.success) {
+                    println("Success body is: ${result.body()}")
                     _assignment.value = result.body()
+                } else {
+                    println("Failed to load assignment: ${result.status}")
+                    _assignment.value = null
                 }
             }.onFailure {
+                println("Failed to load assignment: ${it.message}")
+                _assignment.value = null
                 ensureActive()
             }
         }

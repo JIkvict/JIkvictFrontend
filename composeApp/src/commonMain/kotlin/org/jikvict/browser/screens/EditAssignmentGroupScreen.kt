@@ -33,9 +33,7 @@ fun EditAssignmentGroupScreenComposable(
         InfoAssignmentGroupComponent(
             scope = scope,
             onNavigateBack = {
-                with(navHostController) {
-                    UserGroupScreen.navigateTo()
-                }
+                navHostController.navigateBackOr(UserGroupScreen)
             },
             group = dto,
             allUsers = users.map {

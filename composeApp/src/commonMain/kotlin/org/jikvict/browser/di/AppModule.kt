@@ -14,6 +14,7 @@ import org.jikvict.browser.viewmodel.EditAssignmentGroupViewModel
 import org.jikvict.browser.viewmodel.EditAssignmentScreenViewModel
 import org.jikvict.browser.viewmodel.UserGroupScreenViewModel
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val appModule =
@@ -37,14 +38,14 @@ val appModule =
 
 
         // ViewModels
-        singleOf(::NotFoundScreenViewModel)
-        singleOf(::MakeJarScreenViewModel)
-        singleOf(::TasksScreenViewModel)
-        singleOf(::LoginScreenViewModel)
-        singleOf(::AdminScreenViewModel)
-        singleOf(::UserGroupScreenViewModel)
-        singleOf(::AssignmentsAdminScreenViewModel)
-        singleOf(::CreateAssignmentScreenViewModel)
-        singleOf(::EditAssignmentScreenViewModel)
-        singleOf(::EditAssignmentGroupViewModel)
+        viewModelOf(::NotFoundScreenViewModel)
+        viewModelOf(::MakeJarScreenViewModel)
+        viewModelOf(::TasksScreenViewModel)
+        viewModelOf(::LoginScreenViewModel)
+        viewModelOf(::AdminScreenViewModel)
+        viewModelOf(::UserGroupScreenViewModel)
+        viewModelOf(::AssignmentsAdminScreenViewModel)
+        viewModelOf(::CreateAssignmentScreenViewModel)
+        viewModelOf(::EditAssignmentScreenViewModel)
+        viewModelOf(::EditAssignmentGroupViewModel)
     }
