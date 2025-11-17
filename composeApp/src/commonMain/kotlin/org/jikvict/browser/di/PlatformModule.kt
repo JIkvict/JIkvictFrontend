@@ -5,4 +5,4 @@ import org.koin.core.module.Module
 expect val platformModule: Module
 
 
-const val BACKEND_URL = "http://localhost:8080"
+const val BACKEND_URL = "https://jikvict.fiiture.sk/"

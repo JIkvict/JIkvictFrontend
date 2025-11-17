@@ -44,6 +44,11 @@ fun EditAssignmentScreenComposable(
             onUpdate = {
                 vm.update(it)
             },
+            onNavigateToUpdated = {
+                with(navHostController) {
+                    AssignmentInfoScreen(it.id).navigateTo()
+                }
+            }
         )
     }
 

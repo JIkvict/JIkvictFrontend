@@ -77,6 +77,7 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
 
 
     when (val result = usersResult) {
+        is OperationResult.Idle -> {}
         is OperationResult.Error -> {
             Box(
                 modifier = Modifier.fitContentToScreen(),

@@ -146,6 +146,7 @@ kotlin {
                 implementation(libs.ui.util)
                 implementation(libs.multiplatform.markdown.renderer)
                 implementation(libs.kotlinx.datetime)
+                implementation(libs.charts)
             }
         }
         commonTest {

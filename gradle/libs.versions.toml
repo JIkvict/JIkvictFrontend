@@ -21,6 +21,7 @@ kotlinx-datetime = "0.7.1"
 multiplatform-markdown-renderer = "0.35.0"
 serialization = "1.9.0"
 composeIcons = "2.1.1"
+charts = "0.2.0"
 
 [libraries]
 adaptive-navigation = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }
@@ -60,6 +61,7 @@ compottie-resources = { module = "io.github.alexzhirkevich:compottie-resources",
 ui-util = { module = "org.jetbrains.compose.ui:ui-util", version.ref = "composeMultiplatform" }
 multiplatform-markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "multiplatform-markdown-renderer" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+charts = {module = "io.github.ehsannarmani:compose-charts", version.ref = "charts"}
 
 # icons
 icons = { module = "dev.tclement.fonticons:core", version.ref = "composeIcons"}

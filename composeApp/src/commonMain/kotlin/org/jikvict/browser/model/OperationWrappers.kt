@@ -1,6 +1,8 @@
 package org.jikvict.browser.model
 
 sealed interface OperationResult<T> {
+    class Idle<T> : OperationResult<T>
+
     class Loading<T> : OperationResult<T>
 
     class Success<T>(

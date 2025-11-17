@@ -34,7 +34,7 @@ class EditAssignmentGroupViewModel(
         group.value?.id ?: return
         viewModelScope.launch {
             runCatching {
-                val result = assignmentControllerApi.getAllForAssignmentGroup(group.value!!.id.toString())
+                val result = assignmentControllerApi.getAllForAssignmentGroup(group.value!!.id!!)
                 if (result.success) {
                     _assignments.value = result.body()
                 }

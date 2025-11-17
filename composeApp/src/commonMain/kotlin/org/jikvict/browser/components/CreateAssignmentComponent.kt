@@ -34,6 +34,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -48,6 +51,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.api.models.CreateAssignmentDto
+import org.jikvict.browser.components.common.SearchableDropdown
 import org.jikvict.browser.model.OperationResult
 import org.jikvict.browser.theme.mainColumnModifier
 import org.jikvict.browser.util.DefaultPreview
@@ -127,6 +131,7 @@ fun CreateAssignmentComponent(
     var showGroupDropdown by remember { mutableStateOf(false) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -242,6 +247,7 @@ fun CreateAssignmentComponent(
                                             is OperationResult.Success -> CreateAssignmentState.Success
                                             is OperationResult.Error -> CreateAssignmentState.Error(result.message)
                                             is OperationResult.Loading -> CreateAssignmentState.Loading
+                                            is OperationResult.Idle -> CreateAssignmentState.Idle
                                         }
                                     }
                                 },
@@ -453,65 +459,57 @@ fun AssignmentFormCard(
             )
 
             Box {
-                OutlinedTextField(
-                    value = if (taskId != null) "Task $taskId" else taskSearchQuery,
-                    onValueChange = { newValue ->
-                        if (taskId != null) {
-                            onTaskIdChange(null)
-                        }
-                        onTaskSearchQueryChange(newValue)
-                        onShowTaskDropdownChange(true)
+                SearchableDropdown(
+                    expanded = showTaskDropdown,
+                    onExpandedChange = { onShowTaskDropdownChange(it) },
+                    items = availableTasks.filter { it.toString().contains(taskSearchQuery, ignoreCase = true) },
+                    itemContent = { task ->
+                        DropdownMenuItem(
+                            text = { Text("Task $task") },
+                            onClick = {
+                                onTaskIdChange(task)
+                                onTaskSearchQueryChange("")
+                                onShowTaskDropdownChange(false)
+                            }
+                        )
                     },
-                    label = { Text("Task ID *") },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = taskId == null,
-                    supportingText = if (taskId == null) {
-                        { Text("Please select a task") }
-                    } else null,
-                    trailingIcon = {
-                        Row {
-                            if (taskId != null) {
-                                IconButton(onClick = {
-                                    onTaskIdChange(null)
-                                    onTaskSearchQueryChange("")
-                                }) {
-                                    Icon(Icons.Default.Close, "Clear selection")
+                    searchContent = {
+                        // Typing happens in the anchor field; this area can show a hint or filters
+                        Text("Type to filter tasks", modifier = Modifier.padding(8.dp))
+                    },
+                    displayContent = { anchorModifier ->
+                        OutlinedTextField(
+                            value = if (taskId != null) "Task $taskId" else taskSearchQuery,
+                            onValueChange = { newValue ->
+                                if (taskId != null) onTaskIdChange(null)
+                                onTaskSearchQueryChange(newValue)
+                            },
+                            label = { Text("Task ID *") },
+                            modifier = anchorModifier
+                                .fillMaxWidth()
+                                .onFocusChanged { f -> onShowTaskDropdownChange(f.isFocused) },
+                            isError = taskId == null,
+                            supportingText = if (taskId == null) {
+                                { Text("Please select a task") }
+                            } else null,
+                            trailingIcon = {
+                                Row {
+                                    if (taskId != null) {
+                                        IconButton(onClick = {
+                                            onTaskIdChange(null)
+                                            onTaskSearchQueryChange("")
+                                        }) {
+                                            Icon(Icons.Default.Close, "Clear selection")
+                                        }
+                                    }
+                                    IconButton(onClick = { onShowTaskDropdownChange(!showTaskDropdown) }) {
+                                        Icon(Icons.Default.ArrowDropDown, "Dropdown")
+                                    }
                                 }
                             }
-                            IconButton(onClick = { onShowTaskDropdownChange(!showTaskDropdown) }) {
-                                Icon(Icons.Default.ArrowDropDown, "Dropdown")
-                            }
-                        }
+                        )
                     }
                 )
-
-                DropdownMenu(
-                    expanded = showTaskDropdown,
-                    onDismissRequest = { onShowTaskDropdownChange(false) }
-                ) {
-                    val filteredTasks = availableTasks.filter {
-                        it.toString().contains(taskSearchQuery, ignoreCase = true)
-                    }
-
-                    if (filteredTasks.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text("No tasks found") },
-                            onClick = {},
-                            enabled = false
-                        )
-                    } else {
-                        filteredTasks.forEach { task ->
-                            DropdownMenuItem(
-                                text = { Text("Task $task") },
-                                onClick = {
-                                    onTaskIdChange(task)
-                                    onTaskSearchQueryChange("")
-                                    onShowTaskDropdownChange(false)
-                                }
-                            )
-                        }
-                    }
-                }
             }
 
             OutlinedTextField(
@@ -656,58 +654,54 @@ fun AssignmentFormCard(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
+            val groupSearchFocusRequester = remember { FocusRequester() }
             Box {
-                OutlinedTextField(
-                    value = groupSearchQuery,
-                    onValueChange = { newValue ->
-                        onGroupSearchQueryChange(newValue)
-                        onShowGroupDropdownChange(true)
+                SearchableDropdown(
+                    expanded = showGroupDropdown,
+                    onExpandedChange = { onShowGroupDropdownChange(it) },
+                    items = availableAssignmentGroups
+                        .filter { it.id !in selectedGroupIds }
+                        .filter { it.name.contains(groupSearchQuery, ignoreCase = true) },
+                    itemContent = { group ->
+                        DropdownMenuItem(
+                            text = { Text(group.name) },
+                            onClick = {
+                                onSelectedGroupIdsChange(selectedGroupIds + (group.id!!))
+                                onGroupSearchQueryChange("")
+                                // Keep dropdown open for consecutive selections and refocus input
+                                groupSearchFocusRequester.requestFocus()
+                            }
+                        )
                     },
-                    label = { Text("Search Assignment Groups") },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        Row {
-                            if (groupSearchQuery.isNotEmpty()) {
-                                IconButton(onClick = {
-                                    onGroupSearchQueryChange("")
-                                }) {
-                                    Icon(Icons.Default.Close, "Clear search")
+                    searchContent = {
+                        Text("Type to filter groups", modifier = Modifier.padding(8.dp))
+                    },
+                    displayContent = { anchorModifier ->
+                        OutlinedTextField(
+                            value = groupSearchQuery,
+                            onValueChange = { newValue ->
+                                onGroupSearchQueryChange(newValue)
+                            },
+                            label = { Text("Search Assignment Groups") },
+                            modifier = anchorModifier
+                                .fillMaxWidth()
+                                .focusRequester(groupSearchFocusRequester)
+                                .onFocusChanged { f -> onShowGroupDropdownChange(f.isFocused) },
+                            trailingIcon = {
+                                Row {
+                                    if (groupSearchQuery.isNotEmpty()) {
+                                        IconButton(onClick = { onGroupSearchQueryChange("") }) {
+                                            Icon(Icons.Default.Close, "Clear search")
+                                        }
+                                    }
+                                    IconButton(onClick = { onShowGroupDropdownChange(!showGroupDropdown) }) {
+                                        Icon(Icons.Default.ArrowDropDown, "Dropdown")
+                                    }
                                 }
                             }
-                            IconButton(onClick = { onShowGroupDropdownChange(!showGroupDropdown) }) {
-                                Icon(Icons.Default.ArrowDropDown, "Dropdown")
-                            }
-                        }
+                        )
                     }
                 )
-
-                DropdownMenu(
-                    expanded = showGroupDropdown,
-                    onDismissRequest = { onShowGroupDropdownChange(false) }
-                ) {
-                    val filteredGroups = availableAssignmentGroups
-                        .filter { it.id !in selectedGroupIds }
-                        .filter { it.name.contains(groupSearchQuery, ignoreCase = true) }
-
-                    if (filteredGroups.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text("No groups found") },
-                            onClick = {},
-                            enabled = false
-                        )
-                    } else {
-                        filteredGroups.forEach { group ->
-                            DropdownMenuItem(
-                                text = { Text(group.name) },
-                                onClick = {
-                                    onSelectedGroupIdsChange(selectedGroupIds + group.id!!)
-                                    onGroupSearchQueryChange("")
-                                    onShowGroupDropdownChange(false)
-                                }
-                            )
-                        }
-                    }
-                }
             }
 
             if (selectedGroupIds.isNotEmpty()) {

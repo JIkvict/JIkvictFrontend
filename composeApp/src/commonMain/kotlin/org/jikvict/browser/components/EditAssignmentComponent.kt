@@ -338,6 +338,7 @@ fun EditAssignmentComponent(
                                             is OperationResult.Success -> EditAssignmentState.Success(result.result)
                                             is OperationResult.Error -> EditAssignmentState.Error(result.message)
                                             is OperationResult.Loading -> EditAssignmentState.Loading
+                                            is OperationResult.Idle -> EditAssignmentState.Idle
                                         }
                                     }
                                 },

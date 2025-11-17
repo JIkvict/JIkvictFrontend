@@ -54,7 +54,7 @@ fun EditAssignmentGroupScreenComposable(
             assignments = assignments,
             onAssignmentClick = {
                 with(navHostController) {
-                    EditAssignmentScreen(it.id).navigateTo()
+                    AssignmentInfoScreen(it.id).navigateTo()
                 }
             }
         )

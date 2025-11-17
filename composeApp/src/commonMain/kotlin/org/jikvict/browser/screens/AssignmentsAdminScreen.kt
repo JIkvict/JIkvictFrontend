@@ -33,7 +33,7 @@ fun AssignmentsAdminScreenComposable(scope: DefaultScreenScope) {
         },
         onAssignmentClick = {
             with(navHostController) {
-                EditAssignmentScreen(it.id).navigateTo()
+                AssignmentInfoScreen(it.id).navigateTo()
             }
         },
         scope = scope,
