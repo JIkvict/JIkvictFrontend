@@ -32,10 +32,6 @@ import org.jikvict.browser.util.getInitScreen
 import org.jikvict.browser.util.getTheme
 import org.koin.core.context.startKoin
 
-// TODO: Сделать @Register(name) аннотацию чтобы создать список name с обьектами помеченными этой аннотацией
-
-// TODO: Сделать @CreateNav аннотацию чтобы создать object HomeScreenRegistrar : ScreenRegistrar<HomeScreen> by createRegistrar() для каждого class помеченого этой аннотацией
-
 private var isKoinStarted = false
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

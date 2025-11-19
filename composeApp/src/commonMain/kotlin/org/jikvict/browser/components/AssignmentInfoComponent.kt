@@ -4,12 +4,14 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,7 +22,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.QueryStats
+import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -30,10 +38,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,6 +55,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ir.ehsannarmani.compose_charts.ColumnChart
@@ -68,10 +82,14 @@ import org.jikvict.api.models.TestSuiteResult
 import org.jikvict.api.models.UserDto
 import org.jikvict.browser.components.common.SearchableDropdown
 import org.jikvict.browser.model.OperationResult
+import org.jikvict.browser.screens.formatCpuLimit
+import org.jikvict.browser.screens.formatDate
+import org.jikvict.browser.screens.formatMemory
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.round
+import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -83,7 +101,8 @@ fun AssignmentInfoComponent(
     availableGroups: List<AssignmentGroupDto>,
     infoSupplier: suspend (List<UserDto>, List<AssignmentGroupDto>) -> List<AssignmentInfo>?,
     onEditClick: (AssignmentDto) -> Unit,
-) = with(scope.columnScope) {
+    onDownloadClick: (AssignmentResultDto) -> Unit,
+) = with(scope) {
     var userQuery by remember { mutableStateOf("") }
     var groupQuery by remember { mutableStateOf("") }
     var userDropdownExpanded by remember { mutableStateOf(false) }
@@ -151,6 +170,45 @@ fun AssignmentInfoComponent(
                 )
             }
         }
+
+        Text(
+            text = "Task #${assignment.taskId}",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.outline,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Column {
+                Text(
+                    text = "Start: ${formatDate(assignment.startDate)}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+
+                Text(
+                    text = "End: ${formatDate(assignment.endDate)}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = "Timeout: ${assignment.timeOutSeconds} s | Memory (RAM): ${formatMemory(assignment.memoryLimit)} MB",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f),
+                )
+                Text(
+                    text = "CPU Limit: ${formatCpuLimit(assignment.cpuLimit)} cores | PIDs: ${assignment.pidsLimit} processes",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f),
+                )
+            }
+
+        }
+
 
         // Users selector
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -278,25 +336,76 @@ fun AssignmentInfoComponent(
             }
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+        val options = listOf("Statistics", "Submissions")
+        val unCheckedIcons = listOf(Icons.Outlined.QueryStats, Icons.Outlined.FilterList)
+        val checkedIcons = listOf(Icons.Filled.QueryStats, Icons.Filled.FilterList)
+        var selectedIndex by remember { mutableIntStateOf(0) }
+
+        Row(
+            Modifier.padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+        ) {
+            val modifiers = listOf(Modifier.weight(1f), Modifier.weight(1f))
+
+            options.forEachIndexed { index, label ->
+                ToggleButton(
+                    checked = selectedIndex == index,
+                    onCheckedChange = { selectedIndex = index },
+                    modifier = modifiers[index].semantics { role = Role.RadioButton },
+                    shapes =
+                        when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                ) {
+                    Icon(
+                        if (selectedIndex == index) checkedIcons[index] else unCheckedIcons[index],
+                        contentDescription = "Icon",
+                    )
+                    Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                    Text(label)
+                }
+            }
+        }
+
         when (val infosUnwrapped = infos) {
             is OperationResult.Success -> {
-                StatsComponent(infos = infosUnwrapped.result)
+                if (selectedIndex == 0) {
+                    StatsComponent(infos = infosUnwrapped.result)
+                } else {
+                    SubmissionComponent(infos = infosUnwrapped.result, onDownloadClick)
+                }
             }
 
             is OperationResult.Error -> {
-                Text(text = "Error loading stats: ${infosUnwrapped.message}", color = MaterialTheme.colorScheme.error)
+                Text(
+                    text = "Error loading inforamtions: ${infosUnwrapped.message}",
+                    color = MaterialTheme.colorScheme.error
+                )
             }
 
             is OperationResult.Loading -> {
-                CircularWavyProgressIndicator()
+                Box(
+                    modifier = Modifier.fitContentToScreen(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularWavyProgressIndicator()
+                }
             }
 
             is OperationResult.Idle -> {
-                Text(
-                    text = "Select users and/or groups to load statistics",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Box(
+                    modifier = Modifier.fitContentToScreen(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Select users and/or groups to load statistics",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -329,16 +438,172 @@ private fun SelectableChip(label: String, onRemove: () -> Unit) {
 }
 
 @Composable
+fun SubmissionComponent(
+    infos: List<AssignmentInfo>,
+    download: (AssignmentResultDto) -> Unit
+) {
+    val isDark by LocalThemeSwitcherProvider.current.isDark
+    val colors = remember(isDark) {
+        object {
+            val excellent = if (isDark) Color(0xFF10B981) else Color(0xFF22C55E)
+
+            val good = if (isDark) Color(0xFFFBBF24) else Color(0xFFFACC15)
+
+            val satisfactory = if (isDark) Color(0xFFF97316) else Color(0xFFFB923C)
+
+            val fail = if (isDark) Color(0xFFEF4444) else Color(0xFFF87171)
+        }
+    }
+
+    fun colorFor(earned: Int, max: Int?): Color {
+        if (max == null || max <= 0) return colors.fail
+        val pct = earned.toFloat() / max.toFloat() * 100f
+        return when {
+            pct >= 90f -> colors.excellent
+            pct >= 70f -> colors.good
+            pct >= 50f -> colors.satisfactory
+            else -> colors.fail
+        }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (infos.isEmpty()) {
+            Text(
+                text = "No submissions",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            return@Column
+        }
+
+        var expandedKeys by remember { mutableStateOf(setOf<String>()) }
+
+        infos.forEach { info ->
+            val author = info.author.userNameField
+            val results = info.results
+            if (results.isEmpty()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = author,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "No accepted submissions",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                Text(
+                    text = author,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    results.forEach { res ->
+                        val earned = res.result?.totalEarnedPoints ?: res.points
+                        val max = res.result?.totalPossiblePoints
+                        val leftColor = colorFor(earned, max)
+                        val key = "${info.author.id}-${res.timeStamp}-${res.points}"
+                        val isExpanded = expandedKeys.contains(key)
+                        Surface(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = RoundedCornerShape(4.dp),
+                        ) {
+                            Column {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            expandedKeys = expandedKeys.toMutableSet().also { set ->
+                                                if (!set.add(key)) set.remove(key)
+                                            }
+                                        }
+                                        .heightIn(min = 56.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Colored indicator
+                                    Box(
+                                        modifier = Modifier
+                                            .width(6.dp)
+                                            .height(56.dp)
+                                            .background(
+                                                leftColor,
+                                                RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+                                            )
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "${earned}${if (max != null) " / $max" else " / ?"} points",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = formatDate(res.timeStamp),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = "Id: ${res.id}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+
+                                        IconButton(
+                                            onClick = {
+                                                download(res)
+                                            },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Download,
+                                                contentDescription = "Download",
+                                                tint = MaterialTheme.colorScheme.tertiary
+                                            )
+                                        }
+                                    }
+                                }
+                                if (isExpanded) {
+                                    SubmissionResultComponent(assignmentResultDto = res)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun StatsComponent(
     infos: List<AssignmentInfo>,
 ) {
     val isDark by LocalThemeSwitcherProvider.current.isDark
     println("THEME IS : $isDark")
 
-    // Цветовая палитра для графиков
     val chartColors = remember(isDark) {
         object {
-            // Для качества оценок (heatmap)
             val excellent = if (isDark) Color(0xFF10B981) else Color(0xFF22C55E)
             val excellentSelected = if (isDark) Color(0xFF059669) else Color(0xFF16A34A)
 
@@ -354,7 +619,6 @@ fun StatsComponent(
             val noSubmission = if (isDark) Color(0xFF6B7280) else Color(0xFF9CA3AF)
             val noSubmissionSelected = if (isDark) Color(0xFF4B5563) else Color(0xFF6B7280)
 
-            // Для графика попыток
             val attemptEven1 = if (isDark) Color(0xFF3B82F6) else Color(0xFF60A5FA)
             val attemptEven2 = if (isDark) Color(0xFF2563EB) else Color(0xFF3B82F6)
 
@@ -754,6 +1018,7 @@ fun AssignmentInfoComponentPreview() {
                 )
 
                 fun result(earned: Int, max: Int) = AssignmentResultDto(
+                    id = Random.nextInt().toLong(),
                     timeStamp = now,
                     points = earned,
                     result = suite(earned, max)
@@ -766,7 +1031,13 @@ fun AssignmentInfoComponentPreview() {
                         maxAttempts = 3,
                         attemptsUsed = 0,
                         results = emptyList(),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     // Excellent
                     AssignmentInfo(
@@ -775,7 +1046,13 @@ fun AssignmentInfoComponentPreview() {
                         maxAttempts = 3,
                         attemptsUsed = 1,
                         results = listOf(result(95, 100)),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     AssignmentInfo(
                         assignmentId = 0,
@@ -783,7 +1060,13 @@ fun AssignmentInfoComponentPreview() {
                         maxAttempts = 3,
                         attemptsUsed = 2,
                         results = listOf(result(90, 100)),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     // Good
                     AssignmentInfo(
@@ -792,7 +1075,13 @@ fun AssignmentInfoComponentPreview() {
                         maxAttempts = 3,
                         attemptsUsed = 2,
                         results = listOf(result(80, 100)),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     AssignmentInfo(
                         assignmentId = 0,
@@ -800,7 +1089,13 @@ fun AssignmentInfoComponentPreview() {
                         maxAttempts = 3,
                         attemptsUsed = 1,
                         results = listOf(result(70, 100)),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     // Satisfactory
                     AssignmentInfo(
@@ -809,7 +1104,13 @@ fun AssignmentInfoComponentPreview() {
                         maxAttempts = 3,
                         attemptsUsed = 3,
                         results = listOf(result(60, 100)),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     AssignmentInfo(
                         assignmentId = 0,
@@ -817,7 +1118,13 @@ fun AssignmentInfoComponentPreview() {
                         maxAttempts = 3,
                         attemptsUsed = 0,
                         results = listOf(result(55, 100)),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     // Fail
                     AssignmentInfo(
@@ -826,7 +1133,13 @@ fun AssignmentInfoComponentPreview() {
                         maxAttempts = 3,
                         attemptsUsed = 3,
                         results = listOf(result(30, 100)),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     AssignmentInfo(
                         assignmentId = 0,
@@ -834,7 +1147,13 @@ fun AssignmentInfoComponentPreview() {
                         maxAttempts = 3,
                         attemptsUsed = 2,
                         results = listOf(result(10, 100)),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     // Fallback by points without suite
                     AssignmentInfo(
@@ -846,10 +1165,17 @@ fun AssignmentInfoComponentPreview() {
                             AssignmentResultDto(
                                 timeStamp = now,
                                 points = 1,
-                                result = null
+                                result = null,
+                                id = 1
                             )
                         ),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     AssignmentInfo(
                         assignmentId = 0,
@@ -860,10 +1186,17 @@ fun AssignmentInfoComponentPreview() {
                             AssignmentResultDto(
                                 timeStamp = now,
                                 points = 0,
-                                result = null
+                                result = null,
+                                id = 1
                             )
                         ),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                     // Various attempts used values
                     AssignmentInfo(
@@ -872,11 +1205,18 @@ fun AssignmentInfoComponentPreview() {
                         maxAttempts = 5,
                         attemptsUsed = 5,
                         results = listOf(result(85, 100)),
-                        unacceptedSubmissions = emptyList()
+                        unacceptedSubmissions = emptyList(),
+                        author = UserDto(
+                            0, "No Submissions User", "123",
+                            aisId = "123",
+                            roles = setOf(),
+                            assignmentGroups = setOf()
+                        )
                     ),
                 )
             },
             {},
+            {}
         )
     }
 }

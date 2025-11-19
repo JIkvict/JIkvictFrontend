@@ -66,6 +66,9 @@ fun AssignmentInfoScreenComposable(
             with(navHostController) {
                 EditAssignmentScreen(it.id).navigateTo()
             }
+        },
+        onDownloadClick = {
+            vm.downloadZipAndSave(it.id)
         }
     )
 }

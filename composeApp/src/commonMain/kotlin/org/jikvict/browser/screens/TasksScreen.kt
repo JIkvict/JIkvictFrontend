@@ -124,16 +124,16 @@ import kotlin.time.ExperimentalTime
 
 // Helper functions for formatting values in human-readable format
 @OptIn(ExperimentalTime::class)
-private fun formatMemory(memoryB: Long): String {
+fun formatMemory(memoryB: Long): String {
     return "" + (memoryB / 1024 / 1024)
 }
 
 
-private fun formatCpuLimit(cpuLimit: Long): String {
+fun formatCpuLimit(cpuLimit: Long): String {
     return "" + (cpuLimit.toDouble() / 1e9)
 }
 
-private fun formatDate(dateString: String): String {
+fun formatDate(dateString: String): String {
     return try {
         val parts = dateString.replace("T", " ").replace("Z", "").split(":")
         if (parts.size >= 2) {
@@ -1351,7 +1351,7 @@ fun UnacceptedSubmissionsContainerPreview() {
 
 
 @Composable
-private fun TestResultCard(
+fun TestResultCard(
     testResult: TestResult,
     isDark: Boolean,
     isExpanded: Boolean = false,

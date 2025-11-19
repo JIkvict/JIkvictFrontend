@@ -2,6 +2,13 @@ package org.jikvict.browser.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.http.ContentType.Application
+import io.ktor.http.HttpHeaders
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,12 +23,16 @@ import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.StatsRequestDto
 import org.jikvict.api.models.UserDto
+import org.jikvict.browser.di.BACKEND_URL
+import org.jikvict.browser.util.saveBytesAsFile
 
 class AssignmentInfoScreenViewModel(
     val assignmentControllerApi: AssignmentControllerApi,
     val teacherStudentControllerApi: TeacherStudentControllerApi,
     val assignmentGroupControllerApi: AssignmentGroupControllerApi,
-    val usersControllerApi: UsersControllerApi
+    val usersControllerApi: UsersControllerApi,
+    private val client: HttpClient,
+
 ) : ViewModel() {
 
     private var _assignment = MutableStateFlow<AssignmentDto?>(null)
@@ -46,6 +57,26 @@ class AssignmentInfoScreenViewModel(
         }
     }
 
+
+    fun downloadZipAndSave(
+        assignmentResultId: Long,
+    ) {
+        viewModelScope.launch {
+            try {
+                val url = "$BACKEND_URL/api/teacher/zip/$assignmentResultId"
+                val response =
+                    client.get(url) {
+                        header(HttpHeaders.Accept, Application.OctetStream.toString())
+                    }
+                if (!response.status.isSuccess()) {
+                    return@launch
+                }
+                val bytes: ByteArray = response.body()
+                val ok = saveBytesAsFile("submission-$assignmentResultId.zip", bytes)
+            } catch (e: Exception) {
+            }
+        }
+    }
     fun loadUsers() {
         val ids = groups.value?.flatMap { it.userIds } ?: return
         viewModelScope.launch {
@@ -55,7 +86,6 @@ class AssignmentInfoScreenViewModel(
                         usersControllerApi.getUserById(it)
                     }.getOrNull()
                 }
-                println("Users are: ${result.map { it.body() }}")
                 _users.value = result.mapNotNull { if (it.success) it.body() else null }.distinct()
             }.onFailure {
                 ensureActive()
@@ -78,18 +108,15 @@ class AssignmentInfoScreenViewModel(
     }
 
     suspend fun loadInfos(groupIds: List<Long>, userIds: List<Long>): List<AssignmentInfo>? {
-        println("I was called to fetch stats for users: $userIds and groups: $groupIds")
         if (assignment.value == null) return null
 
         runCatching {
             val result =
                 teacherStudentControllerApi.getAssignmentInfo(assignment.value!!.id, StatsRequestDto(userIds, groupIds))
-            println("Success body is: ${result.body()}")
             if (result.success) {
                 return result.body()
             }
         }.onFailure {
-            println("Failed to load assignment: ${it.message}")
             return null
         }
         return null
