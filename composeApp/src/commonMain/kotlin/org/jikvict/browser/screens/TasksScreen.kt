@@ -1368,11 +1368,15 @@ fun TestResultCard(
         )
     ) {
         BoxWithConstraints {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column {
                 Row(
-                    modifier = Modifier.fillMaxWidth().clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }) { onClick() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { onClick() }
+                        .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -1420,35 +1424,38 @@ fun TestResultCard(
                 }
 
                 if (isExpanded) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Logs:",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isDark) Color(0xFF2C2C2C) else Color(0xFFF5F5F5)
-                        )
+                    Column(
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                     ) {
-                        SelectionContainer {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                if (testResult.logs.isNotEmpty()) {
-                                    testResult.logs.forEach { log ->
+                        Text(
+                            text = "Logs:",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isDark) Color(0xFF2C2C2C) else Color(0xFFF5F5F5)
+                            )
+                        ) {
+                            SelectionContainer {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    if (testResult.logs.isNotEmpty()) {
+                                        testResult.logs.forEach { log ->
+                                            Text(
+                                                text = log,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontFamily = FontFamily.Monospace,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    } else {
                                         Text(
-                                            text = log,
+                                            text = "No logs found for this test",
                                             style = MaterialTheme.typography.bodySmall,
-                                            fontFamily = FontFamily.Monospace,
-                                            color = MaterialTheme.colorScheme.onSurface
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                         )
                                     }
-                                } else {
-                                    Text(
-                                        text = "No logs found for this test",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                    )
                                 }
                             }
                         }

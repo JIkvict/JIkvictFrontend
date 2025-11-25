@@ -50,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -60,6 +61,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.PieChart
 import ir.ehsannarmani.compose_charts.models.AnimationMode
@@ -452,6 +454,8 @@ fun SubmissionComponent(
             val satisfactory = if (isDark) Color(0xFFF97316) else Color(0xFFFB923C)
 
             val fail = if (isDark) Color(0xFFEF4444) else Color(0xFFF87171)
+
+            val bestBadge = if (isDark) Color(0xFFF59E0B) else Color(0xFFD97706)
         }
     }
 
@@ -476,115 +480,207 @@ fun SubmissionComponent(
             return@Column
         }
 
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            listOf(
+                "Excellent (>90%)" to colors.excellent,
+                "Good (70-89%)" to colors.good,
+                "Satisfactory (50-69%)" to colors.satisfactory,
+                "Fail (<50%)" to colors.fail
+            ).forEach { (label, color) ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(color, RoundedCornerShape(2.dp))
+                    )
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+        }
+
+        var expandedUsers by remember { mutableStateOf(setOf<Long>()) }
         var expandedKeys by remember { mutableStateOf(setOf<String>()) }
 
         infos.forEach { info ->
             val author = info.author.userNameField
             val results = info.results
-            if (results.isEmpty()) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(12.dp),
-                ) {
+            val isUserExpanded = expandedUsers.contains(info.author.id)
+
+            val bestScore = remember(results) {
+                results.maxOfOrNull { it.result?.totalEarnedPoints ?: it.points }
+            }
+            val bestTotal = remember(results) {
+                results.firstNotNullOfOrNull { it.result?.totalPossiblePoints }
+            }
+
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+                tonalElevation = if (isUserExpanded) 2.dp else 0.dp
+            ) {
+                Column {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .clickable {
+                                expandedUsers = if (isUserExpanded) {
+                                    expandedUsers - info.author.id
+                                } else {
+                                    expandedUsers + info.author.id
+                                }
+                            }
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = if (isUserExpanded) "Collapse" else "Expand",
+                                modifier = Modifier.rotate(if (isUserExpanded) 0f else -90f)
+                            )
+                            Column {
+                                Text(
+                                    text = author,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                if (results.isNotEmpty() && bestScore != null) {
+                                    Text(
+                                        text = "Best: $bestScore${if (bestTotal != null) " / $bestTotal" else ""}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                        val statusText =
+                            if (results.isEmpty()) "No accepted submissions" else "${results.size} submissions"
                         Text(
-                            text = author,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "No accepted submissions",
+                            text = statusText,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
-            } else {
-                Text(
-                    text = author,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    results.forEach { res ->
-                        val earned = res.result?.totalEarnedPoints ?: res.points
-                        val max = res.result?.totalPossiblePoints
-                        val leftColor = colorFor(earned, max)
-                        val key = "${info.author.id}-${res.timeStamp}-${res.points}"
-                        val isExpanded = expandedKeys.contains(key)
-                        Surface(
-                            color = MaterialTheme.colorScheme.surface,
-                            shape = RoundedCornerShape(4.dp),
+
+                    if (isUserExpanded && results.isNotEmpty()) {
+                        Column(
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Column {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            expandedKeys = expandedKeys.toMutableSet().also { set ->
-                                                if (!set.add(key)) set.remove(key)
+                            results.forEach { res ->
+                                val earned = res.result?.totalEarnedPoints ?: res.points
+                                val max = res.result?.totalPossiblePoints
+                                val leftColor = colorFor(earned, max)
+                                val key = "${info.author.id}-${res.timeStamp}-${res.points}"
+                                val isResultExpanded = expandedKeys.contains(key)
+                                val isBest = bestScore != null && earned == bestScore
+
+                                Surface(
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = RoundedCornerShape(4.dp),
+                                ) {
+                                    Column {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    expandedKeys = expandedKeys.toMutableSet().also { set ->
+                                                        if (!set.add(key)) set.remove(key)
+                                                    }
+                                                }
+                                                .heightIn(min = 56.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Colored indicator
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(6.dp)
+                                                    .height(56.dp)
+                                                    .background(
+                                                        leftColor,
+                                                        RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+                                                    )
+                                            )
+                                            Row(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                                    .fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "${earned}${if (max != null) " / $max" else " / ?"} points",
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            color = MaterialTheme.colorScheme.onSurface
+                                                        )
+                                                        if (isBest) {
+                                                            Surface(
+                                                                color = colors.bestBadge.copy(alpha = 0.2f),
+                                                                shape = RoundedCornerShape(4.dp)
+                                                            ) {
+                                                                Text(
+                                                                    text = "BEST",
+                                                                    style = MaterialTheme.typography.labelSmall,
+                                                                    color = colors.bestBadge,
+                                                                    modifier = Modifier.padding(
+                                                                        horizontal = 4.dp,
+                                                                        vertical = 2.dp
+                                                                    )
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                    Text(
+                                                        text = formatDate(res.timeStamp),
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Text(
+                                                        text = "Id: ${res.id}",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+
+                                                IconButton(
+                                                    onClick = {
+                                                        download(res)
+                                                    },
+                                                    modifier = Modifier.size(24.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Download,
+                                                        contentDescription = "Download",
+                                                        tint = MaterialTheme.colorScheme.tertiary
+                                                    )
+                                                }
                                             }
                                         }
-                                        .heightIn(min = 56.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // Colored indicator
-                                    Box(
-                                        modifier = Modifier
-                                            .width(6.dp)
-                                            .height(56.dp)
-                                            .background(
-                                                leftColor,
-                                                RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
-                                            )
-                                    )
-                                    Row(
-                                        modifier = Modifier
-                                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                                            .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = "${earned}${if (max != null) " / $max" else " / ?"} points",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                            Text(
-                                                text = formatDate(res.timeStamp),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            Text(
-                                                text = "Id: ${res.id}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-
-                                        IconButton(
-                                            onClick = {
-                                                download(res)
-                                            },
-                                            modifier = Modifier.size(24.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Download,
-                                                contentDescription = "Download",
-                                                tint = MaterialTheme.colorScheme.tertiary
-                                            )
+                                        if (isResultExpanded) {
+                                            SubmissionResultComponent(assignmentResultDto = res)
                                         }
                                     }
-                                }
-                                if (isExpanded) {
-                                    SubmissionResultComponent(assignmentResultDto = res)
                                 }
                             }
                         }
@@ -637,73 +733,45 @@ fun StatsComponent(
             return
         }
 
-        data class Bucket(val label: String, val color: Color, val selectedColor: Color)
-
-        val qualityBuckets = listOf(
-            Bucket(
-                "Excellent (90–100%)",
-                color = chartColors.excellent,
-                selectedColor = chartColors.excellentSelected
-            ),
-            Bucket(
-                "Good (70–89%)",
-                color = chartColors.good,
-                selectedColor = chartColors.goodSelected
-            ),
-            Bucket(
-                "Satisfactory (50–69%)",
-                color = chartColors.satisfactory,
-                selectedColor = chartColors.satisfactorySelected
-            ),
-            Bucket(
-                "Fail (<50%)",
-                color = chartColors.fail,
-                selectedColor = chartColors.failSelected
-            ),
-            Bucket(
-                "No submissions",
-                color = chartColors.noSubmission,
-                selectedColor = chartColors.noSubmissionSelected
-            ),
-        )
-
-        fun classifyQuality(info: AssignmentInfo): Int {
-            val last = info.results.lastOrNull() ?: return 4 // No submissions
-            val suite = last.result
-            if (suite != null) {
-                val max = suite.totalPossiblePoints
-                val earned = suite.totalEarnedPoints
-                val ratio = if (max > 0) earned.toDouble() / max.toDouble() else 0.0
-                return when {
-                    ratio >= 0.9 -> 0
-                    ratio >= 0.7 -> 1
-                    ratio >= 0.5 -> 2
-                    else -> 3
+        // Histogram Calculation
+        val histogramResult = remember(infos) {
+            val buckets = IntArray(10)
+            infos.forEach { info ->
+                val last = info.results.lastOrNull()
+                if (last != null) {
+                    val earned = last.result?.totalEarnedPoints ?: last.points
+                    val max = last.result?.totalPossiblePoints ?: 0
+                    if (max > 0) {
+                        val pct = (earned.toDouble() / max.toDouble() * 100.0).coerceIn(0.0, 100.0)
+                        val bin = (pct / 10.0).toInt().coerceAtMost(9)
+                        buckets[bin]++
+                    }
                 }
             }
-            return if (last.points > 0) 2 else 3
+            buckets
         }
 
-        val qualityCounts = remember(infos) {
-            IntArray(qualityBuckets.size).also { arr ->
-                infos.forEach { info -> arr[classifyQuality(info)]++ }
-            }
-        }
-
-        val qualityTotal = qualityCounts.sum().coerceAtLeast(1)
-
-        var qualityData by remember(infos) {
-            mutableStateOf(
-                qualityBuckets.mapIndexed { idx, b ->
-                    Pie(
-                        label = b.label,
-                        data = qualityCounts[idx].toDouble(),
-                        color = b.color,
-                        selectedColor = b.selectedColor,
+        val histogramBars = remember(histogramResult, isDark) {
+            histogramResult.mapIndexed { index, count ->
+                val start = index * 10
+                val end = start + 10
+                Bars(
+                    label = "${start}-${end}%",
+                    values = listOf(
+                        Bars.Data(
+                            label = "Students",
+                            value = count.toDouble(),
+                            color = Brush.verticalGradient(
+                                listOf(chartColors.attemptEven1, chartColors.attemptEven2)
+                            )
+                        )
                     )
-                }
-            )
+                )
+            }
         }
+
+        val maxHistogramCount = histogramResult.maxOrNull() ?: 0
+        val histogramStep = if (maxHistogramCount <= 5) 1.0 else (maxHistogramCount / 5.0)
 
         data class PassBucket(val label: String, val color: Color, val selectedColor: Color)
 
@@ -780,67 +848,62 @@ fun StatsComponent(
 
         Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                // Left: Quality distribution
+                // Left: Quality distribution (Histogram)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Score quality distribution", style = MaterialTheme.typography.titleMedium, color = textColor)
-                    PieChart(
-                        modifier = Modifier.size(260.dp),
-                        data = qualityData,
-                        onPieClick = {
-                            val pieIndex = qualityData.indexOf(it)
-                            qualityData =
-                                qualityData.mapIndexed { mapIndex, pie -> pie.copy(selected = pieIndex == mapIndex) }
-                        },
-                        selectedScale = 1.08f,
-                        scaleAnimEnterSpec = spring(
+                    Text("Score distribution", style = MaterialTheme.typography.titleMedium, color = textColor)
+                    ColumnChart(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                            .size(260.dp),
+                        data = histogramBars,
+                        barProperties = BarProperties(
+                            cornerRadius = Bars.Data.Radius.Rectangle(topLeft = 4.dp, topRight = 4.dp),
+                            spacing = 2.dp,
+                            thickness = 16.dp
+                        ),
+                        animationSpec = spring(
                             dampingRatio = Spring.DampingRatioMediumBouncy,
                             stiffness = Spring.StiffnessLow
                         ),
-                        colorAnimEnterSpec = tween(300),
-                        colorAnimExitSpec = tween(300),
-                        scaleAnimExitSpec = tween(300),
-                        spaceDegreeAnimExitSpec = tween(300),
-                        style = Pie.Style.Stroke()
+                        animationMode = AnimationMode.OneByOne,
+                        labelProperties = LabelProperties(
+                            enabled = true,
+                            textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor, fontSize = 10.sp),
+                        ),
+                        labelHelperProperties = LabelHelperProperties(
+                            enabled = false
+                        ),
+                        indicatorProperties = HorizontalIndicatorProperties(
+                            enabled = true,
+                            textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
+                            count = IndicatorCount.StepBased(histogramStep),
+                            position = IndicatorPosition.Horizontal.Start,
+                            padding = 32.dp,
+                        ),
+                        gridProperties = GridProperties(
+                            xAxisProperties = GridProperties.AxisProperties(
+                                lineCount = 10
+                            ),
+                            yAxisProperties = GridProperties.AxisProperties(
+                                enabled = false,
+                            )
+                        )
                     )
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        qualityData.forEachIndexed { idx, pie ->
-                            val count = qualityCounts[idx]
-                            if (count == 0) return@forEachIndexed
-                            val percent = (count * 100.0 / qualityTotal)
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(12.dp)
-                                        .background(
-                                            if (pie.selected) pie.selectedColor else pie.color,
-                                            RoundedCornerShape(2.dp)
-                                        )
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    text = buildString {
-                                        append(pie.label)
-                                        append(": ")
-                                        append(count)
-                                        append(" (")
-                                        val percentRounded = round(percent * 10.0) / 10.0
-                                        append(percentRounded)
-                                        append("%)")
-                                    },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = textColor
-                                )
-                            }
-                        }
-                    }
                 }
 
                 // Right: Pass/Fail distribution
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         "Pass / Fail / No submissions",
                         style = MaterialTheme.typography.titleMedium,
-                        color = textColor
+                        color = textColor,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Start
                     )
                     PieChart(
                         modifier = Modifier.size(260.dp),
@@ -861,7 +924,7 @@ fun StatsComponent(
                         spaceDegreeAnimExitSpec = tween(300),
                         style = Pie.Style.Fill,
                     )
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
                         passData.forEachIndexed { idx, pie ->
                             val count = passCounts[idx]
                             if (count == 0) return@forEachIndexed
@@ -920,45 +983,69 @@ fun StatsComponent(
                         }
                     }
 
-                    ColumnChart(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp)
-                            .size(260.dp),
-                        data = attemptsBars,
-                        barProperties = BarProperties(
-                            cornerRadius = Bars.Data.Radius.Rectangle(topLeft = 6.dp, topRight = 6.dp),
-                            spacing = 3.dp,
-                            thickness = 20.dp
-                        ),
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessLow
-                        ),
-                        animationMode = AnimationMode.OneByOne,
-                        labelProperties = LabelProperties(
-                            enabled = true,
-                            textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                        ),
-                        labelHelperProperties = LabelHelperProperties(
-                            textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                        ),
-                        indicatorProperties = HorizontalIndicatorProperties(
-                            enabled = true,
-                            textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                            count = IndicatorCount.StepBased(1.0),
-                            position = IndicatorPosition.Horizontal.Start,
-                            padding = 32.dp,
-                        ),
-                        gridProperties = GridProperties(
-                            xAxisProperties = GridProperties.AxisProperties(
-                                lineCount = attemptsCounts.maxOrNull()?.plus(1) ?: 0
-                            ),
-                            yAxisProperties = GridProperties.AxisProperties(
-                                enabled = false,
-                            )
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        // Y-Axis Label (Student Count) - Rotated
+                        Text(
+                            text = "Student Count",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = textColor.copy(alpha = 0.7f),
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .rotate(-90f)
+                                .padding(bottom = 240.dp) // Push out
                         )
-                    )
+
+                        Column {
+                            ColumnChart(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 24.dp, end = 8.dp) // Space for Y label
+                                    .size(260.dp),
+                                data = attemptsBars,
+                                barProperties = BarProperties(
+                                    cornerRadius = Bars.Data.Radius.Rectangle(topLeft = 6.dp, topRight = 6.dp),
+                                    spacing = 3.dp,
+                                    thickness = 20.dp
+                                ),
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessLow
+                                ),
+                                animationMode = AnimationMode.OneByOne,
+                                labelProperties = LabelProperties(
+                                    enabled = true,
+                                    textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
+                                ),
+                                labelHelperProperties = LabelHelperProperties(
+                                    textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
+                                ),
+                                indicatorProperties = HorizontalIndicatorProperties(
+                                    enabled = true,
+                                    textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
+                                    count = IndicatorCount.StepBased(1.0),
+                                    position = IndicatorPosition.Horizontal.Start,
+                                    padding = 32.dp,
+                                ),
+                                gridProperties = GridProperties(
+                                    xAxisProperties = GridProperties.AxisProperties(
+                                        lineCount = attemptsCounts.maxOrNull()?.plus(1) ?: 0
+                                    ),
+                                    yAxisProperties = GridProperties.AxisProperties(
+                                        enabled = false,
+                                    )
+                                )
+                            )
+                            // X-Axis Label
+                            Text(
+                                text = "Number of Attempts",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = textColor.copy(alpha = 0.7f),
+                                modifier = Modifier
+                                    .align(Alignment.CenterHorizontally)
+                                    .padding(top = 8.dp)
+                            )
+                        }
+                    }
                 }
 
                 // Right: empty placeholder to keep 2-per-row layout
