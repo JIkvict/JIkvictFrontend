@@ -43,29 +43,7 @@ fun main() {
 
             navController.navigate(initRoute)
 
-            navController.bindToBrowserNavigation { entry ->
-                println("Binding to navigation: ${entry.destination.route}")
-                var mapping = mapOf<String, Any?>()
-                entry.arguments?.read {
-                    mapping = toMap()
-                }
-
-                val baseRoute =
-                    entry.destination.route
-                        ?.substringBefore("?")
-                        ?.substringBefore("{") ?: ""
-
-                val queryParams =
-                    if (mapping.isNotEmpty()) {
-                        mapping.entries.joinToString(prefix = "?", separator = "&") { (key, value) ->
-                            "$key=${value?.toString() ?: ""}"
-                        }
-                    } else {
-                        ""
-                    }
-
-                return@bindToBrowserNavigation "#$baseRoute$queryParams"
-            }
+            navController.bindToBrowserNavigation()
         }
     }
 }

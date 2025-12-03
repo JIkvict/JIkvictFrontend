@@ -31,7 +31,11 @@ fun StudentsScreenComposable(scope: DefaultScreenScope, userName: String? = null
         },
         onNavigateBack = { navHostController.navigateBackOr(UserGroupScreen) },
         initialUserName = userName
-    )
+    ) {
+        with(navHostController) {
+            StudentsScreen(it.userNameField).forceNavigateTo()
+        }
+    }
 }
 
 @Serializable

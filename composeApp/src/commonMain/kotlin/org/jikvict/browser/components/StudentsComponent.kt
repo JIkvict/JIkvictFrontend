@@ -2,40 +2,14 @@ package org.jikvict.browser.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -56,7 +30,6 @@ import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
 
 data class StudentAssignmentInfo(val assignmentTitle: String, val info: AssignmentInfo)
-
 data class StudentStats(val assignments: List<StudentAssignmentInfo>)
 
 @Composable
@@ -67,33 +40,29 @@ fun StudentsComponent(
     onGroupClick: (AssignmentGroupDto) -> Unit,
     scope: DefaultScreenScope,
     onNavigateBack: () -> Unit = {},
-    initialUserName: String? = null
+    initialUserName: String? = null,
+    onUserSelected: (UserDto) -> Unit = {}
 ) {
-    var userQuery by remember { mutableStateOf(initialUserName ?: "") }
+    val selectedUser = remember(initialUserName, availableUsers) {
+        availableUsers.find { it.userNameField == initialUserName }
+    }
+
+    var userQuery by remember(initialUserName) {
+        mutableStateOf(initialUserName ?: "")
+    }
+
     var userDropdownExpanded by remember { mutableStateOf(false) }
     val userFocusRequester = remember { FocusRequester() }
-    var selectedUser by remember { mutableStateOf<UserDto?>(null) }
 
     var statsResult by remember {
         mutableStateOf<OperationResult<StudentStats>>(OperationResult.Idle())
     }
 
-    LaunchedEffect(initialUserName, availableUsers) {
-        if (initialUserName != null && selectedUser == null) {
-            val user = availableUsers.find { it.userNameField == initialUserName }
-            if (user != null) {
-                selectedUser = user
-                userQuery = user.userNameField
-            }
-        }
-    }
-
     LaunchedEffect(selectedUser) {
-        val user = selectedUser
-        if (user != null) {
+        if (selectedUser != null) {
             statsResult = OperationResult.Loading()
             try {
-                val stats = statsProvider(user)
+                val stats = statsProvider(selectedUser)
                 statsResult = OperationResult.Success(stats)
             } catch (e: Exception) {
                 statsResult = OperationResult.Error(e.message ?: "Unknown error")
@@ -104,11 +73,11 @@ fun StudentsComponent(
     }
 
     Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .heightIn(min = scope.screenHeight)
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = scope.screenHeight)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -121,20 +90,18 @@ fun StudentsComponent(
         SearchableDropdown(
             expanded = userDropdownExpanded,
             onExpandedChange = { userDropdownExpanded = it },
-            items =
-                availableUsers.filter { u ->
-                    val q = userQuery.trim().lowercase()
-                    q.isEmpty() ||
-                            u.userNameField.lowercase().contains(q) ||
-                            u.email.lowercase().contains(q)
-                },
+            items = availableUsers.filter { u ->
+                val q = userQuery.trim().lowercase()
+                q.isEmpty() ||
+                        u.userNameField.lowercase().contains(q) ||
+                        u.email.lowercase().contains(q)
+            },
             itemContent = { user ->
                 DropdownMenuItem(
                     text = { Text("${user.userNameField} (${user.email})") },
                     onClick = {
-                        selectedUser = user
-                        userQuery = user.userNameField
                         userDropdownExpanded = false
+                        onUserSelected(user)
                     }
                 )
             },
@@ -145,18 +112,14 @@ fun StudentsComponent(
                     onValueChange = {
                         userQuery = it
                         if (!userDropdownExpanded) userDropdownExpanded = true
-                        if (selectedUser != null && it != selectedUser?.userNameField) {
-                            selectedUser = null
-                        }
                     },
                     label = { Text("Search user") },
-                    modifier =
-                        anchorModifier
-                            .fillMaxWidth()
-                            .focusRequester(userFocusRequester)
-                            .onFocusChanged { f ->
-                                if (f.isFocused) userDropdownExpanded = true
-                            },
+                    modifier = anchorModifier
+                        .fillMaxWidth()
+                        .focusRequester(userFocusRequester)
+                        .onFocusChanged { f ->
+                            if (f.isFocused) userDropdownExpanded = true
+                        },
                     singleLine = true,
                     trailingIcon = {
                         Row {
@@ -164,7 +127,6 @@ fun StudentsComponent(
                                 IconButton(
                                     onClick = {
                                         userQuery = ""
-                                        selectedUser = null
                                         userDropdownExpanded = true
                                         userFocusRequester.requestFocus()
                                     }
@@ -206,28 +168,26 @@ fun StudentsComponent(
                         CircularProgressIndicator()
                     }
                 }
-
                 is OperationResult.Error -> {
                     Text(
                         "Error loading stats: ${res.message}",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-
                 is OperationResult.Success -> {
-                    StudentOverview(user = selectedUser!!, onGroupClick)
+                    StudentOverview(user = selectedUser, onGroupClick)
                     Spacer(modifier = Modifier.height(16.dp))
                     StudentAssignmentsList(
                         assignments = res.result.assignments,
                         onDownloadClick = onDownloadClick
                     )
                 }
-
                 is OperationResult.Idle -> {}
             }
         }
     }
 }
+
 
 @Composable
 fun StudentOverview(
