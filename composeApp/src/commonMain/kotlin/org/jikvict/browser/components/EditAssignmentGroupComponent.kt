@@ -263,8 +263,8 @@ fun InfoAssignmentGroupComponent(
         }
 
         Box(
-            modifier = Modifier.fitContentToScreen(),
-            contentAlignment = Alignment.TopCenter
+            modifier = Modifier.fitContentToScreen().padding(16.dp),
+            contentAlignment = Alignment.TopCenter,
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Spacer(modifier = Modifier.height(16.dp))

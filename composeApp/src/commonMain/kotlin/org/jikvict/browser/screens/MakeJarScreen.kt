@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Task
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
@@ -61,6 +62,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jikvict.browser.LocalNavController
 import org.jikvict.browser.components.AnimatedBackground
 import org.jikvict.browser.components.AutoSizeText
 import org.jikvict.browser.components.CustomCard
@@ -88,7 +90,7 @@ import kotlin.reflect.KClass
 @Composable
 fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
     val viewModel = koinViewModel<MakeJarScreenViewModel>()
-
+    val navHostController = LocalNavController.current
     val iconId = "icon"
     val annotatedText =
         buildAnnotatedString {
@@ -366,8 +368,12 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
             CustomCard(GitHubIcon(), "Follow me on GitHub") {
                 openExternalUrl("https://github.com/ikvict07", true)
             }
-            CustomCard(Icons.Default.Download, "Download the plugin in IntelliJ IDEA Marketplace")
-            CustomCard(Icons.Default.Task, "Solve tasks and test your knowledge")
+            CustomCard(Icons.Default.Task, "Solve tasks and test your knowledge") {
+                with(navHostController) {
+                    TasksScreen().navigateTo()
+                }
+            }
+            CustomCard(Icons.Default.QuestionAnswer, "Read important information")
         }
         Spacer(modifier = Modifier.height(16.dp))
     }
