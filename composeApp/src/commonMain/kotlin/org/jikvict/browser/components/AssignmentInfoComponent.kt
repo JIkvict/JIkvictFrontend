@@ -274,7 +274,6 @@ fun AssignmentInfoComponent(
             }
         }
 
-        // Groups selector
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Select groups", style = MaterialTheme.typography.titleMedium)
             SearchableDropdown(
@@ -291,7 +290,6 @@ fun AssignmentInfoComponent(
                             if (selectedGroups.none { it.id == group.id }) {
                                 selectedGroups = selectedGroups + group
                             }
-                            // Clear for next search and keep menu open while field stays focused
                             groupQuery = ""
                             groupFocusRequester.requestFocus()
                         }
@@ -421,7 +419,7 @@ fun AssignmentInfoComponent(
 }
 
 @Composable
-private fun SelectableChip(label: String, onRemove: () -> Unit) {
+fun SelectableChip(label: String, onRemove: () -> Unit) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceVariant

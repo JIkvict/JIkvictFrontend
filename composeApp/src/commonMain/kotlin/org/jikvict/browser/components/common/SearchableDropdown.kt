@@ -51,7 +51,7 @@ fun <T> SearchableDropdown(
                 if (items.isEmpty()) {
                     noItemsContent()
                 } else {
-                    items.forEach { item ->
+                    items.take(5).forEach { item ->
                         itemContent(item)
                     }
                 }

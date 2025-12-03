@@ -15,10 +15,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
 
 @Composable
-fun EditAssignmentGroupScreenComposable(
-    scope: DefaultScreenScope,
-    groupId: Long
-) {
+fun EditAssignmentGroupScreenComposable(scope: DefaultScreenScope, groupId: Long) {
     val navHostController = LocalNavController.current
     val vm = koinViewModel<EditAssignmentGroupViewModel>(key = groupId.toString())
     LaunchedEffect(groupId) {
@@ -32,31 +29,19 @@ fun EditAssignmentGroupScreenComposable(
     group?.let { dto ->
         InfoAssignmentGroupComponent(
             scope = scope,
-            onNavigateBack = {
-                navHostController.navigateBackOr(UserGroupScreen)
-            },
+            onNavigateBack = { navHostController.navigateBackOr(UserGroupScreen) },
             group = dto,
-            allUsers = users.map {
-                User(
-                    id = it.id,
-                    name = it.userNameField,
-                    email = it.email
-                )
-            },
-            onUpdate = {
-                vm.update(it)
-            },
+            allUsers =
+                users.map { User(id = it.id, name = it.userNameField, email = it.email) },
+            onUpdate = { vm.update(it) },
             onNavigateToUpdated = {
-                with(navHostController) {
-                    EditAssignmentGroupScreen(groupId).navigateTo()
-                }
+                with(navHostController) { EditAssignmentGroupScreen(groupId).navigateTo() }
             },
             assignments = assignments,
             onAssignmentClick = {
-                with(navHostController) {
-                    AssignmentInfoScreen(it.id).navigateTo()
-                }
-            }
+                with(navHostController) { AssignmentInfoScreen(it.id).navigateTo() }
+            },
+            onUserClick = { with(navHostController) { StudentsScreen(it.name).navigateTo() } }
         )
     }
 }
@@ -65,9 +50,7 @@ fun EditAssignmentGroupScreenComposable(
 @SerialName("edit-assignment-group")
 data class EditAssignmentGroupScreen(val groupId: Long) : TeacherScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
-        get() = {
-            EditAssignmentGroupScreenComposable(it, groupId)
-        }
+        get() = { EditAssignmentGroupScreenComposable(it, groupId) }
 }
 
 object EditAssignmentGroupScreenRouterRegistrar : ScreenRouterRegistrar<EditAssignmentGroupScreen> {
@@ -79,4 +62,5 @@ object EditAssignmentGroupScreenRouterRegistrar : ScreenRouterRegistrar<EditAssi
     }
 }
 
-object EditAssignmentGroupScreenRegistrar : ScreenRegistrar<EditAssignmentGroupScreen> by createRegistrar()
+object EditAssignmentGroupScreenRegistrar :
+    ScreenRegistrar<EditAssignmentGroupScreen> by createRegistrar()

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -50,102 +49,99 @@ fun UserGroupComponent(
     onGroupClick: (AssignmentGroupDto) -> Unit = {},
     scope: DefaultScreenScope,
     onAddGroupClick: () -> Unit = {},
-) = with(scope) {
-    var groupSearch by remember { mutableStateOf("") }
+) =
+    with(scope) {
+        var groupSearch by remember { mutableStateOf("") }
 
-    val filteredGroups = remember(assignmentGroups, groupSearch) {
-        if (groupSearch.isBlank()) {
-            assignmentGroups
-        } else {
-            assignmentGroups.filter {
-                it.name.contains(groupSearch, ignoreCase = true)
-            }
-        }
-    }
-
-    Box(
-        modifier = Modifier.fitContentToScreen(),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            NavigateBackButton(
-                onNavigateBack = onNavigateBack,
-                title = "Admin panel"
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(IntrinsicSize.Min),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                OutlinedTextField(
-                    value = groupSearch,
-                    onValueChange = { groupSearch = it },
-                    label = { Text("Search") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search"
-                        )
-                    },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
-                )
-
-                IconComponentUnsized(
-                    iconSize = 24.dp,
-                    iconVector = Icons.Default.Add,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)),
-                    onClick = onAddGroupClick
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (filteredGroups.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (groupSearch.isBlank()) "No groups available" else "Groups not found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(250.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(vertical = 16.dp),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).heightIn(max = scope.screenHeight),
-                ) {
-                    items(filteredGroups) {
-                        GroupCard(
-                            group = it,
-                            onClick = { onGroupClick(it) }
-                        )
+        val filteredGroups =
+            remember(assignmentGroups, groupSearch) {
+                if (groupSearch.isBlank()) {
+                    assignmentGroups
+                } else {
+                    assignmentGroups.filter {
+                        it.name.contains(groupSearch, ignoreCase = true)
                     }
                 }
+            }
 
+        Box(modifier = Modifier.fitContentToScreen(), contentAlignment = Alignment.TopCenter) {
+            Column(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                NavigateBackButton(onNavigateBack = onNavigateBack, title = "Admin panel")
+
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(16.dp)
+                            .height(IntrinsicSize.Min),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    OutlinedTextField(
+                        value = groupSearch,
+                        onValueChange = { groupSearch = it },
+                        label = { Text("Search") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search"
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true
+                    )
+
+                    IconComponentUnsized(
+                        iconSize = 24.dp,
+                        iconVector = Icons.Default.Add,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier =
+                            Modifier.size(48.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.primary,
+                                    RoundedCornerShape(12.dp)
+                                ),
+                        onClick = onAddGroupClick
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (filteredGroups.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text =
+                                if (groupSearch.isBlank()) "No groups available"
+                                else "Groups not found",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(250.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(vertical = 16.dp),
+                        modifier =
+                            Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                                .weight(1f),
+                    ) {
+                        items(filteredGroups) {
+                            GroupCard(group = it, onClick = { onGroupClick(it) })
+                        }
+                    }
+                }
             }
         }
-
     }
-}
-
 
 @Composable
 private fun GroupCard(
@@ -157,17 +153,11 @@ private fun GroupCard(
         modifier = modifier.width(200.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         onClick = onClick,
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Group,
                     contentDescription = null,

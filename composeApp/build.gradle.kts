@@ -75,6 +75,7 @@ kotlin {
         compilerOptions {
             freeCompilerArgs.add("-Xwasm-debugger-custom-formatters")
             freeCompilerArgs.add("-Xcontext-parameters")
+            freeCompilerArgs.add("-Xgc=wasm")
         }
         binaries.executable()
     }
