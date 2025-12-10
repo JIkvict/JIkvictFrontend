@@ -2,7 +2,7 @@
 adaptive = "1.1.2"
 agp = "8.11.1"
 androidx-lifecycle = "2.9.1"
-composeMultiplatform = "1.9.0-beta01"
+composeMultiplatform = "1.10.0-rc02"
 kotlin = "2.2.0"
 ktlint = "0.4.26"
 material3 = "1.9.0-alpha04"
@@ -22,6 +22,7 @@ multiplatform-markdown-renderer = "0.35.0"
 serialization = "1.9.0"
 composeIcons = "2.1.1"
 charts = "0.2.0"
+adaptive-suite = "1.10.0-alpha05"
 
 [libraries]
 adaptive-navigation = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }
@@ -32,7 +33,7 @@ androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:life
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "ktlint" }
 material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
-material3-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "composeMultiplatform" }
+material3-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "adaptive-suite" }
 material3-window-size-class1 = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClass" }
 navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -62,6 +63,7 @@ ui-util = { module = "org.jetbrains.compose.ui:ui-util", version.ref = "composeM
 multiplatform-markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "multiplatform-markdown-renderer" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 charts = {module = "io.github.ehsannarmani:compose-charts", version.ref = "charts"}
+preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview" }
 
 # icons
 icons = { module = "dev.tclement.fonticons:core", version.ref = "composeIcons"}

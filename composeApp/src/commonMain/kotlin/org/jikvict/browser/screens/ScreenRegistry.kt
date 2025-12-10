@@ -15,7 +15,8 @@ val registeredScreens =
         EditAssignmentScreenRegistrar,
         EditAssignmentGroupScreenRegistrar,
         AssignmentInfoScreenRegistrar,
-        StudentsScreenRegistrar
+        StudentsScreenRegistrar,
+        HelpScreenRegistrar
     )
 val routers =
     listOf<ScreenRouterRegistrar<out NavigableScreen>>(
@@ -32,5 +33,6 @@ val routers =
         EditAssignmentScreenRouterRegistrar,
         EditAssignmentGroupScreenRouterRegistrar,
         AssignmentInfoScreenRouterRegistrar,
-        StudentsScreenRouterRegistrar
+        StudentsScreenRouterRegistrar,
+        HelpScreenRouterRegistrar
     )

@@ -5,7 +5,6 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
     id(
         libs.plugins.kotlinMultiplatform
@@ -148,6 +147,7 @@ kotlin {
                 implementation(libs.multiplatform.markdown.renderer)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.charts)
+                implementation(libs.preview)
             }
         }
         commonTest {

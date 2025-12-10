@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -28,6 +30,7 @@ import org.jikvict.browser.constant.LocalAppColors
 import org.jikvict.browser.icons.myiconpack.AdminIcon
 import org.jikvict.browser.icons.myiconpack.Ijlogo
 import org.jikvict.browser.screens.AdminScreen
+import org.jikvict.browser.screens.HelpScreen
 import org.jikvict.browser.screens.LoginScreen
 import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.ProfileScreen
@@ -108,6 +111,16 @@ fun Header(modifier: Modifier = Modifier) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(35.dp),
                 ) {
+                    IconComponent(
+                        Icons.AutoMirrored.Outlined.HelpOutline,
+                        hoverable = true,
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        onClick = {
+                            context(navController) {
+                                HelpScreen.navigateTo()
+                            }
+                        })
+
                     AnimatedIconComponent(
                         animationPath = "files/sun-moon.json",
                         hoverable = true,
