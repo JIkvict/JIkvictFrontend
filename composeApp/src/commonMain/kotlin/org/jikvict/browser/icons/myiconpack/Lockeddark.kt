@@ -13,9 +13,8 @@ import androidx.compose.ui.graphics.StrokeJoin.Companion.Miter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.ImageVector.Builder
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import kotlin.Unit
 import org.jikvict.browser.icons.MyIconPack
 
 public val MyIconPack.Lockeddark: ImageVector
@@ -23,11 +22,15 @@ public val MyIconPack.Lockeddark: ImageVector
         if (_lockeddark != null) {
             return _lockeddark!!
         }
-        _lockeddark = Builder(name = "Lockeddark", defaultWidth = 16.0.dp, defaultHeight = 16.0.dp,
-                viewportWidth = 16.0f, viewportHeight = 16.0f).apply {
-            path(fill = SolidColor(Color(0xFFCED0D6)), stroke = null, strokeLineWidth = 0.0f,
-                    strokeLineCap = Butt, strokeLineJoin = Miter, strokeLineMiter = 4.0f,
-                    pathFillType = EvenOdd) {
+        _lockeddark = Builder(
+            name = "Lockeddark", defaultWidth = 16.0.dp, defaultHeight = 16.0.dp,
+            viewportWidth = 16.0f, viewportHeight = 16.0f
+        ).apply {
+            path(
+                fill = SolidColor(Color(0xFFCED0D6)), stroke = null, strokeLineWidth = 0.0f,
+                strokeLineCap = Butt, strokeLineJoin = Miter, strokeLineMiter = 4.0f,
+                pathFillType = EvenOdd
+            ) {
                 moveTo(5.0f, 5.0f)
                 curveTo(5.0f, 3.343f, 6.343f, 2.0f, 8.0f, 2.0f)
                 curveTo(9.657f, 2.0f, 11.0f, 3.343f, 11.0f, 5.0f)
@@ -68,7 +71,7 @@ public val MyIconPack.Lockeddark: ImageVector
                 close()
             }
         }
-        .build()
+            .build()
         return _lockeddark!!
     }
 
