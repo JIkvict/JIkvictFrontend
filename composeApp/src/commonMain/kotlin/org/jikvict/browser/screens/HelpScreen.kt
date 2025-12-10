@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -51,12 +50,12 @@ object HelpScreenRouterRegistrar : ScreenRouterRegistrar<HelpScreen> {
 object HelpScreenRegistrar : ScreenRegistrar<HelpScreen> by createRegistrar()
 
 @Composable
-fun HelpScreenComposable(scope: DefaultScreenScope) {
+fun HelpScreenComposable(scope: DefaultScreenScope) = with(scope) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .heightIn(min = scope.screenHeight),
+            .fillMaxWidth()
+            .heightIn(min = scope.screenHeight)
+            .padding(16.dp),
         verticalArrangement = Arrangement.Top
     ) {
 
@@ -137,14 +136,19 @@ fun HelpScreenComposable(scope: DefaultScreenScope) {
                     )
                 }
             )
-            Markdown("""
+            Markdown(
+                """
                 Now you can submit your solution.
                 
                 Simply *drag and drop* the zip file to the assignment window or use *upload* button.
-            """.trimIndent())
+            """.trimIndent()
+            )
             Spacer(modifier = Modifier.height(16.dp))
             Alert(AlertType.Note, "Remove your tmp files and build directories before submitting.")
-            Alert(AlertType.Important, "Make sure the structure is like task<id>.zip and inside is the default-structure folder.")
+            Alert(
+                AlertType.Important,
+                "Make sure the structure is like task<id>.zip and inside is the default-structure folder."
+            )
         }
 
     }

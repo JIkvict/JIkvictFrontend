@@ -372,7 +372,11 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                     TasksScreen().navigateTo()
                 }
             }
-            CustomCard(Icons.Default.QuestionAnswer, "Read important information")
+            CustomCard(Icons.Default.QuestionAnswer, "Read important information") {
+                with(navHostController) {
+                    HelpScreen.navigateTo()
+                }
+            }
         }
         Spacer(modifier = Modifier.height(16.dp))
     }
