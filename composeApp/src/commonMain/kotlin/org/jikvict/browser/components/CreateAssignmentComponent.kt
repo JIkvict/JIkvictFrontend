@@ -5,10 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -34,10 +35,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.launch
@@ -47,7 +49,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.api.models.CreateAssignmentDto
@@ -157,110 +158,101 @@ fun CreateAssignmentComponent(
         )
     }
 
-    with(scope) {
+    Column(modifier = Modifier.fillMaxWidth().heightIn(scope.screenHeight).padding(vertical = 16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            NavigateBackButton(
+                onNavigateBack = onNavigateBack, title = "Assignments"
+            )
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+
         Box(
-            modifier = Modifier.fitContentToScreen().padding(16.dp),
-            contentAlignment = Alignment.TopCenter,
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                NavigateBackButton(
-                    onNavigateBack = onNavigateBack,
-                    title = "Assignments"
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.responsive(mainColumnModifier),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        item {
-                            AssignmentFormCard(
-                                cardTitle = "Create Assignment",
-                                title = title,
-                                onTitleChange = { title = it },
-                                taskId = taskId,
-                                onTaskIdChange = { taskId = it },
-                                taskSearchQuery = taskSearchQuery,
-                                onTaskSearchQueryChange = { taskSearchQuery = it },
-                                showTaskDropdown = showTaskDropdown,
-                                onShowTaskDropdownChange = { showTaskDropdown = it },
-                                availableTasks = availableTasks,
-                                maxPoints = maxPoints,
-                                onMaxPointsChange = { maxPoints = it },
-                                startDate = startDate,
-                                onStartDateClick = { showStartDatePicker = true },
-                                endDate = endDate,
-                                onEndDateClick = { showEndDatePicker = true },
-                                timeoutValue = timeoutValue,
-                                onTimeoutValueChange = { timeoutValue = it },
-                                timeoutUnit = timeoutUnit,
-                                onTimeoutUnitChange = { timeoutUnit = it },
-                                memoryValue = memoryValue,
-                                onMemoryValueChange = { memoryValue = it },
-                                memoryUnit = memoryUnit,
-                                onMemoryUnitChange = { memoryUnit = it },
-                                cpuValue = cpuValue,
-                                onCpuValueChange = { cpuValue = it },
-                                cpuUnit = cpuUnit,
-                                onCpuUnitChange = { cpuUnit = it },
-                                pidsLimit = pidsLimit,
-                                onPidsLimitChange = { pidsLimit = it },
-                                maxAttempts = maxAttempts,
-                                onMaxAttemptsChange = { maxAttempts = it },
-                                groupSearchQuery = groupSearchQuery,
-                                onGroupSearchQueryChange = { groupSearchQuery = it },
-                                showGroupDropdown = showGroupDropdown,
-                                onShowGroupDropdownChange = { showGroupDropdown = it },
-                                availableAssignmentGroups = availableAssignmentGroups,
-                                selectedGroupIds = selectedGroupIds,
-                                onSelectedGroupIdsChange = { selectedGroupIds = it },
-                                onCancel = onNavigateBack,
-                                onSubmit = {
-                                    createState = CreateAssignmentState.Loading
-                                    coroutineScope.launch {
-                                        val result = onCreate(
-                                            CreateAssignmentDto(
-                                                title = title,
-                                                taskId = taskId!!.toInt(),
-                                                maxPoints = maxPoints.toIntOrNull() ?: 100,
-                                                startDate = startDate.toString(),
-                                                endDate = endDate.toString(),
-                                                timeOutSeconds = (timeoutValue.toLongOrNull()
-                                                    ?: 0) * timeoutUnit.nanosMultiplier / 1000000000,
-                                                memoryLimit = (memoryValue.toLongOrNull()
-                                                    ?: 0) * memoryUnit.bytesMultiplier,
-                                                cpuLimit = (cpuValue.toLongOrNull()
-                                                    ?: 0) * cpuUnit.nanoCpuMultiplier,
-                                                pidsLimit = pidsLimit.toLongOrNull() ?: 20,
-                                                assignmentGroupsIds = selectedGroupIds,
-                                                maximumAttempts = maxAttempts.toIntOrNull() ?: 1
-                                            )
-                                        )
-                                        createState = when (result) {
-                                            is OperationResult.Success -> CreateAssignmentState.Success
-                                            is OperationResult.Error -> CreateAssignmentState.Error(result.message)
-                                            is OperationResult.Loading -> CreateAssignmentState.Loading
-                                            is OperationResult.Idle -> CreateAssignmentState.Idle
-                                        }
-                                    }
-                                },
-                                submitButtonText = "Create",
-                                isSubmitEnabled = title.isNotBlank() && taskId != null && createState is CreateAssignmentState.Idle
+            Column(
+                modifier = Modifier.responsive(mainColumnModifier),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                AssignmentFormCard(
+                    cardTitle = "Create Assignment",
+                    title = title,
+                    onTitleChange = { title = it },
+                    taskId = taskId,
+                    onTaskIdChange = { taskId = it },
+                    taskSearchQuery = taskSearchQuery,
+                    onTaskSearchQueryChange = { taskSearchQuery = it },
+                    showTaskDropdown = showTaskDropdown,
+                    onShowTaskDropdownChange = { showTaskDropdown = it },
+                    availableTasks = availableTasks,
+                    maxPoints = maxPoints,
+                    onMaxPointsChange = { maxPoints = it },
+                    startDate = startDate,
+                    onStartDateClick = { showStartDatePicker = true },
+                    endDate = endDate,
+                    onEndDateClick = { showEndDatePicker = true },
+                    timeoutValue = timeoutValue,
+                    onTimeoutValueChange = { timeoutValue = it },
+                    timeoutUnit = timeoutUnit,
+                    onTimeoutUnitChange = { timeoutUnit = it },
+                    memoryValue = memoryValue,
+                    onMemoryValueChange = { memoryValue = it },
+                    memoryUnit = memoryUnit,
+                    onMemoryUnitChange = { memoryUnit = it },
+                    cpuValue = cpuValue,
+                    onCpuValueChange = { cpuValue = it },
+                    cpuUnit = cpuUnit,
+                    onCpuUnitChange = { cpuUnit = it },
+                    pidsLimit = pidsLimit,
+                    onPidsLimitChange = { pidsLimit = it },
+                    maxAttempts = maxAttempts,
+                    onMaxAttemptsChange = { maxAttempts = it },
+                    groupSearchQuery = groupSearchQuery,
+                    onGroupSearchQueryChange = { groupSearchQuery = it },
+                    showGroupDropdown = showGroupDropdown,
+                    onShowGroupDropdownChange = { showGroupDropdown = it },
+                    availableAssignmentGroups = availableAssignmentGroups,
+                    selectedGroupIds = selectedGroupIds,
+                    onSelectedGroupIdsChange = { selectedGroupIds = it },
+                    onCancel = onNavigateBack,
+                    onSubmit = {
+                        createState = CreateAssignmentState.Loading
+                        coroutineScope.launch {
+                            val result = onCreate(
+                                CreateAssignmentDto(
+                                    title = title,
+                                    taskId = taskId!!.toInt(),
+                                    maxPoints = maxPoints.toIntOrNull() ?: 100,
+                                    startDate = startDate.toString(),
+                                    endDate = endDate.toString(),
+                                    timeOutSeconds = (timeoutValue.toLongOrNull()
+                                        ?: 0) * timeoutUnit.nanosMultiplier / 1000000000,
+                                    memoryLimit = (memoryValue.toLongOrNull()
+                                        ?: 0) * memoryUnit.bytesMultiplier,
+                                    cpuLimit = (cpuValue.toLongOrNull()
+                                        ?: 0) * cpuUnit.nanoCpuMultiplier,
+                                    pidsLimit = pidsLimit.toLongOrNull() ?: 20,
+                                    assignmentGroupsIds = selectedGroupIds,
+                                    maximumAttempts = maxAttempts.toIntOrNull() ?: 1
+                                )
                             )
+                            createState = when (result) {
+                                is OperationResult.Success -> CreateAssignmentState.Success
+                                is OperationResult.Error -> CreateAssignmentState.Error(result.message)
+                                is OperationResult.Loading -> CreateAssignmentState.Loading
+                                is OperationResult.Idle -> CreateAssignmentState.Idle
+                            }
                         }
-                    }
-                }
+                    },
+                    submitButtonText = "Create",
+                    isSubmitEnabled = title.isNotBlank() && taskId != null && createState is CreateAssignmentState.Idle
+                )
             }
         }
     }
 }
+
 
 @Composable
 fun DateTimePickerDialog(

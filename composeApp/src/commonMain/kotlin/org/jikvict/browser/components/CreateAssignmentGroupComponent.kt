@@ -6,14 +6,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -40,12 +41,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.browser.model.OperationResult
 import org.jikvict.browser.theme.mainColumnModifier
@@ -200,202 +201,194 @@ fun CreateAssignmentGroupComponent(
         }
     }
 
-    Box(
-        modifier = Modifier.fitContentToScreen().padding(16.dp),
-        contentAlignment = Alignment.TopCenter,
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Spacer(modifier = Modifier.height(16.dp))
+    Column(modifier = Modifier.fillMaxWidth().heightIn(scope.screenHeight).padding(vertical = 16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            NavigateBackButton(
+                onNavigateBack = onNavigateBack, title = "Assignment Groups"
+            )
+        }
+        Spacer(modifier = Modifier.height(32.dp))
 
-            Row(modifier = Modifier.fillMaxWidth()) {
-                NavigateBackButton(
-                    onNavigateBack = onNavigateBack,
-                    title = "Assignment Groups"
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                modifier = Modifier.responsive(mainColumnModifier),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Column(
-                    modifier = Modifier.responsive(mainColumnModifier).verticalScroll(scope.verticalScroll),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 ) {
-                    Card(
-                        shape = RoundedCornerShape(12.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
+                        Text(
+                            text = "Create Assignment Group",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+
+                        OutlinedTextField(
+                            value = groupName,
+                            onValueChange = { groupName = it },
+                            label = { Text("Group name") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            label = { Text("Search students") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            leadingIcon = {
+                                Icon(Icons.Default.Person, contentDescription = "Search")
+                            }
+                        )
+
+                        if (searchQuery.isNotEmpty() && filteredUsers.isNotEmpty()) {
                             Text(
-                                text = "Create Assignment Group",
-                                style = MaterialTheme.typography.headlineSmall
+                                text = "Search results:",
+                                style = MaterialTheme.typography.bodyMedium
                             )
-
-                            OutlinedTextField(
-                                value = groupName,
-                                onValueChange = { groupName = it },
-                                label = { Text("Group name") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-
-                            OutlinedTextField(
-                                value = searchQuery,
-                                onValueChange = { searchQuery = it },
-                                label = { Text("Search students") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                leadingIcon = {
-                                    Icon(Icons.Default.Person, contentDescription = "Search")
-                                }
-                            )
-
-                            if (searchQuery.isNotEmpty() && filteredUsers.isNotEmpty()) {
-                                Text(
-                                    text = "Search results:",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                LazyColumn(
-                                    modifier = Modifier.height(120.dp),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    items(filteredUsers) { user ->
-                                        OutlinedCard(
+                            LazyColumn(
+                                modifier = Modifier.height(120.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                items(filteredUsers) { user ->
+                                    OutlinedCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(CardDefaults.outlinedShape)
+                                            .clickable {
+                                                selectedUsers = selectedUsers + user
+                                                searchQuery = ""
+                                            }
+                                    ) {
+                                        Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .clip(CardDefaults.outlinedShape)
-                                                .clickable {
-                                                    selectedUsers = selectedUsers + user
-                                                    searchQuery = ""
-                                                }
+                                                .padding(12.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(12.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Column {
-                                                    Text(
-                                                        text = user.name,
-                                                        style = MaterialTheme.typography.bodyMedium
-                                                    )
-                                                    Text(
-                                                        text = user.email,
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                }
-                                                Icon(
-                                                    Icons.Default.Add,
-                                                    contentDescription = "Add",
-                                                    tint = MaterialTheme.colorScheme.primary
+                                            Column {
+                                                Text(
+                                                    text = user.name,
+                                                    style = MaterialTheme.typography.bodyMedium
+                                                )
+                                                Text(
+                                                    text = user.email,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (selectedUsers.isNotEmpty()) {
-                                Text(
-                                    text = "Students (${selectedUsers.size}):",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                LazyColumn(
-                                    modifier = Modifier.height(200.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    items(selectedUsers) { user ->
-                                        Card(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            colors = CardDefaults.cardColors(
-                                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = "Add",
+                                                tint = MaterialTheme.colorScheme.primary
                                             )
-                                        ) {
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(12.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Column {
-                                                    Text(
-                                                        text = user.name,
-                                                        style = MaterialTheme.typography.bodyMedium
-                                                    )
-                                                    Text(
-                                                        text = user.email,
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                                    )
-                                                }
-                                                IconButton(
-                                                    onClick = {
-                                                        selectedUsers = selectedUsers.filter { it.id != user.id }
-                                                    }
-                                                ) {
-                                                    Icon(
-                                                        Icons.Default.Close,
-                                                        contentDescription = "Remove",
-                                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                                    )
-                                                }
-                                            }
                                         }
                                     }
                                 }
                             }
+                        }
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        if (selectedUsers.isNotEmpty()) {
+                            Text(
+                                text = "Students (${selectedUsers.size}):",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            LazyColumn(
+                                modifier = Modifier.height(200.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Button(
-                                    onClick = onNavigateBack,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text("Cancel")
-                                }
-                                Button(
-                                    onClick = {
-                                        createState = CreateGroupState.Loading
-                                        coroutineScope.launch {
-                                            val result = onCreate(
-                                                AssignmentGroupDto(
-                                                    name = groupName,
-                                                    userIds = selectedUsers.map { it.id },
-                                                    assignmentIds = emptyList(),
+                                items(selectedUsers) { user ->
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                                        )
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column {
+                                                Text(
+                                                    text = user.name,
+                                                    style = MaterialTheme.typography.bodyMedium
                                                 )
-                                            )
-
-                                            createState = when (result) {
-                                                is OperationResult.Success -> CreateGroupState.Success(result.result)
-                                                is OperationResult.Error -> CreateGroupState.Error(result.message)
-                                                else -> {
-                                                    CreateGroupState.Idle
+                                                Text(
+                                                    text = user.email,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                                )
+                                            }
+                                            IconButton(
+                                                onClick = {
+                                                    selectedUsers = selectedUsers.filter { it.id != user.id }
                                                 }
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Close,
+                                                    contentDescription = "Remove",
+                                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                                )
                                             }
                                         }
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    enabled = groupName.isNotEmpty() && selectedUsers.isNotEmpty() && createState is CreateGroupState.Idle
-                                ) {
-                                    Text("Create")
+                                    }
                                 }
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Button(
+                                onClick = onNavigateBack,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Cancel")
+                            }
+                            Button(
+                                onClick = {
+                                    createState = CreateGroupState.Loading
+                                    coroutineScope.launch {
+                                        val result = onCreate(
+                                            AssignmentGroupDto(
+                                                name = groupName,
+                                                userIds = selectedUsers.map { it.id },
+                                                assignmentIds = emptyList(),
+                                            )
+                                        )
+
+                                        createState = when (result) {
+                                            is OperationResult.Success -> CreateGroupState.Success(result.result)
+                                            is OperationResult.Error -> CreateGroupState.Error(result.message)
+                                            else -> {
+                                                CreateGroupState.Idle
+                                            }
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = groupName.isNotEmpty() && selectedUsers.isNotEmpty() && createState is CreateGroupState.Idle
+                            ) {
+                                Text("Create")
                             }
                         }
                     }
