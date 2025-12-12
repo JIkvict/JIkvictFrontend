@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.2.0"
+    kotlin("jvm") version "2.2.10"
     `kotlin-dsl`
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
@@ -15,7 +15,7 @@ repositories {
 
 }
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(22)
 }
 
 tasks.test {

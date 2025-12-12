@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
     id(
         libs.plugins.kotlinMultiplatform
@@ -74,7 +75,7 @@ kotlin {
         compilerOptions {
             freeCompilerArgs.add("-Xwasm-debugger-custom-formatters")
             freeCompilerArgs.add("-Xcontext-parameters")
-
+            freeCompilerArgs.add("-Xgc=wasm")
         }
         binaries.executable()
     }

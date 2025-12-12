@@ -22,8 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.util.DefaultPreview
 
 @OptIn(ExperimentalMaterial3Api::class)
