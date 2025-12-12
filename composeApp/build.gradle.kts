@@ -40,14 +40,12 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
         freeCompilerArgs.add("-Xcontext-parameters")
-        freeCompilerArgs.add("-Xexplicit-backing-fields")
     }
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
             freeCompilerArgs.add("-Xcontext-parameters")
-            freeCompilerArgs.add("-Xexplicit-backing-fields")
         }
     } // To delete
 
@@ -76,8 +74,6 @@ kotlin {
         compilerOptions {
             freeCompilerArgs.add("-Xwasm-debugger-custom-formatters")
             freeCompilerArgs.add("-Xcontext-parameters")
-            freeCompilerArgs.add("-Xgc=wasm")
-            freeCompilerArgs.add("-Xexplicit-backing-fields")
 
         }
         binaries.executable()
