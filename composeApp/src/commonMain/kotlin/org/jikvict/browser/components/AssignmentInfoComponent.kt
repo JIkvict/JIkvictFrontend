@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -60,7 +61,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.ehsannarmani.compose_charts.ColumnChart
@@ -75,6 +75,7 @@ import ir.ehsannarmani.compose_charts.models.IndicatorPosition
 import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
 import ir.ehsannarmani.compose_charts.models.LabelProperties
 import ir.ehsannarmani.compose_charts.models.Pie
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.api.models.AssignmentInfo
@@ -141,15 +142,12 @@ fun AssignmentInfoComponent(
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Row(
-                modifier = Modifier.weight(1f)
-            ) {
-                NavigateBackButton(
-                    onNavigateBack = onNavigateBack,
-                    title = "Back"
-                )
-            }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            NavigateBackButton(
+                onNavigateBack = onNavigateBack,
+                title = "Back",
+                padding = PaddingValues(0.dp)
+            )
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -442,6 +440,7 @@ fun SubmissionComponent(
     infos: List<AssignmentInfo>,
     download: (AssignmentResultDto) -> Unit
 ) {
+    val primary = MaterialTheme.colorScheme.primary
     val isDark by LocalThemeSwitcherProvider.current.isDark
     val colors = remember(isDark) {
         object {
@@ -453,7 +452,7 @@ fun SubmissionComponent(
 
             val fail = if (isDark) Color(0xFFEF4444) else Color(0xFFF87171)
 
-            val bestBadge = if (isDark) Color(0xFFF59E0B) else Color(0xFFD97706)
+            val bestBadge = primary
         }
     }
 

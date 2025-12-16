@@ -1,6 +1,7 @@
 package org.jikvict.browser.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -25,11 +26,12 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun NavigateBackButton(
     onNavigateBack: () -> Unit,
-    title: String
+    title: String,
+    padding: PaddingValues = PaddingValues(horizontal = 16.dp)
 ) {
     Surface(
         modifier = Modifier
-            .padding(horizontal = 16.dp),
+            .padding(padding),
         color = Color.Transparent,
         shape = RoundedCornerShape(24.dp),
         border = BorderStroke(2.dp, MaterialTheme.colorScheme.primaryContainer)

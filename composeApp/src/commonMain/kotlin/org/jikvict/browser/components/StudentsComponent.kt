@@ -2,14 +2,42 @@ package org.jikvict.browser.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -17,8 +45,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.AssignmentResultDto
@@ -82,7 +110,11 @@ fun StudentsComponent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            NavigateBackButton(onNavigateBack = onNavigateBack, title = "Back")
+            NavigateBackButton(
+                onNavigateBack = onNavigateBack,
+                title = "Back",
+                padding = PaddingValues(0.dp)
+            )
         }
 
         Text("Select student", style = MaterialTheme.typography.titleMedium)
@@ -168,12 +200,14 @@ fun StudentsComponent(
                         CircularProgressIndicator()
                     }
                 }
+
                 is OperationResult.Error -> {
                     Text(
                         "Error loading stats: ${res.message}",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+
                 is OperationResult.Success -> {
                     StudentOverview(user = selectedUser, onGroupClick)
                     Spacer(modifier = Modifier.height(16.dp))
@@ -182,6 +216,7 @@ fun StudentsComponent(
                         onDownloadClick = onDownloadClick
                     )
                 }
+
                 is OperationResult.Idle -> {}
             }
         }
@@ -214,7 +249,7 @@ fun StudentOverview(
                 )
             }
 
-            HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Assignment Groups", style = MaterialTheme.typography.titleSmall)
@@ -225,14 +260,20 @@ fun StudentOverview(
                         user.assignmentGroups.forEach { group ->
                             SuggestionChip(
                                 onClick = { onGroupClick(group) },
-                                label = { Text(group.name) }
+                                label = { Text(group.name) },
+                                colors = SuggestionChipDefaults.suggestionChipColors().copy(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                    labelColor = MaterialTheme.colorScheme.onSurface
+
+                                )
                             )
                         }
                     }
                 }
             }
 
-            HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+
         }
     }
 }
@@ -242,6 +283,8 @@ fun StudentAssignmentsList(
     assignments: List<StudentAssignmentInfo>,
     onDownloadClick: (AssignmentResultDto) -> Unit
 ) {
+    val primary = MaterialTheme.colorScheme.primary
+
     val isDark by LocalThemeSwitcherProvider.current.isDark
     val colors =
         remember(isDark) {
@@ -250,7 +293,7 @@ fun StudentAssignmentsList(
                 val good = if (isDark) Color(0xFFFBBF24) else Color(0xFFFACC15)
                 val satisfactory = if (isDark) Color(0xFFF97316) else Color(0xFFFB923C)
                 val fail = if (isDark) Color(0xFFEF4444) else Color(0xFFF87171)
-                val bestBadge = if (isDark) Color(0xFFF59E0B) else Color(0xFFD97706)
+                val bestBadge = primary
             }
         }
 
@@ -543,8 +586,9 @@ fun StudentAssignmentsList(
 @Preview(widthDp = 1980, heightDp = 1280)
 @Composable
 fun StudentsComponentPreview() {
-    DefaultPreview {
+    DefaultPreview(false) {
         StudentsComponent(
+            initialUserName = "John Doe",
             availableUsers =
                 listOf(
                     UserDto(
@@ -553,7 +597,13 @@ fun StudentsComponentPreview() {
                         email = "john@example.com",
                         aisId = "123",
                         roles = setOf(),
-                        assignmentGroups = setOf()
+                        assignmentGroups = setOf(
+                            AssignmentGroupDto(
+                                "Group A",
+                                userIds = listOf(1),
+                                assignmentIds = listOf(1)
+                            )
+                        )
                     ),
                 ),
             statsProvider = {
