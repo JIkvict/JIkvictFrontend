@@ -12,6 +12,7 @@ import org.jikvict.browser.viewmodel.EditAssignmentScreenViewModel
 import org.jikvict.browser.viewmodel.LoginScreenViewModel
 import org.jikvict.browser.viewmodel.MakeJarScreenViewModel
 import org.jikvict.browser.viewmodel.NotFoundScreenViewModel
+import org.jikvict.browser.viewmodel.ProfileScreenViewModel
 import org.jikvict.browser.viewmodel.StudentsScreenViewModel
 import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.jikvict.browser.viewmodel.UserGroupScreenViewModel
@@ -42,6 +43,7 @@ val appModule = module {
     viewModelOf(::MakeJarScreenViewModel)
     viewModelOf(::TasksScreenViewModel)
     viewModelOf(::LoginScreenViewModel)
+    viewModelOf(::ProfileScreenViewModel)
     viewModelOf(::AdminScreenViewModel)
     viewModelOf(::UserGroupScreenViewModel)
     viewModelOf(::AssignmentsAdminScreenViewModel)

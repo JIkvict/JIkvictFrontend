@@ -3,6 +3,7 @@ package org.jikvict.browser.di
 import org.jikvict.api.apis.AssignmentControllerApi
 import org.jikvict.api.apis.AssignmentGroupControllerApi
 import org.jikvict.api.apis.AuthControllerApi
+import org.jikvict.api.apis.LongLivingTokenControllerApi
 import org.jikvict.api.apis.SolutionCheckerControllerApi
 import org.jikvict.api.apis.TaskStatusControllerApi
 import org.jikvict.api.apis.TeacherStudentControllerApi
@@ -17,6 +18,7 @@ actual val platformModule = module {
 
 
     single { AuthControllerApi(baseUrl = BACKEND_URL, httpClientConfig = ::simpleClientConfig) }
+    single { LongLivingTokenControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
     single { AssignmentControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
     single { SolutionCheckerControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
     single { TaskStatusControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }

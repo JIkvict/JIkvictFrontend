@@ -4,6 +4,7 @@ import io.ktor.client.engine.js.Js
 import org.jikvict.api.apis.AssignmentControllerApi
 import org.jikvict.api.apis.AssignmentGroupControllerApi
 import org.jikvict.api.apis.AuthControllerApi
+import org.jikvict.api.apis.LongLivingTokenControllerApi
 import org.jikvict.api.apis.SolutionCheckerControllerApi
 import org.jikvict.api.apis.TaskStatusControllerApi
 import org.jikvict.api.apis.TeacherStudentControllerApi
@@ -23,6 +24,7 @@ actual val platformModule = module {
             httpClientEngine = Js.create()
         )
     }
+    single { LongLivingTokenControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
     single { AssignmentControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
     single { SolutionCheckerControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
     single { TaskStatusControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }

@@ -330,24 +330,31 @@ private fun LoginScreenComposablePreviewSM() {
 
 
 @Composable
-fun ProfileScreenComposable(defaultScreenScope: DefaultScreenScope) = with(defaultScreenScope) {
+fun ProfileScreenComposable(defaultScreenScope: DefaultScreenScope) {
+    val viewModel = koinViewModel<org.jikvict.browser.viewmodel.ProfileScreenViewModel>()
     val sessionManager = koinInject<SessionManager>()
     val navController = LocalNavController.current
-    Box(
-        modifier = Modifier.fitContentToScreen()
-    ) {
-        Button(
-            modifier = Modifier.fillMaxWidth(0.5f),
-            onClick = {
-                sessionManager.logout()
-                with(navController) {
-                    LoginScreen.forceNavigateTo()
-                }
-            },
-        ) {
-            Text("Log out")
-        }
-    }
+    org.jikvict.browser.components.MeComponent(
+        scope = defaultScreenScope,
+        name = viewModel.userName,
+        longLivingToken = viewModel.longLivingToken,
+        tokenLoadResult = viewModel.tokenLoadResult,
+        tokenCreateResult = viewModel.tokenCreateResult,
+        tokenDeleteResult = viewModel.tokenDeleteResult,
+        viewModelScope = viewModel.viewModelScope,
+        loadToken = viewModel::loadToken,
+        createToken = viewModel::createToken,
+        deleteToken = viewModel::deleteToken,
+        resetTokenLoadResult = viewModel::resetTokenLoadResult,
+        resetTokenCreateResult = viewModel::resetTokenCreateResult,
+        resetTokenDeleteResult = viewModel::resetTokenDeleteResult,
+        onLogout = {
+            sessionManager.logout()
+            with(navController) {
+                LoginScreen.forceNavigateTo()
+            }
+        },
+    )
 }
 
 @Serializable
