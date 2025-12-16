@@ -54,6 +54,7 @@ import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import jikvictfrontend.composeapp.generated.resources.Res
 import jikvictfrontend.composeapp.generated.resources.kotlink
+import jikvictfrontend.composeapp.generated.resources.pluginicon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -376,6 +377,10 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                 with(navHostController) {
                     HelpScreen.navigateTo()
                 }
+            }
+
+            CustomCard(painterResource(Res.drawable.pluginicon), "Use IntelliJ Plugin (Alfa)") {
+                openExternalUrl("https://github.com/JIkvict/JIkvictIdeaPlugin/releases", true)
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
