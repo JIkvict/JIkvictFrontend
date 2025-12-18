@@ -4,6 +4,7 @@ import org.jikvict.api.apis.AssignmentControllerApi
 import org.jikvict.api.apis.AssignmentGroupControllerApi
 import org.jikvict.api.apis.AuthControllerApi
 import org.jikvict.api.apis.LongLivingTokenControllerApi
+import org.jikvict.api.apis.QueueStatusControllerApi
 import org.jikvict.api.apis.SolutionCheckerControllerApi
 import org.jikvict.api.apis.TaskStatusControllerApi
 import org.jikvict.api.apis.TeacherStudentControllerApi
@@ -25,6 +26,6 @@ actual val platformModule = module {
     single { TeacherStudentControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
     single { AssignmentGroupControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
     single { UsersControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
-
+    single { QueueStatusControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
 
 }

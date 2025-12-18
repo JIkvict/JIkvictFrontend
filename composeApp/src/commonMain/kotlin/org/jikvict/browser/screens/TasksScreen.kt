@@ -94,6 +94,7 @@ import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.PendingStatusResponseLong
 import org.jikvict.api.models.PendingSubmissionDto
+import org.jikvict.api.models.QueueStatusDto
 import org.jikvict.api.models.TestResult
 import org.jikvict.browser.components.DefaultScreenScope
 import org.jikvict.browser.components.TextWithOverflowHiding
@@ -200,6 +201,7 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
         val uiState by viewModel.assignmentsState.collectAsState()
         val assignments by viewModel.assignments.collectAsState()
         val assignmentInfos by viewModel.assignmentInfoMap.collectAsState()
+        val queueStatus by viewModel.queueStatus.collectAsState()
 
         var selectedAssignmentId by remember { mutableLongStateOf(-1L) }
         var notification by remember { mutableStateOf<TaskNotification?>(null) }
@@ -261,6 +263,8 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
                         }
 
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp))
+
+                        QueueStatusBanner(queueStatus = queueStatus)
 
                         when (uiState) {
                             is AssignmentsUiState.Loading -> {
@@ -1478,6 +1482,105 @@ private fun EmptyDetailPane() {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         )
+    }
+}
+
+@Composable
+private fun QueueStatusBanner(
+    queueStatus: QueueStatusDto?,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(
+        visible = queueStatus != null && queueStatus.totalInQueue > 0,
+        enter = slideInVertically(
+            initialOffsetY = { -it },
+            animationSpec = tween(300)
+        ) + fadeIn(animationSpec = tween(300)),
+        exit = slideOutVertically(
+            targetOffsetY = { -it },
+            animationSpec = tween(300)
+        ) + fadeOut(animationSpec = tween(300)),
+    ) {
+        queueStatus?.let { status ->
+            Card(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                ),
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Queue Status",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                        Text(
+                            text = "${status.totalInQueue} task${if (status.totalInQueue != 1) "s" else ""} in queue",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                        )
+                    }
+                    
+                    if (status.userTaskPosition != null) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
+                        )
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                            ) {
+                                Text(
+                                    text = "Your position: #${status.userTaskPosition}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                )
+                                
+                                if (status.estimatedTimeRemainingSeconds != null) {
+                                    val minutes = status.estimatedTimeRemainingSeconds / 60
+                                    val seconds = status.estimatedTimeRemainingSeconds % 60
+                                    val timeText = when {
+                                        minutes > 0 -> "${minutes}m ${seconds}s"
+                                        else -> "${seconds}s"
+                                    }
+                                    Text(
+                                        text = "Est. time: ~$timeText",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                                    )
+                                }
+                            }
+                            
+                            if (status.userTaskId != null) {
+                                Text(
+                                    text = "Task #${status.userTaskId}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

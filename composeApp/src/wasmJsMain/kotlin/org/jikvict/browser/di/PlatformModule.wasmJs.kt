@@ -5,6 +5,7 @@ import org.jikvict.api.apis.AssignmentControllerApi
 import org.jikvict.api.apis.AssignmentGroupControllerApi
 import org.jikvict.api.apis.AuthControllerApi
 import org.jikvict.api.apis.LongLivingTokenControllerApi
+import org.jikvict.api.apis.QueueStatusControllerApi
 import org.jikvict.api.apis.SolutionCheckerControllerApi
 import org.jikvict.api.apis.TaskStatusControllerApi
 import org.jikvict.api.apis.TeacherStudentControllerApi
@@ -24,11 +25,36 @@ actual val platformModule = module {
             httpClientEngine = Js.create()
         )
     }
-    single { LongLivingTokenControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
+    single {
+        LongLivingTokenControllerApi(
+            baseUrl = BACKEND_URL,
+            httpClientConfig = get(),
+            httpClientEngine = Js.create()
+        )
+    }
     single { AssignmentControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
-    single { SolutionCheckerControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
+    single {
+        SolutionCheckerControllerApi(
+            baseUrl = BACKEND_URL,
+            httpClientConfig = get(),
+            httpClientEngine = Js.create()
+        )
+    }
     single { TaskStatusControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
-    single { TeacherStudentControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
-    single { AssignmentGroupControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
+    single {
+        TeacherStudentControllerApi(
+            baseUrl = BACKEND_URL,
+            httpClientConfig = get(),
+            httpClientEngine = Js.create()
+        )
+    }
+    single {
+        AssignmentGroupControllerApi(
+            baseUrl = BACKEND_URL,
+            httpClientConfig = get(),
+            httpClientEngine = Js.create()
+        )
+    }
     single { UsersControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
+    single { QueueStatusControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get(), httpClientEngine = Js.create()) }
 }

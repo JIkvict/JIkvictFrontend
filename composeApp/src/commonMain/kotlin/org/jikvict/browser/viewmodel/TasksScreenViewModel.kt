@@ -26,11 +26,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import org.jikvict.api.apis.AssignmentControllerApi
+import org.jikvict.api.apis.QueueStatusControllerApi
 import org.jikvict.api.apis.TaskStatusControllerApi
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentInfo
 import org.jikvict.api.models.PendingStatusResponseLong
 import org.jikvict.api.models.ProblemDetail
+import org.jikvict.api.models.QueueStatusDto
 import org.jikvict.browser.di.BACKEND_URL
 import org.jikvict.browser.screens.AssignmentsUiState
 import org.jikvict.browser.util.PickedFile
@@ -87,10 +89,14 @@ class TasksScreenViewModel(
     private val assignmentControllerApi: AssignmentControllerApi,
     val taskStatusControllerApi: TaskStatusControllerApi,
     private val client: HttpClient,
+    private val queueStatusControllerApi: QueueStatusControllerApi,
 ) : ExtendedViewModel(savedStateHandle) {
     private val _assignmentsState = MutableStateFlow<AssignmentsUiState>(AssignmentsUiState.Loading)
 
     val assignmentsState: StateFlow<AssignmentsUiState> = _assignmentsState.asStateFlow()
+    
+    private val _queueStatus = MutableStateFlow<QueueStatusDto?>(null)
+    val queueStatus: StateFlow<QueueStatusDto?> = _queueStatus.asStateFlow()
 
     // Logs display state
     private val _showLogs = MutableStateFlow(false)
@@ -127,6 +133,20 @@ class TasksScreenViewModel(
                         fetchStatuses(assignmentIds)
                     }
                 }
+            }
+        }
+        
+        viewModelScope.launch {
+            while (true) {
+                try {
+                    val response = queueStatusControllerApi.getQueueStatusHttp()
+                    if (response.success) {
+                        _queueStatus.value = response.body()
+                    }
+                } catch (e: Exception) {
+                    println("[QueueStatus] Error polling queue status: ${e.message}")
+                }
+                delay(2000)
             }
         }
     }
