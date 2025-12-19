@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -75,6 +78,7 @@ fun MeComponent(
     val coroutineScope = rememberCoroutineScope()
 
     var copyButtonText by remember { mutableStateOf("Copy") }
+    var isTokenVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         loadToken()
@@ -156,20 +160,22 @@ fun MeComponent(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
-                    Text(
-                        text = token ?: "",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontFamily = FontFamily.Monospace
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                MaterialTheme.colorScheme.surface,
-                                RoundedCornerShape(4.dp)
-                            )
-                            .padding(12.dp),
-                    )
+                    SelectionContainer {
+                        Text(
+                            text = if (isTokenVisible) token ?: "" else "•".repeat((token?.length ?: 20).coerceAtMost(50)),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontFamily = FontFamily.Monospace
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    MaterialTheme.colorScheme.surface,
+                                    RoundedCornerShape(4.dp)
+                                )
+                                .padding(12.dp),
+                        )
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -195,6 +201,19 @@ fun MeComponent(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(copyButtonText)
+                        }
+
+                        OutlinedButton(
+                            onClick = { isTokenVisible = !isTokenVisible },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isLoading,
+                        ) {
+                            Icon(
+                                imageVector = if (isTokenVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (isTokenVisible) "Hide" else "Show",
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(if (isTokenVisible) "Hide" else "Show")
                         }
 
                         OutlinedButton(

@@ -1,6 +1,7 @@
 package org.jikvict.browser.util
 
 import kotlinx.browser.window
+import org.jikvict.browser.screens.MakeJarScreen
 import org.jikvict.browser.screens.NavigableScreen
 import org.jikvict.browser.screens.NotFoundScreen
 import org.jikvict.browser.screens.routers
@@ -26,6 +27,9 @@ actual fun getInitScreen(): NavigableScreen {
         val screen = router.constructScreen(params)
         screen
     } else {
+        if (initRoute.isBlank()) {
+            return MakeJarScreen
+        }
         NotFoundScreen()
     }
 }
