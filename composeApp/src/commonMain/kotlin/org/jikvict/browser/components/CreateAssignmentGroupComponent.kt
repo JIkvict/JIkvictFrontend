@@ -236,6 +236,12 @@ fun CreateAssignmentGroupComponent(
                             style = MaterialTheme.typography.headlineSmall
                         )
 
+                        Text(
+                            text = "Tip: You can drag and drop a file with AIS IDs (one per line) to quickly add students.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
                         OutlinedTextField(
                             value = groupName,
                             onValueChange = { groupName = it },
