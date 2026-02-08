@@ -91,4 +91,21 @@ class EditAssignmentScreenViewModel(
             OperationResult.Error(t.message ?: "Unknown error")
         }
     }
+
+    suspend fun delete(): OperationResult<Unit> {
+        val current = assignment.value ?: return OperationResult.Error("No assignment to delete")
+
+        return try {
+            val response = assignmentControllerApi.deleteAssignment(current.id)
+            if (response.success) {
+                OperationResult.Success(Unit)
+            } else {
+                OperationResult.Error("Failed to delete assignment")
+            }
+        } catch (ce: CancellationException) {
+            throw ce
+        } catch (t: Throwable) {
+            OperationResult.Error(t.message ?: "Unknown error")
+        }
+    }
 }

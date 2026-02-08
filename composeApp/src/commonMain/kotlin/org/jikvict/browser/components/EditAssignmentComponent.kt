@@ -31,7 +31,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -54,6 +53,14 @@ sealed class EditAssignmentState {
     data class Error(val message: String) : EditAssignmentState()
 }
 
+sealed class DeleteAssignmentState {
+    object Idle : DeleteAssignmentState()
+    object Confirming : DeleteAssignmentState()
+    object Loading : DeleteAssignmentState()
+    object Success : DeleteAssignmentState()
+    data class Error(val message: String) : DeleteAssignmentState()
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
 @Composable
 fun EditAssignmentComponent(
@@ -63,9 +70,11 @@ fun EditAssignmentComponent(
     availableAssignmentGroups: List<AssignmentGroupDto>,
     availableTasks: List<Long>,
     onUpdate: suspend (AssignmentDto) -> OperationResult<AssignmentDto>,
-    onNavigateToUpdated: (AssignmentDto) -> Unit = {}
+    onNavigateToUpdated: (AssignmentDto) -> Unit = {},
+    onDelete: suspend () -> OperationResult<Unit> = { OperationResult.Error("Not implemented") },
 ) {
     var editState by remember { mutableStateOf<EditAssignmentState>(EditAssignmentState.Idle) }
+    var deleteState by remember { mutableStateOf<DeleteAssignmentState>(DeleteAssignmentState.Idle) }
     var title by remember { mutableStateOf(assignment.title) }
     var taskId by remember { mutableStateOf<Long?>(assignment.taskId.toLong()) }
     var maxPoints by remember { mutableStateOf(assignment.maxPoints.toString()) }
@@ -169,7 +178,7 @@ fun EditAssignmentComponent(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = null,
                                 modifier = Modifier.size(48.dp),
-                                tint = Color(0xFF4CAF50)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = "Assignment updated successfully!",
@@ -202,7 +211,7 @@ fun EditAssignmentComponent(
                                 imageVector = Icons.Default.Error,
                                 contentDescription = null,
                                 modifier = Modifier.size(48.dp),
-                                tint = Color(0xFFF44336)
+                                tint = MaterialTheme.colorScheme.error
                             )
                             Text(
                                 text = "Error updating assignment",
@@ -219,6 +228,129 @@ fun EditAssignmentComponent(
                             ) {
                                 Text("Try Again")
                             }
+                        }
+
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
+
+    if (deleteState !is DeleteAssignmentState.Idle) {
+        Dialog(
+            onDismissRequest = {
+                if (deleteState is DeleteAssignmentState.Confirming || deleteState is DeleteAssignmentState.Error) {
+                    deleteState = DeleteAssignmentState.Idle
+                }
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = deleteState !is DeleteAssignmentState.Loading,
+                dismissOnClickOutside = deleteState !is DeleteAssignmentState.Loading
+            )
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    when (deleteState) {
+                        is DeleteAssignmentState.Confirming -> {
+                            Text(
+                                text = "Delete Assignment?",
+                                style = MaterialTheme.typography.headlineSmall
+                            )
+                            Text(
+                                text = "Are you sure you want to delete \"${assignment.title}\"? This action cannot be undone.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Button(
+                                    onClick = { deleteState = DeleteAssignmentState.Idle },
+                                    modifier = Modifier.weight(1f)
+                                ) { Text("Cancel") }
+                                Button(
+                                    onClick = {
+                                        deleteState = DeleteAssignmentState.Loading
+                                        coroutineScope.launch {
+                                            val result = onDelete()
+                                            deleteState = when (result) {
+                                                is OperationResult.Success -> DeleteAssignmentState.Success
+                                                is OperationResult.Error -> DeleteAssignmentState.Error(result.message)
+                                                else -> DeleteAssignmentState.Idle
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    )
+                                ) { Text("Delete") }
+                            }
+                        }
+
+                        is DeleteAssignmentState.Loading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(48.dp),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Deleting assignment...",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+
+                        is DeleteAssignmentState.Success -> {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Assignment deleted successfully!",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Button(
+                                onClick = {
+                                    deleteState = DeleteAssignmentState.Idle
+                                    onNavigateBack()
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text("Back") }
+                        }
+
+                        is DeleteAssignmentState.Error -> {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = "Error deleting assignment",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = (deleteState as DeleteAssignmentState.Error).message,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Button(
+                                onClick = { deleteState = DeleteAssignmentState.Idle },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text("Close") }
                         }
 
                         else -> {}
@@ -342,6 +474,17 @@ fun EditAssignmentComponent(
                     submitButtonText = "Save",
                     isSubmitEnabled = title.isNotBlank() && taskId != null && editState is EditAssignmentState.Idle
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = { deleteState = DeleteAssignmentState.Confirming },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    enabled = deleteState is DeleteAssignmentState.Idle
+                ) { Text("Delete") }
             }
         }
     }

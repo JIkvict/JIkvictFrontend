@@ -41,7 +41,8 @@ fun EditAssignmentGroupScreenComposable(scope: DefaultScreenScope, groupId: Long
             onAssignmentClick = {
                 with(navHostController) { AssignmentInfoScreen(it.id).navigateTo() }
             },
-            onUserClick = { with(navHostController) { StudentsScreen(it.name).navigateTo() } }
+            onUserClick = { with(navHostController) { StudentsScreen(it.name).navigateTo() } },
+            onDelete = { vm.delete() }
         )
     }
 }

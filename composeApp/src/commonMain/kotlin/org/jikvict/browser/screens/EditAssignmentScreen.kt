@@ -48,7 +48,8 @@ fun EditAssignmentScreenComposable(
                 with(navHostController) {
                     AssignmentInfoScreen(it.id).navigateTo()
                 }
-            }
+            },
+            onDelete = { vm.delete() }
         )
     }
 

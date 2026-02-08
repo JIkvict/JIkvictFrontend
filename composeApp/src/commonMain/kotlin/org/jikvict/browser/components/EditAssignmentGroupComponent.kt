@@ -43,7 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -63,6 +62,14 @@ sealed class EditGroupState {
     data class Error(val message: String) : EditGroupState()
 }
 
+sealed class DeleteGroupState {
+    object Idle : DeleteGroupState()
+    object Confirming : DeleteGroupState()
+    object Loading : DeleteGroupState()
+    object Success : DeleteGroupState()
+    data class Error(val message: String) : DeleteGroupState()
+}
+
 @Composable
 fun InfoAssignmentGroupComponent(
     scope: DefaultScreenScope,
@@ -74,6 +81,7 @@ fun InfoAssignmentGroupComponent(
     onUpdate: suspend (AssignmentGroupDto) -> OperationResult<AssignmentGroupDto>,
     onNavigateToUpdated: (AssignmentGroupDto) -> Unit = {},
     onUserClick: (User) -> Unit = {},
+    onDelete: suspend () -> OperationResult<Unit> = { OperationResult.Error("Not implemented") },
 ) = with(scope) {
     var groupName by remember(group) { mutableStateOf(group.name) }
     var searchQuery by remember { mutableStateOf("") }
@@ -81,6 +89,7 @@ fun InfoAssignmentGroupComponent(
         mutableStateOf(allUsers.filter { it.id in group.userIds })
     }
     var editState by remember { mutableStateOf<EditGroupState>(EditGroupState.Idle) }
+    var deleteState by remember { mutableStateOf<DeleteGroupState>(DeleteGroupState.Idle) }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -136,7 +145,7 @@ fun InfoAssignmentGroupComponent(
                                 modifier = Modifier.size(
                                     48.dp
                                 ),
-                                tint = Color(0xFF4CAF50)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = "Assignment group updated successfully!",
@@ -172,7 +181,7 @@ fun InfoAssignmentGroupComponent(
                             Icon(
                                 imageVector = Icons.Default.Error, contentDescription = null, modifier = Modifier.size(
                                     48.dp
-                                ), tint = Color(0xFFF44336)
+                                ), tint = MaterialTheme.colorScheme.error
                             )
                             Text(
                                 text = "Error updating group", style = MaterialTheme.typography.bodyLarge
@@ -192,6 +201,129 @@ fun InfoAssignmentGroupComponent(
                         else -> {
 
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    if (deleteState !is DeleteGroupState.Idle) {
+        Dialog(
+            onDismissRequest = {
+                if (deleteState is DeleteGroupState.Confirming || deleteState is DeleteGroupState.Error) {
+                    deleteState = DeleteGroupState.Idle
+                }
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = deleteState !is DeleteGroupState.Loading,
+                dismissOnClickOutside = deleteState !is DeleteGroupState.Loading
+            )
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    when (deleteState) {
+                        is DeleteGroupState.Confirming -> {
+                            Text(
+                                text = "Delete Assignment Group?",
+                                style = MaterialTheme.typography.headlineSmall
+                            )
+                            Text(
+                                text = "Are you sure you want to delete \"${group.name}\"? This action cannot be undone.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Button(
+                                    onClick = { deleteState = DeleteGroupState.Idle },
+                                    modifier = Modifier.weight(1f)
+                                ) { Text("Cancel") }
+                                Button(
+                                    onClick = {
+                                        deleteState = DeleteGroupState.Loading
+                                        coroutineScope.launch {
+                                            val result = onDelete()
+                                            deleteState = when (result) {
+                                                is OperationResult.Success -> DeleteGroupState.Success
+                                                is OperationResult.Error -> DeleteGroupState.Error(result.message)
+                                                else -> DeleteGroupState.Idle
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    )
+                                ) { Text("Delete") }
+                            }
+                        }
+
+                        is DeleteGroupState.Loading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(48.dp),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Deleting assignment group...",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+
+                        is DeleteGroupState.Success -> {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Assignment group deleted successfully!",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Button(
+                                onClick = {
+                                    deleteState = DeleteGroupState.Idle
+                                    onNavigateBack()
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text("Back") }
+                        }
+
+                        is DeleteGroupState.Error -> {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = "Error deleting group",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = (deleteState as DeleteGroupState.Error).message,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Button(
+                                onClick = { deleteState = DeleteGroupState.Idle },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text("Close") }
+                        }
+
+                        else -> {}
                     }
                 }
             }
@@ -441,6 +573,17 @@ fun InfoAssignmentGroupComponent(
                                 enabled = groupName.isNotEmpty() && selectedUsers.isNotEmpty() && editState is EditGroupState.Idle
                             ) { Text("Save") }
                         }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(
+                            onClick = { deleteState = DeleteGroupState.Confirming },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            ),
+                            enabled = deleteState is DeleteGroupState.Idle
+                        ) { Text("Delete") }
                     }
                 }
             }
