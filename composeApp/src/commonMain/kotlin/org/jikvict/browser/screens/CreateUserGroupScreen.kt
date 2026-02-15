@@ -150,8 +150,7 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
                                         .lines()
                                         .map { it.trim() }
                                         .filter { it.isNotEmpty() }
-                                        .mapNotNull { it.toLongOrNull() }
-                                        .map { it.toString() }
+                                        .map { it }
 
                                     println("AIS ids: $aisIds")
                                     runCatching {
