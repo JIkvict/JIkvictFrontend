@@ -33,24 +33,30 @@ class AssignmentInfoScreenViewModel(
     val usersControllerApi: UsersControllerApi,
     private val client: HttpClient,
 
-) : ViewModel() {
+    ) : ViewModel() {
 
     private var _assignment = MutableStateFlow<AssignmentDto?>(null)
     val assignment = _assignment.asStateFlow()
 
-    private var _groups = MutableStateFlow<List<AssignmentGroupDto>?>(null)
+    private var _groups = MutableStateFlow<Set<AssignmentGroupDto>?>(null)
     val groups = _groups.asStateFlow()
 
-    private var _users = MutableStateFlow<List<UserDto>?>(null)
+    private var _users = MutableStateFlow<Set<UserDto>?>(null)
     val users = _users.asStateFlow()
 
     fun loadGroup(): Job {
+        val groups = assignment.value?.assignmentGroupsIds ?: return viewModelScope.launch { }
+        println("groups: $groups")
         return viewModelScope.launch {
             runCatching {
-                val result = assignmentGroupControllerApi.getAllAssignmentGroups()
-                if (result.success) {
-                    _groups.value = result.body()
+                val result = groups.mapNotNull { groupId ->
+                    runCatching {
+                        assignmentGroupControllerApi.getAssignmentGroupById(groupId)
+                    }.onFailure {
+                        println("Failed to load group $it: ${it.message}")
+                    }.getOrNull()
                 }
+                _groups.value = result.filter { it.success }.map { it.body() }.toSet()
             }.onFailure {
                 ensureActive()
             }
@@ -77,6 +83,7 @@ class AssignmentInfoScreenViewModel(
             }
         }
     }
+
     fun loadUsers() {
         val ids = groups.value?.flatMap { it.userIds } ?: return
         viewModelScope.launch {
@@ -86,7 +93,7 @@ class AssignmentInfoScreenViewModel(
                         usersControllerApi.getUserById(it)
                     }.getOrNull()
                 }
-                _users.value = result.mapNotNull { if (it.success) it.body() else null }.distinct()
+                _users.value = result.mapNotNull { if (it.success) it.body() else null }.distinct().toSet()
             }.onFailure {
                 ensureActive()
             }
@@ -94,8 +101,8 @@ class AssignmentInfoScreenViewModel(
     }
 
 
-    fun loadAssignments(id: Long) {
-        viewModelScope.launch {
+    fun loadAssignments(id: Long): Job {
+        return viewModelScope.launch {
             runCatching {
                 val result = assignmentControllerApi.getAssignmentAdmin(id)
                 if (result.success) {
@@ -109,10 +116,15 @@ class AssignmentInfoScreenViewModel(
 
     suspend fun loadInfos(groupIds: List<Long>, userIds: List<Long>): List<AssignmentInfo>? {
         if (assignment.value == null) return null
-
+        val extendedGroups = groupIds.ifEmpty {
+            assignment.value!!.assignmentGroupsIds
+        }
         runCatching {
             val result =
-                teacherStudentControllerApi.getAssignmentInfo(assignment.value!!.id, StatsRequestDto(userIds, groupIds))
+                teacherStudentControllerApi.getAssignmentInfo(
+                    assignment.value!!.id,
+                    StatsRequestDto(userIds, extendedGroups)
+                )
             if (result.success) {
                 return result.body()
             }

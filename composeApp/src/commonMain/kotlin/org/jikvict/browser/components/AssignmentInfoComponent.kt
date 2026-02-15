@@ -981,22 +981,11 @@ fun StatsComponent(
                     }
 
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        // Y-Axis Label (Student Count) - Rotated
-                        Text(
-                            text = "Student Count",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = textColor.copy(alpha = 0.7f),
-                            modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .rotate(-90f)
-                                .padding(bottom = 240.dp) // Push out
-                        )
-
                         Column {
                             ColumnChart(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(start = 24.dp, end = 8.dp) // Space for Y label
+                                    .padding(start = 8.dp, end = 8.dp)
                                     .size(260.dp),
                                 data = attemptsBars,
                                 barProperties = BarProperties(
@@ -1017,22 +1006,17 @@ fun StatsComponent(
                                     textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
                                 ),
                                 indicatorProperties = HorizontalIndicatorProperties(
-                                    enabled = true,
-                                    textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
-                                    count = IndicatorCount.StepBased(1.0),
-                                    position = IndicatorPosition.Horizontal.Start,
-                                    padding = 32.dp,
+                                    enabled = false,
                                 ),
                                 gridProperties = GridProperties(
                                     xAxisProperties = GridProperties.AxisProperties(
-                                        lineCount = attemptsCounts.maxOrNull()?.plus(1) ?: 0
+                                        enabled = false,
                                     ),
                                     yAxisProperties = GridProperties.AxisProperties(
                                         enabled = false,
                                     )
                                 )
                             )
-                            // X-Axis Label
                             Text(
                                 text = "Number of Attempts",
                                 style = MaterialTheme.typography.labelSmall,

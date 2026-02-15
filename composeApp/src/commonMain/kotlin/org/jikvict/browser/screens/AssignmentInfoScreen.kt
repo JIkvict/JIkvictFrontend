@@ -31,7 +31,7 @@ fun AssignmentInfoScreenComposable(
 
 
     LaunchedEffect(assignmentId) {
-        vm.loadAssignments(assignmentId)
+        vm.loadAssignments(assignmentId).join()
         vm.loadGroup().join()
         vm.loadUsers()
     }
@@ -52,7 +52,7 @@ fun AssignmentInfoScreenComposable(
         scope = scope,
         assignment = assignment!!,
         availableUsers = users!!.distinctBy { it.userNameField },
-        availableGroups = groups!!,
+        availableGroups = groups!!.toList(),
         infoSupplier = { selectedUsers, selectedGroups ->
             vm.loadInfos(
                 groupIds = selectedGroups.mapNotNull { it.id },
