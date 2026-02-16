@@ -12,7 +12,7 @@ import kotlin.js.unsafeCast
 @OptIn(ExperimentalWasmJsInterop::class)
 fun options(): JSZipGeneratorOptions<JsAny> = js(
     """
-            type: "blob",
+            type: "uint8array",
             compression: "DEFLATE",
             compressionOptions: {
                 level: 9

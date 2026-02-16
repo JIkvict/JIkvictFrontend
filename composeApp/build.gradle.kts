@@ -69,7 +69,7 @@ kotlin {
                     }
             }
             testTask {
-                enabled = false
+                enabled = true
             }
         }
         compilerOptions {
@@ -154,6 +154,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }
