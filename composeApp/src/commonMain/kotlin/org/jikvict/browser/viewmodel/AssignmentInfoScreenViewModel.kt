@@ -88,12 +88,10 @@ class AssignmentInfoScreenViewModel(
         val ids = groups.value?.flatMap { it.userIds } ?: return
         viewModelScope.launch {
             runCatching {
-                val result = ids.mapNotNull {
-                    runCatching {
-                        usersControllerApi.getUserById(it)
-                    }.getOrNull()
-                }
-                _users.value = result.mapNotNull { if (it.success) it.body() else null }.distinct().toSet()
+                val result = runCatching {
+                        usersControllerApi.getUsersByIds(ids).body()
+                    }.getOrNull() ?: return@launch
+                _users.value = result.toSet()
             }.onFailure {
                 ensureActive()
             }

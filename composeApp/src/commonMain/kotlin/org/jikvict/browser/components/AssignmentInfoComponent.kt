@@ -486,7 +486,7 @@ fun SubmissionComponent(
                 "Excellent (>90%)" to colors.excellent,
                 "Good (70-89%)" to colors.good,
                 "Satisfactory (50-69%)" to colors.satisfactory,
-                "Fail (<50%)" to colors.fail
+                "Bad (<50%)" to colors.fail
             ).forEach { (label, color) ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -805,7 +805,7 @@ fun StatsComponent(
                 selectedColor = chartColors.excellentSelected
             ),
             PassBucket(
-                "Fail",
+                "Bad",
                 color = chartColors.fail,
                 selectedColor = chartColors.failSelected
             ),
@@ -896,7 +896,7 @@ fun StatsComponent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "Pass / Fail / No submissions",
+                        "Pass / Bad / No submissions",
                         style = MaterialTheme.typography.titleMedium,
                         color = textColor,
                         modifier = Modifier.fillMaxWidth(),

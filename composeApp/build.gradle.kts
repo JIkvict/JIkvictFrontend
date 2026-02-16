@@ -106,6 +106,7 @@ kotlin {
         val wasmJsMain by getting {
             dependencies {
                 implementation(libs.ktor.client.js)
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-jszip-wasm-js:2026.2.13-3.10.1")
             }
         }
 
