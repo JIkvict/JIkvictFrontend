@@ -17,7 +17,6 @@ import org.jikvict.browser.auth.SessionManager
 import org.jikvict.browser.auth.TokenHolder
 import org.jikvict.browser.auth.toJwt
 import org.jikvict.browser.components.DefaultScreenScope
-import org.jikvict.browser.screens.LoginScreen.requiredRoles
 import org.koin.compose.koinInject
 import kotlin.reflect.KClass
 
@@ -40,15 +39,20 @@ interface ScreenRegistrar<T : NavigableScreen> {
             val isLoggedIn by sessionManager.isLoggedIn.collectAsState()
             if (isLoggedIn || getType() == LoginScreen::class || getType() == NotFoundScreen::class) {
                 val route = entry.toRoute<T>(getType())
-                if (route.requiredRoles.isEmpty()) {
+                val userRoles = TokenHolder.token().toJwt()?.roles ?: emptyList()
+                val hasRequiredRoles = route.requiredRoles.isEmpty() || route.requiredRoles.all { it in userRoles }
+                val hasForbiddenRoles = route.forbiddenRoles.isNotEmpty() && route.forbiddenRoles.any { it in userRoles }
+
+                if (hasRequiredRoles && !hasForbiddenRoles) {
                     route.compose(scope)
                 } else {
-                    val userRoles = TokenHolder.token().toJwt()?.roles ?: emptyList()
-                    if (route.requiredRoles.all { it in userRoles }) {
-                        route.compose(scope)
-                    } else {
-                        val navHostController = LocalNavController.current
-                        with(navHostController) {
+                    val navHostController = LocalNavController.current
+                    with(navHostController) {
+                        if (!hasRequiredRoles) {
+                            MakeJarScreen.forceNavigateTo()
+                        } else {
+                            // If forbidden role is present, maybe go back or to a safe place
+                            // For now, same as unauthorized
                             MakeJarScreen.forceNavigateTo()
                         }
                     }

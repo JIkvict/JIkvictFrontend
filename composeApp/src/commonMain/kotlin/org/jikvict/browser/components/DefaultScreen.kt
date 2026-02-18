@@ -24,6 +24,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jikvict.browser.auth.TokenHolder
+import org.jikvict.browser.auth.toJwt
 import org.jikvict.browser.util.DefaultPreview
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +40,10 @@ fun DefaultScreen(content: @Composable ColumnScope.(DefaultScreenScope) -> Unit)
         val headerHeight = remember { mutableStateOf(0) }
         val footerHeight = remember { mutableStateOf(0) }
         val density = LocalDensity.current
+
+        val isReadOnly = remember(TokenHolder.tokenVersion.value) {
+            TokenHolder.token().toJwt()?.roles?.contains("TEACHER_READ_ONLY") ?: false
+        }
 
         val screenHeight =
             derivedStateOf {
@@ -70,6 +76,7 @@ fun DefaultScreen(content: @Composable ColumnScope.(DefaultScreenScope) -> Unit)
                     headerHeight.value,
                     footerHeight.value,
                     screenHeight = screenHeight.value,
+                    isReadOnly = isReadOnly,
                 ),
             )
 
@@ -91,6 +98,7 @@ data class DefaultScreenScope(
     val footerHeight: Int,
     val screenWidth: Dp = boxWithConstraintsScope.maxWidth,
     val screenHeight: Dp,
+    val isReadOnly: Boolean = false,
 ) {
     fun Modifier.fitContentToScreen(): Modifier = this.fillMaxWidth().height(screenHeight)
 }

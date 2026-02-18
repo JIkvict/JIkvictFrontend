@@ -15,11 +15,19 @@ interface NavigableScreen {
 
     val requiredRoles: List<String>
         get() = emptyList()
+
+    val forbiddenRoles: List<String>
+        get() = emptyList()
 }
 
 interface TeacherScreen : NavigableScreen {
     override val requiredRoles: List<String>
         get() = listOf("TEACHER")
+}
+
+interface TeacherWriteScreen : TeacherScreen {
+    override val forbiddenRoles: List<String>
+        get() = listOf("TEACHER_READ_ONLY")
 }
 
 context(navController: NavHostController)

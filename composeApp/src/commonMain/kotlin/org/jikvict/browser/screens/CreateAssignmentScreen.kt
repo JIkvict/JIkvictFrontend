@@ -197,14 +197,11 @@ fun CreateAssignmentScreenComposable(scope: DefaultScreenScope) = with(scope) {
 
 @Serializable
 @SerialName("create-assignment")
-object CreateAssignmentScreen : NavigableScreen {
+object CreateAssignmentScreen : TeacherWriteScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = {
             CreateAssignmentScreenComposable(it)
         }
-
-    override val requiredRoles: List<String>
-        get() = listOf("TEACHER")
 }
 
 object CreateAssignmentScreenRouterRegistrar : ScreenRouterRegistrar<CreateAssignmentScreen> {

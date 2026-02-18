@@ -400,7 +400,7 @@ fun EditAssignmentComponent(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 AssignmentFormCard(
-                    cardTitle = "Edit Assignment",
+                    cardTitle = if (scope.isReadOnly) "Assignment Info" else "Edit Assignment",
                     title = title,
                     onTitleChange = { title = it },
                     taskId = taskId,
@@ -472,19 +472,22 @@ fun EditAssignmentComponent(
                         }
                     },
                     submitButtonText = "Save",
-                    isSubmitEnabled = title.isNotBlank() && taskId != null && editState is EditAssignmentState.Idle
+                    isSubmitEnabled = title.isNotBlank() && taskId != null && editState is EditAssignmentState.Idle,
+                    isReadOnly = scope.isReadOnly
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                if (!scope.isReadOnly) {
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = { deleteState = DeleteAssignmentState.Confirming },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    ),
-                    enabled = deleteState is DeleteAssignmentState.Idle
-                ) { Text("Delete") }
+                    Button(
+                        onClick = { deleteState = DeleteAssignmentState.Confirming },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        ),
+                        enabled = deleteState is DeleteAssignmentState.Idle
+                    ) { Text("Delete") }
+                }
             }
         }
     }

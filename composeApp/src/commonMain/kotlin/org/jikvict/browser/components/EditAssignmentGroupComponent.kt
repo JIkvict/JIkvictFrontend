@@ -359,15 +359,21 @@ fun InfoAssignmentGroupComponent(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            text = "Edit Assignment Group", style = MaterialTheme.typography.headlineSmall
+                            text = if (isReadOnly) "Group Info" else "Edit Assignment Group",
+                            style = MaterialTheme.typography.headlineSmall
                         )
 
                         OutlinedTextField(
-                            value = groupName, onValueChange = {
-                                groupName = it
-                            }, label = {
+                            value = groupName,
+                            onValueChange = {
+                                if (!isReadOnly) groupName = it
+                            },
+                            label = {
                                 Text("Group name")
-                            }, modifier = Modifier.fillMaxWidth(), singleLine = true
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            readOnly = isReadOnly
                         )
 
                         if (assignments.isNotEmpty()) {
@@ -414,17 +420,19 @@ fun InfoAssignmentGroupComponent(
                             )
                         }
 
-                        OutlinedTextField(value = searchQuery, onValueChange = {
-                            searchQuery = it
-                        }, label = {
-                            Text(
-                                "Search students"
-                            )
-                        }, modifier = Modifier.fillMaxWidth(), singleLine = true, leadingIcon = {
-                            Icon(
-                                Icons.Default.Person, contentDescription = "Search"
-                            )
-                        })
+                        if (!isReadOnly) {
+                            OutlinedTextField(value = searchQuery, onValueChange = {
+                                searchQuery = it
+                            }, label = {
+                                Text(
+                                    "Search students"
+                                )
+                            }, modifier = Modifier.fillMaxWidth(), singleLine = true, leadingIcon = {
+                                Icon(
+                                    Icons.Default.Person, contentDescription = "Search"
+                                )
+                            })
+                        }
 
                         if (searchQuery.isNotEmpty() && filteredUsers.isNotEmpty()) {
                             Text(
@@ -514,17 +522,19 @@ fun InfoAssignmentGroupComponent(
                                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                                 )
                                             }
-                                            IconButton(
-                                                onClick = {
-                                                    selectedUsers = selectedUsers.filter {
-                                                        it.id != user.id
-                                                    }
-                                                }) {
-                                                Icon(
-                                                    Icons.Default.Close,
-                                                    contentDescription = "Remove",
-                                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                                )
+                                            if (!isReadOnly) {
+                                                IconButton(
+                                                    onClick = {
+                                                        selectedUsers = selectedUsers.filter {
+                                                            it.id != user.id
+                                                        }
+                                                    }) {
+                                                    Icon(
+                                                        Icons.Default.Close,
+                                                        contentDescription = "Remove",
+                                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -532,58 +542,64 @@ fun InfoAssignmentGroupComponent(
                             }
                         }
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(
-                                12.dp
-                            )
-                        ) {
-                            Button(
-                                onClick = onNavigateBack, modifier = Modifier.weight(
-                                    1f
+                        if (!isReadOnly) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(
+                                    12.dp
                                 )
-                            ) { Text("Cancel") }
-                            Button(
-                                onClick = {
-                                    editState = EditGroupState.Loading
-                                    coroutineScope.launch {
-                                        val dto = AssignmentGroupDto(
-                                            id = group.id, name = groupName, userIds = selectedUsers.map {
-                                                it.id
-                                            }, assignmentIds = group.assignmentIds
-                                        )
-                                        val result = onUpdate(
-                                            dto
-                                        )
-                                        editState = when (result) {
-                                            is OperationResult.Success -> EditGroupState.Success(
-                                                result.result
+                            ) {
+                                Button(
+                                    onClick = onNavigateBack, modifier = Modifier.weight(
+                                        1f
+                                    )
+                                ) { Text("Cancel") }
+                                Button(
+                                    onClick = {
+                                        editState = EditGroupState.Loading
+                                        coroutineScope.launch {
+                                            val dto = AssignmentGroupDto(
+                                                id = group.id, name = groupName, userIds = selectedUsers.map {
+                                                    it.id
+                                                }, assignmentIds = group.assignmentIds
                                             )
-
-                                            is OperationResult.Error -> EditGroupState.Error(
-                                                result.message
+                                            val result = onUpdate(
+                                                dto
                                             )
+                                            editState = when (result) {
+                                                is OperationResult.Success -> EditGroupState.Success(
+                                                    result.result
+                                                )
 
-                                            else -> EditGroupState.Idle
+                                                is OperationResult.Error -> EditGroupState.Error(
+                                                    result.message
+                                                )
+
+                                                else -> EditGroupState.Idle
+                                            }
                                         }
-                                    }
-                                },
-                                modifier = Modifier.weight(
-                                    1f
+                                    },
+                                    modifier = Modifier.weight(
+                                        1f
+                                    ),
+                                    enabled = groupName.isNotEmpty() && selectedUsers.isNotEmpty() && editState is EditGroupState.Idle
+                                ) { Text("Save") }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Button(
+                                onClick = { deleteState = DeleteGroupState.Confirming },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
                                 ),
-                                enabled = groupName.isNotEmpty() && selectedUsers.isNotEmpty() && editState is EditGroupState.Idle
-                            ) { Text("Save") }
+                                enabled = deleteState is DeleteGroupState.Idle
+                            ) { Text("Delete") }
+                        } else {
+                            Button(
+                                onClick = onNavigateBack, modifier = Modifier.fillMaxWidth()
+                            ) { Text("Back") }
                         }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Button(
-                            onClick = { deleteState = DeleteGroupState.Confirming },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
-                            ),
-                            enabled = deleteState is DeleteGroupState.Idle
-                        ) { Text("Delete") }
                     }
                 }
             }

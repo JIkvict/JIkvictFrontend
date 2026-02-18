@@ -306,11 +306,9 @@ fun CreateUserGroupScreen(scope: DefaultScreenScope) = with(scope) {
 
 @Serializable
 @SerialName("create-user-group")
-object CreateUserGroupScreen : NavigableScreen {
+object CreateUserGroupScreen : TeacherWriteScreen {
     override val largeScreen: @Composable ((DefaultScreenScope) -> Unit)
         get() = { CreateUserGroupScreen(it) }
-    override val requiredRoles: List<String>
-        get() = listOf("TEACHER")
 }
 
 

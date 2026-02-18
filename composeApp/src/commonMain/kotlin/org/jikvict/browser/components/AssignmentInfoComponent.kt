@@ -406,11 +406,13 @@ fun AssignmentInfoComponent(
                 }
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = {
-                onEditClick(assignment)
-            }) {
-                Text("Edit assignment", color = MaterialTheme.colorScheme.onPrimary)
+        if (!isReadOnly) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Button(onClick = {
+                    onEditClick(assignment)
+                }) {
+                    Text("Edit assignment", color = MaterialTheme.colorScheme.onPrimary)
+                }
             }
         }
     }

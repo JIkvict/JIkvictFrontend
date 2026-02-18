@@ -108,15 +108,17 @@ fun AssignmentsComponent(
                     singleLine = true
                 )
 
-                IconComponentUnsized(
-                    iconSize = 24.dp,
-                    iconVector = Icons.Default.Add,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)),
-                    onClick = onAddAssignmentClick
-                )
+                if (!isReadOnly) {
+                    IconComponentUnsized(
+                        iconSize = 24.dp,
+                        iconVector = Icons.Default.Add,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)),
+                        onClick = onAddAssignmentClick
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(16.dp))
 

@@ -420,7 +420,8 @@ fun AssignmentFormCard(
     onCancel: () -> Unit,
     onSubmit: () -> Unit,
     submitButtonText: String,
-    isSubmitEnabled: Boolean
+    isSubmitEnabled: Boolean,
+    isReadOnly: Boolean = false,
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -444,76 +445,88 @@ fun AssignmentFormCard(
                 label = { Text("Title *") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                isError = title.isBlank(),
-                supportingText = if (title.isBlank()) {
+                isError = !isReadOnly && title.isBlank(),
+                supportingText = if (!isReadOnly && title.isBlank()) {
                     { Text("Title is required") }
-                } else null
+                } else null,
+                readOnly = isReadOnly
             )
 
             Box {
-                SearchableDropdown(
-                    expanded = showTaskDropdown,
-                    onExpandedChange = { onShowTaskDropdownChange(it) },
-                    items = availableTasks.filter { it.toString().contains(taskSearchQuery, ignoreCase = true) },
-                    itemContent = { task ->
-                        DropdownMenuItem(
-                            text = { Text("Task $task") },
-                            onClick = {
-                                onTaskIdChange(task)
-                                onTaskSearchQueryChange("")
-                                onShowTaskDropdownChange(false)
-                            }
-                        )
-                    },
-                    searchContent = {
-                        // Typing happens in the anchor field; this area can show a hint or filters
-                        Text("Type to filter tasks", modifier = Modifier.padding(8.dp))
-                    },
-                    displayContent = { anchorModifier ->
-                        OutlinedTextField(
-                            value = if (taskId != null) "Task $taskId" else taskSearchQuery,
-                            onValueChange = { newValue ->
-                                if (taskId != null) onTaskIdChange(null)
-                                onTaskSearchQueryChange(newValue)
-                            },
-                            label = { Text("Task ID *") },
-                            modifier = anchorModifier
-                                .fillMaxWidth()
-                                .onFocusChanged { f -> onShowTaskDropdownChange(f.isFocused) },
-                            isError = taskId == null,
-                            supportingText = if (taskId == null) {
-                                { Text("Please select a task") }
-                            } else null,
-                            trailingIcon = {
-                                Row {
-                                    if (taskId != null) {
-                                        IconButton(onClick = {
-                                            onTaskIdChange(null)
-                                            onTaskSearchQueryChange("")
-                                        }) {
-                                            Icon(Icons.Default.Close, "Clear selection")
+                if (isReadOnly) {
+                    OutlinedTextField(
+                        value = if (taskId != null) "Task $taskId" else "",
+                        onValueChange = {},
+                        label = { Text("Task ID") },
+                        modifier = Modifier.fillMaxWidth(),
+                        readOnly = true
+                    )
+                } else {
+                    SearchableDropdown(
+                        expanded = showTaskDropdown,
+                        onExpandedChange = { onShowTaskDropdownChange(it) },
+                        items = availableTasks.filter { it.toString().contains(taskSearchQuery, ignoreCase = true) },
+                        itemContent = { task ->
+                            DropdownMenuItem(
+                                text = { Text("Task $task") },
+                                onClick = {
+                                    onTaskIdChange(task)
+                                    onTaskSearchQueryChange("")
+                                    onShowTaskDropdownChange(false)
+                                }
+                            )
+                        },
+                        searchContent = {
+                            // Typing happens in the anchor field; this area can show a hint or filters
+                            Text("Type to filter tasks", modifier = Modifier.padding(8.dp))
+                        },
+                        displayContent = { anchorModifier ->
+                            OutlinedTextField(
+                                value = if (taskId != null) "Task $taskId" else taskSearchQuery,
+                                onValueChange = { newValue ->
+                                    if (taskId != null) onTaskIdChange(null)
+                                    onTaskSearchQueryChange(newValue)
+                                },
+                                label = { Text("Task ID *") },
+                                modifier = anchorModifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { f -> onShowTaskDropdownChange(f.isFocused) },
+                                isError = taskId == null,
+                                supportingText = if (taskId == null) {
+                                    { Text("Please select a task") }
+                                } else null,
+                                trailingIcon = {
+                                    Row {
+                                        if (taskId != null) {
+                                            IconButton(onClick = {
+                                                onTaskIdChange(null)
+                                                onTaskSearchQueryChange("")
+                                            }) {
+                                                Icon(Icons.Default.Close, "Clear selection")
+                                            }
+                                        }
+                                        IconButton(onClick = { onShowTaskDropdownChange(!showTaskDropdown) }) {
+                                            Icon(Icons.Default.ArrowDropDown, "Dropdown")
                                         }
                                     }
-                                    IconButton(onClick = { onShowTaskDropdownChange(!showTaskDropdown) }) {
-                                        Icon(Icons.Default.ArrowDropDown, "Dropdown")
-                                    }
                                 }
-                            }
-                        )
-                    }
-                )
+                            )
+                        }
+                    )
+                }
             }
 
             OutlinedTextField(
                 value = maxPoints,
                 onValueChange = {
-                    if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                    if (!isReadOnly && (it.isEmpty() || it.all { char -> char.isDigit() })) {
                         onMaxPointsChange(it)
                     }
                 },
                 label = { Text("Max Points") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                readOnly = isReadOnly
             )
 
             OutlinedTextField(
@@ -522,11 +535,13 @@ fun AssignmentFormCard(
                 label = { Text("Start Date") },
                 modifier = Modifier.fillMaxWidth(),
                 readOnly = true,
-                trailingIcon = {
-                    IconButton(onClick = onStartDateClick) {
-                        Icon(Icons.Default.DateRange, "Pick date")
+                trailingIcon = if (!isReadOnly) {
+                    {
+                        IconButton(onClick = onStartDateClick) {
+                            Icon(Icons.Default.DateRange, "Pick date")
+                        }
                     }
-                }
+                } else null
             )
 
             OutlinedTextField(
@@ -535,11 +550,13 @@ fun AssignmentFormCard(
                 label = { Text("End Date") },
                 modifier = Modifier.fillMaxWidth(),
                 readOnly = true,
-                trailingIcon = {
-                    IconButton(onClick = onEndDateClick) {
-                        Icon(Icons.Default.DateRange, "Pick date")
+                trailingIcon = if (!isReadOnly) {
+                    {
+                        IconButton(onClick = onEndDateClick) {
+                            Icon(Icons.Default.DateRange, "Pick date")
+                        }
                     }
-                }
+                } else null
             )
 
             Text(
@@ -555,21 +572,32 @@ fun AssignmentFormCard(
                 OutlinedTextField(
                     value = timeoutValue,
                     onValueChange = {
-                        if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                        if (!isReadOnly && (it.isEmpty() || it.all { char -> char.isDigit() })) {
                             onTimeoutValueChange(it)
                         }
                     },
                     label = { Text("Timeout") },
                     modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    readOnly = isReadOnly
                 )
-                UnitSelector(
-                    selectedUnit = timeoutUnit,
-                    units = TimeUnit.entries,
-                    onUnitSelected = onTimeoutUnitChange,
-                    modifier = Modifier.weight(0.5f),
-                    getDisplayName = { it.displayName }
-                )
+                if (isReadOnly) {
+                    OutlinedTextField(
+                        value = timeoutUnit.displayName,
+                        onValueChange = {},
+                        label = { Text("Unit") },
+                        modifier = Modifier.weight(0.5f),
+                        readOnly = true
+                    )
+                } else {
+                    UnitSelector(
+                        selectedUnit = timeoutUnit,
+                        units = TimeUnit.entries,
+                        onUnitSelected = onTimeoutUnitChange,
+                        modifier = Modifier.weight(0.5f),
+                        getDisplayName = { it.displayName }
+                    )
+                }
             }
 
             Row(
@@ -580,21 +608,32 @@ fun AssignmentFormCard(
                 OutlinedTextField(
                     value = memoryValue,
                     onValueChange = {
-                        if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                        if (!isReadOnly && (it.isEmpty() || it.all { char -> char.isDigit() })) {
                             onMemoryValueChange(it)
                         }
                     },
                     label = { Text("Memory Limit") },
                     modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    readOnly = isReadOnly
                 )
-                UnitSelector(
-                    selectedUnit = memoryUnit,
-                    units = MemoryUnit.entries,
-                    onUnitSelected = onMemoryUnitChange,
-                    modifier = Modifier.weight(0.5f),
-                    getDisplayName = { it.displayName }
-                )
+                if (isReadOnly) {
+                    OutlinedTextField(
+                        value = memoryUnit.displayName,
+                        onValueChange = {},
+                        label = { Text("Unit") },
+                        modifier = Modifier.weight(0.5f),
+                        readOnly = true
+                    )
+                } else {
+                    UnitSelector(
+                        selectedUnit = memoryUnit,
+                        units = MemoryUnit.entries,
+                        onUnitSelected = onMemoryUnitChange,
+                        modifier = Modifier.weight(0.5f),
+                        getDisplayName = { it.displayName }
+                    )
+                }
             }
 
             Row(
@@ -605,95 +644,110 @@ fun AssignmentFormCard(
                 OutlinedTextField(
                     value = cpuValue,
                     onValueChange = {
-                        if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                        if (!isReadOnly && (it.isEmpty() || it.all { char -> char.isDigit() })) {
                             onCpuValueChange(it)
                         }
                     },
                     label = { Text("CPU Limit") },
                     modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    readOnly = isReadOnly
                 )
-                UnitSelector(
-                    selectedUnit = cpuUnit,
-                    units = CpuUnit.entries,
-                    onUnitSelected = onCpuUnitChange,
-                    modifier = Modifier.weight(0.5f),
-                    getDisplayName = { it.displayName }
-                )
+                if (isReadOnly) {
+                    OutlinedTextField(
+                        value = cpuUnit.displayName,
+                        onValueChange = {},
+                        label = { Text("Unit") },
+                        modifier = Modifier.weight(0.5f),
+                        readOnly = true
+                    )
+                } else {
+                    UnitSelector(
+                        selectedUnit = cpuUnit,
+                        units = CpuUnit.entries,
+                        onUnitSelected = onCpuUnitChange,
+                        modifier = Modifier.weight(0.5f),
+                        getDisplayName = { it.displayName }
+                    )
+                }
             }
 
             OutlinedTextField(
                 value = pidsLimit,
                 onValueChange = {
-                    if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                    if (!isReadOnly && (it.isEmpty() || it.all { char -> char.isDigit() })) {
                         onPidsLimitChange(it)
                     }
                 },
                 label = { Text("PIDs Limit") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                readOnly = isReadOnly
             )
 
             OutlinedTextField(
                 value = maxAttempts,
                 onValueChange = {
-                    if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                    if (!isReadOnly && (it.isEmpty() || it.all { char -> char.isDigit() })) {
                         onMaxAttemptsChange(it)
                     }
                 },
                 label = { Text("Maximum attempts") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                readOnly = isReadOnly
             )
 
-            val groupSearchFocusRequester = remember { FocusRequester() }
-            Box {
-                SearchableDropdown(
-                    expanded = showGroupDropdown,
-                    onExpandedChange = { onShowGroupDropdownChange(it) },
-                    items = availableAssignmentGroups
-                        .filter { it.id !in selectedGroupIds }
-                        .filter { it.name.contains(groupSearchQuery, ignoreCase = true) },
-                    itemContent = { group ->
-                        DropdownMenuItem(
-                            text = { Text(group.name) },
-                            onClick = {
-                                onSelectedGroupIdsChange(selectedGroupIds + (group.id!!))
-                                onGroupSearchQueryChange("")
-                                // Keep dropdown open for consecutive selections and refocus input
-                                groupSearchFocusRequester.requestFocus()
-                            }
-                        )
-                    },
-                    searchContent = {
-                        Text("Type to filter groups", modifier = Modifier.padding(8.dp))
-                    },
-                    displayContent = { anchorModifier ->
-                        OutlinedTextField(
-                            value = groupSearchQuery,
-                            onValueChange = { newValue ->
-                                onGroupSearchQueryChange(newValue)
-                            },
-                            label = { Text("Search Assignment Groups") },
-                            modifier = anchorModifier
-                                .fillMaxWidth()
-                                .focusRequester(groupSearchFocusRequester)
-                                .onFocusChanged { f -> onShowGroupDropdownChange(f.isFocused) },
-                            trailingIcon = {
-                                Row {
-                                    if (groupSearchQuery.isNotEmpty()) {
-                                        IconButton(onClick = { onGroupSearchQueryChange("") }) {
-                                            Icon(Icons.Default.Close, "Clear search")
+            if (!isReadOnly) {
+                val groupSearchFocusRequester = remember { FocusRequester() }
+                Box {
+                    SearchableDropdown(
+                        expanded = showGroupDropdown,
+                        onExpandedChange = { onShowGroupDropdownChange(it) },
+                        items = availableAssignmentGroups
+                            .filter { it.id !in selectedGroupIds }
+                            .filter { it.name.contains(groupSearchQuery, ignoreCase = true) },
+                        itemContent = { group ->
+                            DropdownMenuItem(
+                                text = { Text(group.name) },
+                                onClick = {
+                                    onSelectedGroupIdsChange(selectedGroupIds + (group.id!!))
+                                    onGroupSearchQueryChange("")
+                                    // Keep dropdown open for consecutive selections and refocus input
+                                    groupSearchFocusRequester.requestFocus()
+                                }
+                            )
+                        },
+                        searchContent = {
+                            Text("Type to filter groups", modifier = Modifier.padding(8.dp))
+                        },
+                        displayContent = { anchorModifier ->
+                            OutlinedTextField(
+                                value = groupSearchQuery,
+                                onValueChange = { newValue ->
+                                    onGroupSearchQueryChange(newValue)
+                                },
+                                label = { Text("Search Assignment Groups") },
+                                modifier = anchorModifier
+                                    .fillMaxWidth()
+                                    .focusRequester(groupSearchFocusRequester)
+                                    .onFocusChanged { f -> onShowGroupDropdownChange(f.isFocused) },
+                                trailingIcon = {
+                                    Row {
+                                        if (groupSearchQuery.isNotEmpty()) {
+                                            IconButton(onClick = { onGroupSearchQueryChange("") }) {
+                                                Icon(Icons.Default.Close, "Clear search")
+                                            }
+                                        }
+                                        IconButton(onClick = { onShowGroupDropdownChange(!showGroupDropdown) }) {
+                                            Icon(Icons.Default.ArrowDropDown, "Dropdown")
                                         }
                                     }
-                                    IconButton(onClick = { onShowGroupDropdownChange(!showGroupDropdown) }) {
-                                        Icon(Icons.Default.ArrowDropDown, "Dropdown")
-                                    }
                                 }
-                            }
-                        )
-                    }
-                )
+                            )
+                        }
+                    )
+                }
             }
 
             if (selectedGroupIds.isNotEmpty()) {
@@ -713,14 +767,16 @@ fun AssignmentFormCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(it.name)
-                                IconButton(
-                                    onClick = {
-                                        onSelectedGroupIdsChange(
-                                            selectedGroupIds.filter { id -> id != groupId }
-                                        )
+                                if (!isReadOnly) {
+                                    IconButton(
+                                        onClick = {
+                                            onSelectedGroupIdsChange(
+                                                selectedGroupIds.filter { id -> id != groupId }
+                                            )
+                                        }
+                                    ) {
+                                        Icon(Icons.Default.Close, "Remove")
                                     }
-                                ) {
-                                    Icon(Icons.Default.Close, "Remove")
                                 }
                             }
                         }
@@ -731,21 +787,28 @@ fun AssignmentFormCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Button(
-                    onClick = onCancel,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Cancel")
+                if (!isReadOnly) {
+                    Button(
+                        onClick = onCancel,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
+                    }
+                    Button(
+                        onClick = onSubmit,
+                        modifier = Modifier.weight(1f),
+                        enabled = isSubmitEnabled
+                    ) {
+                        Text(submitButtonText)
+                    }
+                } else {
+                    Button(
+                        onClick = onCancel,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Back")
+                    }
                 }
-                Button(
-                    onClick = onSubmit,
-                    modifier = Modifier.weight(1f),
-                    enabled = isSubmitEnabled
-                ) {
-                    Text(submitButtonText)
-                }
-
-
             }
         }
     }
