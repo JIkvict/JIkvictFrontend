@@ -1,5 +1,6 @@
 package org.jikvict.browser.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
@@ -21,11 +23,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.m3.Markdown
+import jikvictfrontend.composeapp.generated.resources.Res
+import jikvictfrontend.composeapp.generated.resources.configure_source
+import jikvictfrontend.composeapp.generated.resources.gradle
+import jikvictfrontend.composeapp.generated.resources.gradle_settings
+import jikvictfrontend.composeapp.generated.resources.link_project
+import jikvictfrontend.composeapp.generated.resources.open_gradle
+import jikvictfrontend.composeapp.generated.resources.plugins
+import jikvictfrontend.composeapp.generated.resources.project_structure
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.browser.components.Alert
 import org.jikvict.browser.components.AlertType
 import org.jikvict.browser.components.DefaultScreenScope
@@ -95,6 +110,79 @@ fun HelpScreenComposable(scope: DefaultScreenScope) = with(scope) {
         }
         Spacer(modifier = Modifier.height(16.dp))
 
+
+        HelpSection("Getting Started") {
+            Markdown(
+                """
+                    First, after you open an assignment, you should open `build.gradle.kts`
+                """.trimIndent()
+            )
+
+            Photo(
+                Res.drawable.open_gradle,
+                caption = "Click \"Link Gradle Project\"",
+            )
+
+            Markdown(
+                """
+                    Next you should select `default-structure` folder.
+                """.trimIndent()
+            )
+
+            Photo(
+                Res.drawable.link_project,
+                caption = "Select \"default-structure\" folder",
+            )
+
+            Markdown(
+                """
+                    Now we need to tell IntelliJ where our sources are located.
+                """.trimIndent()
+            )
+
+            Photo(
+                Res.drawable.configure_source,
+                caption = "Select \"java\" folder, click right mouse button and mark it as \"Sources Root\"",
+            )
+
+            Markdown(
+                """
+                    The next steps are aimed to configure right JDK version
+                """.trimIndent()
+            )
+
+            Markdown("Click double shift and search for \"Project Structure\". Open it")
+
+            Photo(
+                Res.drawable.project_structure,
+                caption = "Select JDK 21. You can download it, if you don't have it. Any vendor JDK will work, for example OpenJDK."
+            )
+
+            Markdown(
+                """
+                Now open `Gradle`, it looks like an elephant. If you don't have it on your toolbars, use Double shift and search for it.
+            """.trimIndent()
+            )
+
+            Photo(
+                Res.drawable.gradle,
+                caption = "Click \"Gradle Settings\""
+            )
+
+            Photo(
+                Res.drawable.gradle_settings,
+                caption = "Select JDK 21. You can use the same JDK, as in Project Structure."
+            )
+
+            Alert(
+                AlertType.Note,
+                "Gradle is a build automation tool, used to manage dependencies and build processes in the project. It is build on JVM, this is why it also needs JDK."
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
         var selectedPlatformIndex by remember { mutableStateOf(0) }
 
         HelpSection("Submitting") {
@@ -151,11 +239,101 @@ fun HelpScreenComposable(scope: DefaultScreenScope) = with(scope) {
             )
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        HelpSection("Use plugin") {
+            Markdown(
+                """
+                You can use the IntelliJ plugin to make your life easier!
+                
+                It will automatically download and open assignments for you.
+                
+                It also will automatically zip and submit you solution, so no more frustration while submitting!
+                
+                Go to [releases](https://github.com/JIkvict/JIkvictIdeaPlugin/releases) and download the latest version.
+            """.trimIndent()
+            )
+
+            Markdown("""
+                Open IntelliJ settings (double shift and search settings).
+                Find plugins section.
+            """.trimIndent())
+
+            Photo(
+                Res.drawable.plugins,
+                caption = "Simply select downloaded plugin and restart IntelliJ."
+            )
+
+            SelectionContainer {
+                Markdown("""
+                Now you can open plugin by Double shift and search for `Jikvict`.
+                After first use, you will find it's icon in the toolbar.
+            """.trimIndent())
+            }
+        }
+    }
+}
+
+interface HelpSectionScope {
+    @Composable
+    fun Photo(
+        painter: Painter,
+        caption: String,
+        modifier: Modifier = Modifier
+    )
+
+    @Composable
+    fun Photo(
+        resource: DrawableResource,
+        caption: String,
+        modifier: Modifier = Modifier
+    )
+}
+
+private object HelpSectionScopeImpl : HelpSectionScope {
+    @Composable
+    override fun Photo(
+        painter: Painter,
+        caption: String,
+        modifier: Modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painter,
+                contentDescription = caption,
+                modifier = modifier
+                    .widthIn(max = 1600.dp)
+                    .fillMaxWidth(0.8f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Fit
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = caption,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+
+    @Composable
+    override fun Photo(
+        resource: DrawableResource,
+        caption: String,
+        modifier: Modifier
+    ) {
+        Photo(painterResource(resource), caption, modifier)
     }
 }
 
 @Composable
-fun HelpSection(title: String, content: @Composable () -> Unit) {
+fun HelpSection(title: String, content: @Composable HelpSectionScope.() -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -175,7 +353,7 @@ fun HelpSection(title: String, content: @Composable () -> Unit) {
                         .padding(16.dp),
             ) {
                 Column {
-                    content()
+                    HelpSectionScopeImpl.content()
                 }
             }
         }
