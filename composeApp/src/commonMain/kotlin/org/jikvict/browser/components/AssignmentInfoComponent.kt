@@ -780,8 +780,12 @@ fun StatsComponent(
         data class PassBucket(val label: String, val color: Color, val selectedColor: Color)
 
         fun isPass(info: AssignmentInfoAdmin): Boolean? {
-            return info.results.any {
-                it.points > 0
+            return if (info.results.isNotEmpty()) {
+                info.results.any {
+                    it.points > 0
+                }
+            } else {
+                null
             }
         }
 
