@@ -780,14 +780,8 @@ fun StatsComponent(
         data class PassBucket(val label: String, val color: Color, val selectedColor: Color)
 
         fun isPass(info: AssignmentInfoAdmin): Boolean? {
-            val last = info.results.lastOrNull() ?: return null
-            val suite = last.result
-            return if (suite != null) {
-                val max = suite.totalPossiblePoints
-                val earned = suite.totalEarnedPoints
-                if (max <= 0) false else earned.toDouble() / max.toDouble() >= 0.5
-            } else {
-                last.points > 0
+            return info.results.any {
+                it.points > 0
             }
         }
 
@@ -807,12 +801,12 @@ fun StatsComponent(
 
         val passBuckets = listOf(
             PassBucket(
-                "Pass",
+                "Accepted",
                 color = chartColors.excellent,
                 selectedColor = chartColors.excellentSelected
             ),
             PassBucket(
-                "Bad",
+                "Failed",
                 color = chartColors.fail,
                 selectedColor = chartColors.failSelected
             ),
