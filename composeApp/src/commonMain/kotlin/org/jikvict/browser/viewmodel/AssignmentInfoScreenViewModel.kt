@@ -20,7 +20,7 @@ import org.jikvict.api.apis.TeacherStudentControllerApi
 import org.jikvict.api.apis.UsersControllerApi
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentGroupDto
-import org.jikvict.api.models.AssignmentInfo
+import org.jikvict.api.models.AssignmentInfoAdmin
 import org.jikvict.api.models.StatsRequestDto
 import org.jikvict.api.models.UserDto
 import org.jikvict.browser.di.BACKEND_URL
@@ -112,7 +112,7 @@ class AssignmentInfoScreenViewModel(
         }
     }
 
-    suspend fun loadInfos(groupIds: List<Long>, userIds: List<Long>): List<AssignmentInfo>? {
+    suspend fun loadInfos(groupIds: List<Long>, userIds: List<Long>): List<AssignmentInfoAdmin>? {
         if (assignment.value == null) return null
         val extendedGroups = groupIds.ifEmpty {
             assignment.value!!.assignmentGroupsIds

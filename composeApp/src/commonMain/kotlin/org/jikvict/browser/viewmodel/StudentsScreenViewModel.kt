@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import org.jikvict.api.apis.AssignmentControllerApi
 import org.jikvict.api.apis.TeacherStudentControllerApi
 import org.jikvict.api.apis.UsersControllerApi
-import org.jikvict.api.models.AssignmentInfo
+import org.jikvict.api.models.AssignmentInfoAdmin
 import org.jikvict.api.models.StatsRequestDto
 import org.jikvict.api.models.UserDto
 import org.jikvict.browser.components.StudentAssignmentInfo
@@ -78,7 +78,7 @@ class StudentsScreenViewModel(
                             } else {
                                 StudentAssignmentInfo(
                                     assignment.title,
-                                    AssignmentInfo(
+                                    AssignmentInfoAdmin(
                                         assignmentId = assignment.id,
                                         taskId = assignment.taskId,
                                         maxAttempts =

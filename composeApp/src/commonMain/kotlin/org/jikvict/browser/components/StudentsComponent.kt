@@ -48,8 +48,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentGroupDto
-import org.jikvict.api.models.AssignmentInfo
-import org.jikvict.api.models.AssignmentResultDto
+import org.jikvict.api.models.AssignmentInfoAdmin
+import org.jikvict.api.models.AssignmentResultAdminDto
 import org.jikvict.api.models.UserDto
 import org.jikvict.browser.components.common.SearchableDropdown
 import org.jikvict.browser.model.OperationResult
@@ -57,14 +57,14 @@ import org.jikvict.browser.screens.formatDate
 import org.jikvict.browser.util.DefaultPreview
 import org.jikvict.browser.util.LocalThemeSwitcherProvider
 
-data class StudentAssignmentInfo(val assignmentTitle: String, val info: AssignmentInfo)
+data class StudentAssignmentInfo(val assignmentTitle: String, val info: AssignmentInfoAdmin)
 data class StudentStats(val assignments: List<StudentAssignmentInfo>)
 
 @Composable
 fun StudentsComponent(
     availableUsers: List<UserDto>,
     statsProvider: suspend (UserDto) -> StudentStats,
-    onDownloadClick: (AssignmentResultDto) -> Unit,
+    onDownloadClick: (AssignmentResultAdminDto) -> Unit,
     onGroupClick: (AssignmentGroupDto) -> Unit,
     scope: DefaultScreenScope,
     onNavigateBack: () -> Unit = {},
@@ -281,7 +281,7 @@ fun StudentOverview(
 @Composable
 fun StudentAssignmentsList(
     assignments: List<StudentAssignmentInfo>,
-    onDownloadClick: (AssignmentResultDto) -> Unit
+    onDownloadClick: (AssignmentResultAdminDto) -> Unit
 ) {
     val primary = MaterialTheme.colorScheme.primary
 
@@ -613,7 +613,7 @@ fun StudentsComponentPreview() {
                             StudentAssignmentInfo(
                                 assignmentTitle = "Intro to Kotlin",
                                 info =
-                                    AssignmentInfo(
+                                    AssignmentInfoAdmin(
                                         assignmentId = 1,
                                         taskId = 1,
                                         maxAttempts = 3,
@@ -621,7 +621,7 @@ fun StudentsComponentPreview() {
                                         results = listOf(),
                                         unacceptedSubmissions =
                                             listOf(),
-                                        author = it
+                                        author = it,
                                     )
                             )
                         )

@@ -78,8 +78,8 @@ import ir.ehsannarmani.compose_charts.models.Pie
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentGroupDto
-import org.jikvict.api.models.AssignmentInfo
-import org.jikvict.api.models.AssignmentResultDto
+import org.jikvict.api.models.AssignmentInfoAdmin
+import org.jikvict.api.models.AssignmentResultAdminDto
 import org.jikvict.api.models.TestResult
 import org.jikvict.api.models.TestSuiteResult
 import org.jikvict.api.models.UserDto
@@ -102,9 +102,9 @@ fun AssignmentInfoComponent(
     onNavigateBack: () -> Unit,
     availableUsers: List<UserDto>,
     availableGroups: List<AssignmentGroupDto>,
-    infoSupplier: suspend (List<UserDto>, List<AssignmentGroupDto>) -> List<AssignmentInfo>?,
+    infoSupplier: suspend (List<UserDto>, List<AssignmentGroupDto>) -> List<AssignmentInfoAdmin>?,
     onEditClick: (AssignmentDto) -> Unit,
-    onDownloadClick: (AssignmentResultDto) -> Unit,
+    onDownloadClick: (AssignmentResultAdminDto) -> Unit,
 ) = with(scope) {
     var userQuery by remember { mutableStateOf("") }
     var groupQuery by remember { mutableStateOf("") }
@@ -117,11 +117,12 @@ fun AssignmentInfoComponent(
     var selectedUsers by remember { mutableStateOf<List<UserDto>>(emptyList()) }
     var selectedGroups by remember { mutableStateOf<List<AssignmentGroupDto>>(emptyList()) }
 
-    var infos by remember { mutableStateOf<OperationResult<List<AssignmentInfo>>>(OperationResult.Idle()) }
+    var infos by remember { mutableStateOf<OperationResult<List<AssignmentInfoAdmin>>>(OperationResult.Idle()) }
     LaunchedEffect(selectedUsers, selectedGroups) {
         infos = OperationResult.Loading()
         try {
             val res = infoSupplier(selectedUsers, selectedGroups)
+            println("Info supplier result: $res")
             infos = if (res == null) {
                 OperationResult.Error("No results")
             } else {
@@ -130,6 +131,7 @@ fun AssignmentInfoComponent(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            e.printStackTrace()
             infos = OperationResult.Error(e.message ?: "Unknown error")
         }
     }
@@ -379,7 +381,7 @@ fun AssignmentInfoComponent(
 
             is OperationResult.Error -> {
                 Text(
-                    text = "Error loading inforamtions: ${infosUnwrapped.message}",
+                    text = "Error loading information: ${infosUnwrapped.message}",
                     color = MaterialTheme.colorScheme.error
                 )
             }
@@ -407,7 +409,10 @@ fun AssignmentInfoComponent(
             }
         }
         if (!isReadOnly) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Button(onClick = {
                     onEditClick(assignment)
                 }) {
@@ -439,8 +444,8 @@ fun SelectableChip(label: String, onRemove: () -> Unit) {
 
 @Composable
 fun SubmissionComponent(
-    infos: List<AssignmentInfo>,
-    download: (AssignmentResultDto) -> Unit
+    infos: List<AssignmentInfoAdmin>,
+    download: (AssignmentResultAdminDto) -> Unit
 ) {
     val primary = MaterialTheme.colorScheme.primary
     val isDark by LocalThemeSwitcherProvider.current.isDark
@@ -692,7 +697,7 @@ fun SubmissionComponent(
 
 @Composable
 fun StatsComponent(
-    infos: List<AssignmentInfo>,
+    infos: List<AssignmentInfoAdmin>,
 ) {
     val isDark by LocalThemeSwitcherProvider.current.isDark
     println("THEME IS : $isDark")
@@ -774,7 +779,7 @@ fun StatsComponent(
 
         data class PassBucket(val label: String, val color: Color, val selectedColor: Color)
 
-        fun isPass(info: AssignmentInfo): Boolean? {
+        fun isPass(info: AssignmentInfoAdmin): Boolean? {
             val last = info.results.lastOrNull() ?: return null
             val suite = last.result
             return if (suite != null) {
@@ -1087,7 +1092,7 @@ fun AssignmentInfoComponentPreview() {
                     totalEarnedPoints = earned
                 )
 
-                fun result(earned: Int, max: Int) = AssignmentResultDto(
+                fun result(earned: Int, max: Int) = AssignmentResultAdminDto(
                     id = Random.nextInt().toLong(),
                     timeStamp = now,
                     points = earned,
@@ -1095,7 +1100,7 @@ fun AssignmentInfoComponentPreview() {
                 )
                 listOf(
                     // No submissions
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 1,
                         maxAttempts = 3,
@@ -1110,7 +1115,7 @@ fun AssignmentInfoComponentPreview() {
                         )
                     ),
                     // Excellent
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 2,
                         maxAttempts = 3,
@@ -1124,7 +1129,7 @@ fun AssignmentInfoComponentPreview() {
                             assignmentGroups = setOf()
                         )
                     ),
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 3,
                         maxAttempts = 3,
@@ -1139,7 +1144,7 @@ fun AssignmentInfoComponentPreview() {
                         )
                     ),
                     // Good
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 4,
                         maxAttempts = 3,
@@ -1153,7 +1158,7 @@ fun AssignmentInfoComponentPreview() {
                             assignmentGroups = setOf()
                         )
                     ),
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 5,
                         maxAttempts = 3,
@@ -1168,7 +1173,7 @@ fun AssignmentInfoComponentPreview() {
                         )
                     ),
                     // Satisfactory
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 6,
                         maxAttempts = 3,
@@ -1182,7 +1187,7 @@ fun AssignmentInfoComponentPreview() {
                             assignmentGroups = setOf()
                         )
                     ),
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 7,
                         maxAttempts = 3,
@@ -1197,7 +1202,7 @@ fun AssignmentInfoComponentPreview() {
                         )
                     ),
                     // Fail
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 8,
                         maxAttempts = 3,
@@ -1211,7 +1216,7 @@ fun AssignmentInfoComponentPreview() {
                             assignmentGroups = setOf()
                         )
                     ),
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 9,
                         maxAttempts = 3,
@@ -1226,13 +1231,13 @@ fun AssignmentInfoComponentPreview() {
                         )
                     ),
                     // Fallback by points without suite
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 10,
                         maxAttempts = 5,
                         attemptsUsed = 4,
                         results = listOf(
-                            AssignmentResultDto(
+                            AssignmentResultAdminDto(
                                 timeStamp = now,
                                 points = 1,
                                 result = null,
@@ -1247,13 +1252,13 @@ fun AssignmentInfoComponentPreview() {
                             assignmentGroups = setOf()
                         )
                     ),
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 11,
                         maxAttempts = 5,
                         attemptsUsed = 5,
                         results = listOf(
-                            AssignmentResultDto(
+                            AssignmentResultAdminDto(
                                 timeStamp = now,
                                 points = 0,
                                 result = null,
@@ -1269,7 +1274,7 @@ fun AssignmentInfoComponentPreview() {
                         )
                     ),
                     // Various attempts used values
-                    AssignmentInfo(
+                    AssignmentInfoAdmin(
                         assignmentId = 0,
                         taskId = 12,
                         maxAttempts = 5,
