@@ -1,5 +1,6 @@
 package org.jikvict.browser.util
 
+import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.auth.Auth
@@ -74,6 +75,8 @@ class ClientConfigProvider(
     }
 }
 
+
+class PublicHttpClient(val client: HttpClient)
 
 fun simpleClientConfig(client: HttpClientConfig<*>) {
     with(client) {

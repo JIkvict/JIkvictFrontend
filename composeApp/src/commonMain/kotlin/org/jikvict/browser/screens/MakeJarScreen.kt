@@ -22,10 +22,12 @@ import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Task
+import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -379,9 +381,26 @@ fun MakeJarScreenComposable(defaultScope: DefaultScreenScope) {
                 }
             }
 
-            CustomCard(painterResource(Res.drawable.pluginicon), "Use IntelliJ Plugin (Alfa)") {
-                openExternalUrl("https://github.com/JIkvict/JIkvictIdeaPlugin/releases", true)
-            }
+            val hasNewPluginRelease by viewModel.hasNewPluginRelease.collectAsState()
+            CustomCard(
+                painter = painterResource(Res.drawable.pluginicon),
+                text = "Use IntelliJ Plugin (Alfa)",
+                onClick = { openExternalUrl("https://github.com/JIkvict/JIkvictIdeaPlugin/releases", true) },
+                badge = if (hasNewPluginRelease) {
+                    {
+                        Badge(
+                            modifier = Modifier.offset(x = (-12).dp, y = 12.dp),
+                            containerColor = MaterialTheme.colorScheme.error,
+                        ) {
+                            Text(
+                                text = "New version available!",
+                                color = MaterialTheme.colorScheme.onError,
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                        }
+                    }
+                } else null,
+            )
         }
         Spacer(modifier = Modifier.height(16.dp))
     }

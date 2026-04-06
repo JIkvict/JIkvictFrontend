@@ -69,6 +69,7 @@ fun CustomCard(
     painter: Painter,
     text: String,
     onClick: () -> Unit = {},
+    badge: (@Composable () -> Unit)? = null,
 ) {
     val iconSize = adaptiveValue(128.dp, 256.dp)
     val minTextSize = 8.sp
@@ -104,5 +105,6 @@ fun CustomCard(
                 autoSize = TextAutoSize.StepBased(minTextSize, maxTextSize),
             )
         },
+        badge = badge,
     )
 }

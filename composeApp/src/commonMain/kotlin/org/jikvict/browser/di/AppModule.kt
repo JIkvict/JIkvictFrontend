@@ -1,6 +1,10 @@
 package org.jikvict.browser.di
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
+import org.jikvict.browser.util.PublicHttpClient
 import org.jikvict.browser.auth.SessionManager
 import org.jikvict.browser.util.ClientConfigProvider
 import org.jikvict.browser.viewmodel.AdminScreenViewModel
@@ -36,6 +40,14 @@ val appModule = module {
             val config = get<ClientConfigProvider>().provide()
             config(this)
         }
+    }
+
+    single<PublicHttpClient> {
+        PublicHttpClient(HttpClient {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        })
     }
 
     // ViewModels

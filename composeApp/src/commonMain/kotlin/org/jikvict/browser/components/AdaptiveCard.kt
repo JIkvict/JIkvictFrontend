@@ -35,6 +35,7 @@ fun SmallCard(
         CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
         ),
+    badge: (@Composable () -> Unit)? = null,
 ) {
     ElevatedCard(
         modifier = modifier,
@@ -42,34 +43,37 @@ fun SmallCard(
         colors = colors,
         shape = RoundedCornerShape(24.dp),
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .background(
-                            MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
-                            RoundedCornerShape(24.dp),
-                        ).fillMaxHeight(),
-                contentAlignment = Alignment.Center,
+        Box(contentAlignment = Alignment.TopEnd) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                primaryContent()
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .background(
+                                MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
+                                RoundedCornerShape(24.dp),
+                            ).fillMaxHeight(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    primaryContent()
+                }
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .background(colors.containerColor, RoundedCornerShape(24.dp))
+                            .padding(16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    secondaryContent()
+                }
             }
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .background(colors.containerColor, RoundedCornerShape(24.dp))
-                        .padding(16.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                secondaryContent()
-            }
+            badge?.invoke()
         }
     }
 }
@@ -85,6 +89,7 @@ fun LargeCard(
         CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
         ),
+    badge: (@Composable () -> Unit)? = null,
 ) {
     ElevatedCard(
         modifier = modifier,
@@ -92,35 +97,38 @@ fun LargeCard(
         colors = colors,
         shape = RoundedCornerShape(24.dp),
     ) {
-        Row(
-            modifier = Modifier.height(IntrinsicSize.Min).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Box(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .background(
-                            MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
-                            RoundedCornerShape(24.dp),
-                        ).fillMaxHeight(),
-                contentAlignment = Alignment.Center,
+        Box(contentAlignment = Alignment.TopEnd) {
+            Row(
+                modifier = Modifier.height(IntrinsicSize.Min).fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                primaryContent()
+                Box(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(
+                                MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
+                                RoundedCornerShape(24.dp),
+                            ).fillMaxHeight(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    primaryContent()
+                }
+                Box(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(colors.containerColor, RoundedCornerShape(24.dp))
+                            .padding(16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    secondaryContent()
+                }
             }
-            Box(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .background(colors.containerColor, RoundedCornerShape(24.dp))
-                        .padding(16.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                secondaryContent()
-            }
+            badge?.invoke()
         }
     }
 }
@@ -136,6 +144,7 @@ fun AdaptiveCard(
         CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
         ),
+    badge: (@Composable () -> Unit)? = null,
 ) = adaptiveComponent(
     small =
         {
@@ -145,6 +154,7 @@ fun AdaptiveCard(
                 secondaryContent = secondaryContent,
                 elevation = elevation,
                 colors = colors,
+                badge = badge,
             )
         },
     large = {
@@ -154,6 +164,7 @@ fun AdaptiveCard(
             secondaryContent = secondaryContent,
             elevation = elevation,
             colors = colors,
+            badge = badge,
         )
     },
 )

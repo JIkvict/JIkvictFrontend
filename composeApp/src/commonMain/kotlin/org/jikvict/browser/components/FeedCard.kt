@@ -21,6 +21,7 @@ fun FeedCard(
     modifier: Modifier = Modifier,
     primaryContent: @Composable () -> Unit,
     secondaryContent: @Composable () -> Unit,
+    badge: (@Composable () -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
@@ -53,5 +54,6 @@ fun FeedCard(
             ),
         primaryContent = primaryContent,
         secondaryContent = secondaryContent,
+        badge = badge,
     )
 }
