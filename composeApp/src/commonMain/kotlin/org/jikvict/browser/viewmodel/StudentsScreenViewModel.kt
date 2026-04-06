@@ -56,8 +56,8 @@ class StudentsScreenViewModel(
         if (!assignmentsResult.success) {
             throw Exception("Failed to load assignments: ${assignmentsResult.status}")
         }
-        val assignments = assignmentsResult.body()
-
+        val accessible = user.assignmentGroups.flatMap { it.assignmentIds }.distinct()
+        val assignments = assignmentsResult.body().filter { accessible.contains(it.id) }
         val deferredInfos =
             assignments.map { assignment ->
                 viewModelScope.async {

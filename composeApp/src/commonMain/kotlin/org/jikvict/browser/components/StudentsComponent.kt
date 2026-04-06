@@ -586,7 +586,7 @@ fun StudentAssignmentsList(
 @Preview(widthDp = 1980, heightDp = 1280)
 @Composable
 fun StudentsComponentPreview() {
-    DefaultPreview(false) {
+    DefaultPreview {
         StudentsComponent(
             initialUserName = "John Doe",
             availableUsers =
@@ -606,10 +606,10 @@ fun StudentsComponentPreview() {
                         )
                     ),
                 ),
-            statsProvider = {
+            statsProvider = {user ->
                 StudentStats(
                     assignments =
-                        listOf(
+                        List(15) {
                             StudentAssignmentInfo(
                                 assignmentTitle = "Intro to Kotlin",
                                 info =
@@ -621,10 +621,10 @@ fun StudentsComponentPreview() {
                                         results = listOf(),
                                         unacceptedSubmissions =
                                             listOf(),
-                                        author = it,
+                                        author = user,
                                     )
                             )
-                        )
+                        }
                 )
             },
             onDownloadClick = {},

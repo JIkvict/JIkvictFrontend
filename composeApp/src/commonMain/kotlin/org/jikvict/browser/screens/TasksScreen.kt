@@ -124,6 +124,7 @@ import org.jikvict.browser.viewmodel.SubmissionStatus
 import org.jikvict.browser.viewmodel.TasksScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 
@@ -223,7 +224,7 @@ fun TasksScreenComposable(defaultScope: DefaultScreenScope): Unit =
             notification = TaskNotification(message, type, true)
             // Auto-hide after 5 seconds
             scope.launch {
-                delay(5000)
+                delay(5.seconds)
                 notification = null
             }
         }
@@ -744,7 +745,7 @@ private fun AssignmentDetailPane(
                 )
             } else if (showUnaccepted) {
                 val unacceptedSubmission = assignmentInfo?.unacceptedSubmissions ?: emptyList()
-                val acceptedSubmissions = assignmentInfo?.results ?: emptyList()
+                val acceptedSubmissions = assignmentInfo?.results?.filter { it.points > 0 } ?: emptyList()
                 val submission = unacceptedSubmission.map {
                     SubmissionInfo(
                         time = it.time,
@@ -1675,7 +1676,6 @@ fun RefreshButton(
         animationSpec = MaterialTheme.motionScheme.slowEffectsSpec(),
         finishedListener = { finalValue ->
             if (isAnimating) {
-                @Suppress("AssignedValueIsNeverRead")
                 totalRotation = finalValue
                 isAnimating = false
             }
