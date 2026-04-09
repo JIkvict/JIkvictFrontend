@@ -14,7 +14,14 @@
 <script>
     window.originalFetch = window.fetch;
     window.fetch = function (resource, init) {
-        return window.originalFetch(resource, Object.assign({ credentials: 'include' }, init || {}));
+        const url = typeof resource === 'string' ? resource : resource.url;
+        const isSameOrigin = url.startsWith('/') || url.startsWith(window.location.origin);
+
+        if (isSameOrigin) {
+            return window.originalFetch(resource, Object.assign({ credentials: 'include' }, init || {}));
+        }
+
+        return window.originalFetch(resource, init || {});
     };
 </script>
 </html>
