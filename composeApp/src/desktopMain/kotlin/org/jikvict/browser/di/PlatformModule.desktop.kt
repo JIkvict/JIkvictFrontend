@@ -4,6 +4,7 @@ import org.jikvict.api.apis.AssignmentControllerApi
 import org.jikvict.api.apis.AssignmentGroupControllerApi
 import org.jikvict.api.apis.AuthControllerApi
 import org.jikvict.api.apis.LongLivingTokenControllerApi
+import org.jikvict.api.apis.PlagiarismControllerApi
 import org.jikvict.api.apis.QueueStatusControllerApi
 import org.jikvict.api.apis.SolutionCheckerControllerApi
 import org.jikvict.api.apis.TaskStatusControllerApi
@@ -27,5 +28,6 @@ actual val platformModule = module {
     single { AssignmentGroupControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
     single { UsersControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
     single { QueueStatusControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
+    single { PlagiarismControllerApi(baseUrl = BACKEND_URL, httpClientConfig = get()) }
 
 }

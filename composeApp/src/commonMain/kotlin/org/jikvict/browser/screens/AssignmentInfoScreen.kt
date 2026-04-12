@@ -34,10 +34,14 @@ fun AssignmentInfoScreenComposable(
         vm.loadAssignments(assignmentId).join()
         vm.loadGroup().join()
         vm.loadUsers()
+        vm.loadPlagiarismChecks()
     }
     val assignment by vm.assignment.collectAsState()
     val groups by vm.groups.collectAsState()
     val users by vm.users.collectAsState()
+    val plagiarismChecks by vm.plagiarismChecks.collectAsState()
+    val plagiarismLoading by vm.plagiarismLoading.collectAsState()
+    val plagiarismStarting by vm.plagiarismStarting.collectAsState()
 
     if (assignment == null || groups == null || users == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -69,7 +73,14 @@ fun AssignmentInfoScreenComposable(
         },
         onDownloadClick = {
             vm.downloadZipAndSave(it.id)
-        }
+        },
+        plagiarismChecks = plagiarismChecks,
+        plagiarismLoading = plagiarismLoading,
+        plagiarismStarting = plagiarismStarting,
+        onStartPlagiarismCheck = { vm.startPlagiarismCheck(it) },
+        onDownloadPlagiarismReport = { vm.downloadPlagiarismReport(it) },
+        onViewPlagiarismReport = { vm.viewPlagiarismReport(it) },
+        onRefreshPlagiarismChecks = { vm.loadPlagiarismChecks() },
     )
 }
 

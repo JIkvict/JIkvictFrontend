@@ -25,12 +25,18 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.QueryStats
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.QueryStats
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -39,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
@@ -80,6 +87,8 @@ import org.jikvict.api.models.AssignmentDto
 import org.jikvict.api.models.AssignmentGroupDto
 import org.jikvict.api.models.AssignmentInfoAdmin
 import org.jikvict.api.models.AssignmentResultAdminDto
+import org.jikvict.api.models.PlagiarismCheckParameters
+import org.jikvict.api.models.PlagiarismCheckSummaryResponse
 import org.jikvict.api.models.TestResult
 import org.jikvict.api.models.TestSuiteResult
 import org.jikvict.api.models.UserDto
@@ -105,6 +114,13 @@ fun AssignmentInfoComponent(
     infoSupplier: suspend (List<UserDto>, List<AssignmentGroupDto>) -> List<AssignmentInfoAdmin>?,
     onEditClick: (AssignmentDto) -> Unit,
     onDownloadClick: (AssignmentResultAdminDto) -> Unit,
+    plagiarismChecks: List<PlagiarismCheckSummaryResponse> = emptyList(),
+    plagiarismLoading: Boolean = false,
+    plagiarismStarting: Boolean = false,
+    onStartPlagiarismCheck: (PlagiarismCheckParameters?) -> Unit = {},
+    onDownloadPlagiarismReport: (Long) -> Unit = {},
+    onViewPlagiarismReport: (Long) -> Unit = {},
+    onRefreshPlagiarismChecks: () -> Unit = {},
 ) = with(scope) {
     var userQuery by remember { mutableStateOf("") }
     var groupQuery by remember { mutableStateOf("") }
@@ -337,16 +353,18 @@ fun AssignmentInfoComponent(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        val options = listOf("Statistics", "Submissions")
-        val unCheckedIcons = listOf(Icons.Outlined.QueryStats, Icons.Outlined.FilterList)
-        val checkedIcons = listOf(Icons.Filled.QueryStats, Icons.Filled.FilterList)
+        val options = listOf("Statistics", "Submissions", "Plagiarism")
+        val unCheckedIcons =
+            listOf(Icons.Outlined.QueryStats, Icons.Outlined.FilterList, Icons.Outlined.Policy)
+        val checkedIcons =
+            listOf(Icons.Filled.QueryStats, Icons.Filled.FilterList, Icons.Filled.Policy)
         var selectedIndex by remember { mutableIntStateOf(0) }
 
         Row(
             Modifier.padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
         ) {
-            val modifiers = listOf(Modifier.weight(1f), Modifier.weight(1f))
+            val modifiers = listOf(Modifier.weight(1f), Modifier.weight(1f), Modifier.weight(1f))
 
             options.forEachIndexed { index, label ->
                 ToggleButton(
@@ -370,41 +388,54 @@ fun AssignmentInfoComponent(
             }
         }
 
-        when (val infosUnwrapped = infos) {
-            is OperationResult.Success -> {
-                if (selectedIndex == 0) {
-                    StatsComponent(infos = infosUnwrapped.result)
-                } else {
-                    SubmissionComponent(infos = infosUnwrapped.result, onDownloadClick)
+        if (selectedIndex == 2) {
+            PlagiarismComponent(
+                checks = plagiarismChecks,
+                isLoading = plagiarismLoading,
+                isStarting = plagiarismStarting,
+                isReadOnly = isReadOnly,
+                onStartCheck = onStartPlagiarismCheck,
+                onDownloadReport = onDownloadPlagiarismReport,
+                onViewReport = onViewPlagiarismReport,
+                onRefresh = onRefreshPlagiarismChecks,
+            )
+        } else {
+            when (val infosUnwrapped = infos) {
+                is OperationResult.Success -> {
+                    if (selectedIndex == 0) {
+                        StatsComponent(infos = infosUnwrapped.result)
+                    } else {
+                        SubmissionComponent(infos = infosUnwrapped.result, onDownloadClick)
+                    }
                 }
-            }
 
-            is OperationResult.Error -> {
-                Text(
-                    text = "Error loading information: ${infosUnwrapped.message}",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-
-            is OperationResult.Loading -> {
-                Box(
-                    modifier = Modifier.fitContentToScreen(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularWavyProgressIndicator()
-                }
-            }
-
-            is OperationResult.Idle -> {
-                Box(
-                    modifier = Modifier.fitContentToScreen(),
-                    contentAlignment = Alignment.Center
-                ) {
+                is OperationResult.Error -> {
                     Text(
-                        text = "Select users and/or groups to load statistics",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.bodyMedium
+                        text = "Error loading information: ${infosUnwrapped.message}",
+                        color = MaterialTheme.colorScheme.error
                     )
+                }
+
+                is OperationResult.Loading -> {
+                    Box(
+                        modifier = Modifier.fitContentToScreen(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularWavyProgressIndicator()
+                    }
+                }
+
+                is OperationResult.Idle -> {
+                    Box(
+                        modifier = Modifier.fitContentToScreen(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Select users and/or groups to load statistics",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }
@@ -1292,4 +1323,333 @@ fun AssignmentInfoComponentPreview() {
             {}
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun PlagiarismComponent(
+    checks: List<PlagiarismCheckSummaryResponse>,
+    isLoading: Boolean,
+    isStarting: Boolean,
+    isReadOnly: Boolean,
+    onStartCheck: (PlagiarismCheckParameters?) -> Unit,
+    onDownloadReport: (Long) -> Unit,
+    onViewReport: (Long) -> Unit,
+    onRefresh: () -> Unit,
+) {
+    var showParamsDialog by remember { mutableStateOf(false) }
+
+    if (showParamsDialog) {
+        PlagiarismParametersDialog(
+            onDismiss = { showParamsDialog = false },
+            onConfirm = {
+                showParamsDialog = false
+                onStartCheck(it)
+            }
+        )
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Plagiarism checks",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                IconButton(onClick = onRefresh, enabled = !isLoading) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                }
+                if (!isReadOnly) {
+                    Button(
+                        onClick = { showParamsDialog = true },
+                        enabled = !isStarting
+                    ) {
+                        if (isStarting) {
+                            CircularWavyProgressIndicator(modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Starting...", color = MaterialTheme.colorScheme.onPrimary)
+                        } else {
+                            Icon(
+                                Icons.Default.Policy,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Start check", color = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
+                }
+            }
+        }
+
+        when {
+            isLoading && checks.isEmpty() -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularWavyProgressIndicator()
+                }
+            }
+
+            checks.isEmpty() -> {
+                Text(
+                    text = "No plagiarism checks yet",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            else -> {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    checks.sortedByDescending { it.startedAt }.forEach { check ->
+                        PlagiarismCheckRow(
+                            check = check,
+                            onDownload = { onDownloadReport(check.taskId) },
+                            onView = { onViewReport(check.taskId) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlagiarismCheckRow(
+    check: PlagiarismCheckSummaryResponse,
+    onDownload: () -> Unit,
+    onView: () -> Unit,
+) {
+    val statusColor = when (check.status) {
+        PlagiarismCheckSummaryResponse.Status.DONE -> MaterialTheme.colorScheme.primary
+        PlagiarismCheckSummaryResponse.Status.PENDING -> MaterialTheme.colorScheme.tertiary
+        PlagiarismCheckSummaryResponse.Status.FAILED,
+        PlagiarismCheckSummaryResponse.Status.REJECTED,
+        PlagiarismCheckSummaryResponse.Status.CANCELLED -> MaterialTheme.colorScheme.error
+    }
+    val isDone = check.status == PlagiarismCheckSummaryResponse.Status.DONE
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth(),
+        tonalElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Task #${check.taskId}",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = statusColor.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = check.status.value,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = statusColor,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                Text(
+                    text = "Started: ${check.startedAt}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "By: ${check.initiatedBy}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                check.parameters?.let { params ->
+                    val parts = buildList {
+                        params.minimumTokenMatch?.let { add("min token match: $it") }
+                        params.similarityThreshold?.let { add("similarity ≥ $it") }
+                        params.maxNumberOfComparisons?.let { add("max comparisons: $it") }
+                        params.similarityMetric?.let { add("metric: ${similarityMetricLabel(it)}") }
+                    }
+                    if (parts.isNotEmpty()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = parts.joinToString(" · "),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                IconButton(onClick = onDownload, enabled = isDone) {
+                    Icon(
+                        Icons.Default.Download,
+                        contentDescription = "Download report"
+                    )
+                }
+                IconButton(onClick = onView, enabled = isDone) {
+                    Icon(
+                        Icons.Default.OpenInNew,
+                        contentDescription = "View in JPlag"
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun similarityMetricLabel(metric: PlagiarismCheckParameters.SimilarityMetric): String =
+    when (metric.value) {
+        "AVG" -> "Average similarity (AVG)"
+        "MIN" -> "Minimum similarity (MIN)"
+        "MAX" -> "Maximum similarity (MAX)"
+        "INTERSECTION" -> "Matched tokens (INTERSECTION)"
+        else -> metric.value
+    }
+
+@Composable
+private fun PlagiarismParametersDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (PlagiarismCheckParameters?) -> Unit,
+) {
+    var minTokenMatch by remember { mutableStateOf("") }
+    var similarityThreshold by remember { mutableStateOf("") }
+    var maxComparisons by remember { mutableStateOf("") }
+    var metricExpanded by remember { mutableStateOf(false) }
+    var metric by remember { mutableStateOf<PlagiarismCheckParameters.SimilarityMetric?>(null) }
+
+    val metricOptions = PlagiarismCheckParameters.SimilarityMetric.entries
+
+    fun parseInt(s: String): Int? = s.trim().takeIf { it.isNotEmpty() }?.toIntOrNull()
+    fun parseDouble(s: String): Double? = s.trim().takeIf { it.isNotEmpty() }?.toDoubleOrNull()
+
+    val minTokenError = minTokenMatch.isNotBlank() && parseInt(minTokenMatch) == null
+    val thresholdError = similarityThreshold.isNotBlank() &&
+        (parseDouble(similarityThreshold)?.let { it !in 0.0..1.0 } ?: true)
+    val maxComparisonsError = maxComparisons.isNotBlank() && parseInt(maxComparisons) == null
+    val hasErrors = minTokenError || thresholdError || maxComparisonsError
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Plagiarism check parameters") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Leave fields empty to use defaults.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = minTokenMatch,
+                    onValueChange = { minTokenMatch = it.filter { c -> c.isDigit() } },
+                    label = { Text("Minimum token match") },
+                    isError = minTokenError,
+                    supportingText = if (minTokenError) { { Text("Must be an integer") } } else null,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = similarityThreshold,
+                    onValueChange = { similarityThreshold = it.filter { c -> c.isDigit() || c == '.' } },
+                    label = { Text("Similarity threshold (0.0–1.0)") },
+                    isError = thresholdError,
+                    supportingText = if (thresholdError) { { Text("Must be a number in 0.0..1.0") } } else null,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = maxComparisons,
+                    onValueChange = { maxComparisons = it.filter { c -> c.isDigit() } },
+                    label = { Text("Max number of comparisons") },
+                    isError = maxComparisonsError,
+                    supportingText = if (maxComparisonsError) { { Text("Must be an integer") } } else null,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = metric?.let { similarityMetricLabel(it) } ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Similarity metric") },
+                        trailingIcon = {
+                            IconButton(onClick = { metricExpanded = !metricExpanded }) {
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Dropdown")
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { metricExpanded = true },
+                    )
+                    DropdownMenu(
+                        expanded = metricExpanded,
+                        onDismissRequest = { metricExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("(default)") },
+                            onClick = {
+                                metric = null
+                                metricExpanded = false
+                            }
+                        )
+                        metricOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(similarityMetricLabel(option)) },
+                                onClick = {
+                                    metric = option
+                                    metricExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                enabled = !hasErrors,
+                onClick = {
+                    val min = parseInt(minTokenMatch)
+                    val thr = parseDouble(similarityThreshold)
+                    val maxCmp = parseInt(maxComparisons)
+                    val params = if (min == null && thr == null && maxCmp == null && metric == null) {
+                        null
+                    } else {
+                        PlagiarismCheckParameters(
+                            minimumTokenMatch = min,
+                            similarityThreshold = thr,
+                            maxNumberOfComparisons = maxCmp,
+                            similarityMetric = metric,
+                        )
+                    }
+                    onConfirm(params)
+                }
+            ) {
+                Text("Start")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }
